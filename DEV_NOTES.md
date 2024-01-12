@@ -29,7 +29,7 @@ be useful.
 
 With the above configuration complete, you should be able to `npm run
 build-docs` to create/re-create the `docs` folder from the main branch.  You can
-then commit it, which will update the GitHub pages for JetLag.
+then commit it, which will update JetLag's GitHub Pages.
 
 You may also wish to preview the updated documentation locally, before
 committing it.  You can do so via `npm run serve-docs`.
