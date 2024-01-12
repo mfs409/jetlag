@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "esnext",
+    "sourceMap": true,
+    "outDir": "./check/",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "include": [
+    "src/jetlag/Config.ts",
+    "src/jetlag/Stage.ts",
+    "src/jetlag/Components/*",
+    "src/jetlag/Entities/*",
+    "src/jetlag/Services/*",
+    "src/jetlag/Systems/*"
+  ],
+  "typedocOptions": {
+    "out": "./docs/",
+    "name": "JetLag Documentation",
+    "excludeExternals": true,
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "hideGenerator": true,
+    "requiredToBeDocumented": [
+      "Constructor",
+    ],
+    "validation": {
+      "notDocumented": true
+    }
+  }
+}
