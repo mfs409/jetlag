@@ -343,7 +343,11 @@ export class AnimatedSprite implements IStateObserver {
   }
 
   /** Restart the current animation */
-  public restartCurrentAnimation() { this.activeFrame = this.elapsedTime = 0; }
+  public restartCurrentAnimation() {
+    this.activeFrame = this.elapsedTime = 0;
+    let oldState = this.actor?.state.current.clone();
+    this.onStateChange(this.actor!, StateEvent.MOVE_S, oldState!, oldState!);
+  }
 
   /**
    * When an actor renders, we use this method to figure out which image to
