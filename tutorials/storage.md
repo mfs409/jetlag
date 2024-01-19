@@ -193,6 +193,19 @@ However, don't forget that if you make changes to `pstore`, you will need to
 call `persist(pstore, "persistent_info");`, or else your changes won't be saved
 for the next time the game is played.
 
+@@red WARNING@@ This kind of persistent storage is only intended for small
+amounts of data (up to 5MB).  For larger amounts of storage, you'll want to have
+a different strategy:
+
+- If you are planning to launch your game as a web app that is played in a
+  browser, and there is a log-in feature, then cloud storage (such as FireBase)
+  may be appropriate. If your game doesn't have a log-in feature, you might
+  consider
+  [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB).
+- If you are using Capacitor.js to create a mobile game, or Electron.js to
+  create a desktop game, your options include SQLite and filesystem-based
+  storage.
+
 ## Greeting The Player
 
 Our next bit of code will compare today's date with the date in `pstore`, to
