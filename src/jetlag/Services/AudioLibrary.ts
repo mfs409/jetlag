@@ -13,13 +13,13 @@ import { stage } from "../Stage";
  */
 export interface ISound {
   /** Play the sound */
-  play(): void;
+  play(): number;
   /** Stop playing the sound */
-  stop(): void;
+  stop(id?: number): void;
   /** Pause the sound, so we can resume it later */
-  pause(): void;
+  pause(id?: number): void;
   /** Report if the sound is currently playing */
-  playing(): boolean;
+  playing(id?: number): boolean;
 }
 
 /**
