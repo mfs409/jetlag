@@ -277,14 +277,22 @@ behavior, we will make the `onCollect` function first.  We don't use the goodie
 that is passed to it, so we give it a name that starts with an underscore.  As
 for the hero, we'll change its appearance by calling `setImage()`.  Note that we
 can't give it a `new ImageSprite()`... JetLag doesn't allow that.  Instead, we
-change the image used by its existing `ImageSprite`.  Also, notice that I am
-computing the name of the image based n the hero's strength.  The different
-`color_star_X.png` images are part of our `sprites.json` file.
+change the image used by its existing `ImageSprite`.
+
+In this code, you'll notice that it says `h.appearance[0]`.  That's because
+the `appearance` field can actually hold several `AppearanceComponent`
+instances.  So far, we've only ever had one, but in JetLag, there's actually
+an *array*, so that first component is `appearance[0]`.  We'll explore this
+idea more in another tutorial.
+
+Also, notice that I am computing the name of the image based n the hero's
+strength.  The different `color_star_X.png` images are part of our
+`sprites.json` file.
 
 ```typescript
     let onCollect = (_g: Actor, h: Actor) => {
       let s = ++(h.role as Hero).strength;
-      (h.appearance as ImageSprite).setImage("color_star_" + s + ".png");
+      (h.appearance[0] as ImageSprite).setImage("color_star_" + s + ".png");
       return true;
     }
 ```
