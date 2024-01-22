@@ -274,15 +274,19 @@ export class AnimatedSprite implements IStateObserver {
 
   /** Width of the animation */
   width: number;
+
   /** Height of the animation */
   height: number;
+
   /** Z index of the image */
   z: ZIndex;
+
   /**
    * The animation sequences to use (they correspond to different
    * AnimationStates) 
    */
   animations: Map<AnimationState, AnimationSequence>;
+
   /**
    * A function for selecting what animation state to move to when the attached
    * actor's state changes.  Defaults to the version for overhead-style games.
@@ -394,7 +398,10 @@ export class AnimatedSprite implements IStateObserver {
       newState.last_ew = DIRECTION.W;
     let st = this.stateSelector(oldState, newState);
     let newAni = this.animations.get(st);
-    if (newAni === this.current_ani) return;
+    // NB:  We need to process TOSS_Y even when the animatoin doesn't change, or
+    //      else we'll never run the code for triggering a TOSS_N, and
+    //      newState.tossing will never get cleared.
+    if (newAni === this.current_ani && event != StateEvent.TOSS_Y) return;
     if (newAni === undefined) { newAni = this.animations.get(AnimationState.IDLE_E)!; }
     this.current_ani = newAni;
     this.activeFrame = 0;
