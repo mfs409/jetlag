@@ -74,7 +74,6 @@ function builder(level: number) {
     animations.set(AnimationState.CRAWL_W, AnimationSequence.makeSimple({ timePerFrame: 75, repeat: true, images: ["sep_alien_walk_l_0.png", "sep_alien_walk_l_1.png", "sep_alien_walk_l_2.png", "sep_alien_walk_l_3.png", "sep_alien_walk_l_4.png", "sep_alien_walk_l_5.png", "sep_alien_walk_l_6.png", "sep_alien_walk_l_7.png", "sep_alien_walk_l_8.png"] }));
     animations.set(AnimationState.CRAWL_E, AnimationSequence.makeSimple({ timePerFrame: 75, repeat: true, images: ["sep_alien_walk_r_0.png", "sep_alien_walk_r_1.png", "sep_alien_walk_r_2.png", "sep_alien_walk_r_3.png", "sep_alien_walk_r_4.png", "sep_alien_walk_r_5.png", "sep_alien_walk_r_6.png", "sep_alien_walk_r_7.png", "sep_alien_walk_r_8.png"] }));
 
-
     let remap = new Map();
     remap.set(AnimationState.JUMP_IDLE_W, AnimationState.JUMP_W);
     remap.set(AnimationState.JUMP_IDLE_E, AnimationState.JUMP_E);
