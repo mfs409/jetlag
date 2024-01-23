@@ -26,7 +26,7 @@ abstract class RigidBodyBase {
   /** Are collisions only valid from one direction? */
   singleRigidSide?: Sides;
   /** A joint for fusing entities together when one is "sticky" */
-  public distJoint?: b2DistanceJoint;
+  public stickyDistJoint?: b2DistanceJoint;
   /** The physics body */
   public body!: b2Body;
   /** Radius of a circumscribed circle, for culling */
@@ -53,6 +53,8 @@ abstract class RigidBodyBase {
    *                     to this entity
    * @param localAnchorY The Y coordinate (relative to center) where joint fuses
    *                     to this entity
+   *
+   * @return The joint that was created
    */
   public setRevoluteJoint(anchor: Actor, anchorX: number, anchorY: number, localAnchorX: number, localAnchorY: number) {
     // make the this body dynamic
@@ -68,6 +70,7 @@ abstract class RigidBodyBase {
     this.revJointDef.referenceAngle = 0;
     this.revJointDef.enableLimit = false;
     this.revJoint = this.body.GetWorld().CreateJoint(this.revJointDef);
+    return this.revJoint;
   }
 
   /**
@@ -76,6 +79,8 @@ abstract class RigidBodyBase {
    * @param motorSpeed  Speed in radians per second
    * @param motorTorque torque of the motor... when in doubt, go with something
    *                    huge, like positive infinity
+   *
+   * @return The modified joint.  The old revolute joint will be destroyed.
    */
   public setRevoluteJointMotor(motorSpeed: number, motorTorque: number) {
     // destroy the previously created joint, change the definition, re-create
@@ -87,6 +92,7 @@ abstract class RigidBodyBase {
       this.revJointDef!.maxMotorTorque = motorTorque;
     }
     this.revJoint = this.body.GetWorld().CreateJoint(this.revJointDef!);
+    return this.revJoint;
   }
 
   /**
@@ -94,6 +100,8 @@ abstract class RigidBodyBase {
    *
    * @param upper The upper bound in radians
    * @param lower The lower bound in radians
+   *
+   * @return The modified joint.  The old revolute joint will be destroyed.
    */
   public setRevoluteJointLimits(upper: number, lower: number) {
     // destroy the previously created joint, change the definition, re-create
@@ -103,6 +111,7 @@ abstract class RigidBodyBase {
     this.revJointDef!.lowerAngle = lower;
     this.revJointDef!.enableLimit = true;
     this.revJoint = this.body.GetWorld().CreateJoint(this.revJointDef!);
+    return this.revJoint;
   }
 
   /**
@@ -119,6 +128,8 @@ abstract class RigidBodyBase {
    * @param localY The Y coordinate (relative to center) where joint fuses to
    *               this entity
    * @param angle  The angle between the entities
+   *
+   * @return The joint that was created
    */
   public setWeldJoint(other: Actor, otherX: number, otherY: number, localX: number, localY: number, angle: number) {
     let w = new b2WeldJointDef();
@@ -128,11 +139,11 @@ abstract class RigidBodyBase {
     w.localAnchorB.Set(otherX, otherY);
     w.referenceAngle = angle;
     w.collideConnected = false;
-    this.body.GetWorld().CreateJoint(w);
+    return this.body.GetWorld().CreateJoint(w);
   }
 
   /**
-   * Create a distance joint between this entity and some other entity
+   * Create an explicit distance joint between this entity and some other entity
    *
    * @param anchor       The entity to which this entity is connected
    * @param anchorX      The X coordinate (relative to center) where joint fuses
@@ -143,6 +154,8 @@ abstract class RigidBodyBase {
    *                     to this entity
    * @param localAnchorY The Y coordinate (relative to center) where joint fuses
    *                     to this entity
+   *
+   * @return The joint that was created
    */
   public setDistanceJoint(anchor: Actor, anchorX: number, anchorY: number, localAnchorX: number, localAnchorY: number) {
     // make the body dynamic
@@ -157,16 +170,20 @@ abstract class RigidBodyBase {
     mDistJointDef.collideConnected = false;
     mDistJointDef.damping = 0.1;
     mDistJointDef.stiffness = 2;
-
-    this.body.GetWorld().CreateJoint(mDistJointDef);
+    return this.body.GetWorld().CreateJoint(mDistJointDef);
   }
 
-  /** Break any implicit distance joints connecting this entity */
-  public breakDistJoints() {
-    // Clobber any joints, or this won't be able to move
-    if (this.distJoint) {
-      this.body.GetWorld().DestroyJoint(this.distJoint);
-      this.distJoint = undefined;
+  /**
+   * Break any distance joints connecting this entity on account of the "sticky"
+   * feature.  Joints created via `setDistanceJoint()` won't be destroyed by
+   * this call.
+   */
+  public breakStickyJoints() {
+    // Clobber any distance joints that were made because of the "sticky"
+    // feature, or this actor won't be able to move
+    if (this.stickyDistJoint) {
+      this.body.GetWorld().DestroyJoint(this.stickyDistJoint);
+      this.stickyDistJoint = undefined;
     }
   }
 

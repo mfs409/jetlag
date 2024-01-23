@@ -549,7 +549,7 @@ export class Hero extends Role {
     let v = this._actor!.rigidBody.body.GetLinearVelocity() ?? { x: 0, y: 0 };
     x += v.x;
     y += v.y;
-    this._actor!.rigidBody.breakDistJoints();
+    this._actor!.rigidBody.breakStickyJoints();
     this._actor!.rigidBody.body.SetLinearVelocity(new b2Vec2(x, y));
 
     this._actor!.state.changeState(this._actor!, StateEvent.JUMP_Y);

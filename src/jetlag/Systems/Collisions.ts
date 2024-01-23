@@ -186,7 +186,7 @@ export class AdvancedCollisionSystem extends BasicCollisionSystem {
             oneSided = b; other = a;
           }
           // Should we disable a one-sided collision?
-          if (oneSided && other && !oneSided.rigidBody!.distJoint && !other.rigidBody!.distJoint) {
+          if (oneSided && other && !oneSided.rigidBody!.stickyDistJoint && !other.rigidBody!.stickyDistJoint) {
             if (true) {
               let ot = oneSided.rigidBody.getCenter().y - oneSided.rigidBody.h / 2;
               let ob = oneSided.rigidBody.getCenter().y + oneSided.rigidBody.h / 2;
@@ -270,7 +270,7 @@ export class AdvancedCollisionSystem extends BasicCollisionSystem {
    */
   private handleSticky(sticky: Actor, other: Actor, contact: b2Contact) {
     // don't create a joint if we've already got one
-    if (other.rigidBody?.distJoint) return;
+    if (other.rigidBody?.stickyDistJoint) return;
     // don't create a joint if we're supposed to wait
     if (window.performance.now() < (other.rigidBody?.stickyDelay ?? 0)) return;
     // only do something if we're hitting the actor from the correct direction
@@ -295,7 +295,7 @@ export class AdvancedCollisionSystem extends BasicCollisionSystem {
         let d = new b2DistanceJointDef();
         d.Initialize(sb, ob, v, v);
         d.collideConnected = true;
-        other.rigidBody!.distJoint = this.world.CreateJoint(d) as b2DistanceJoint;
+        other.rigidBody!.stickyDistJoint = this.world.CreateJoint(d) as b2DistanceJoint;
       });
     }
   }

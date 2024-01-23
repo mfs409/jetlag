@@ -91,7 +91,7 @@ export class PathMovement {
     if (!this.rigidBody) return;
     this.done = true;
     // Stop the movement
-    this.rigidBody.breakDistJoints();
+    this.rigidBody.breakStickyJoints();
     this.rigidBody.body.SetLinearVelocity({ x: 0, y: 0 });
   }
 
@@ -101,7 +101,7 @@ export class PathMovement {
     // convert from the point to a unit vector, then set velocity
     p.Subtract(this.rigidBody!.getCenter()).Normalize();
     p.Scale(this.velocity);
-    this.rigidBody!.breakDistJoints();
+    this.rigidBody!.breakStickyJoints();
     this.rigidBody!.body.SetLinearVelocity(p);
     if (this.waypointCallback) this.waypointCallback(this.nextIndex - 1);
   }
@@ -203,14 +203,14 @@ export class TiltMovement {
   /** Update the Y velocity, without affecting the X velocity */
   updateYVelocity(v: number) {
     if (!this.rigidBody?.body.IsEnabled()) return;
-    this.rigidBody.breakDistJoints();
+    this.rigidBody.breakStickyJoints();
     this.rigidBody.body.SetLinearVelocity({ x: this.rigidBody?.body.GetLinearVelocity().x ?? 0, y: v });
   }
 
   /** Update the X velocity, without affecting the Y velocity */
   updateXVelocity(v: number) {
     if (!this.rigidBody?.body.IsEnabled()) return;
-    this.rigidBody.breakDistJoints();
+    this.rigidBody.breakStickyJoints();
     this.rigidBody.body.SetLinearVelocity({ x: v, y: this.rigidBody?.body.GetLinearVelocity().y ?? 0 });
   }
 
@@ -266,7 +266,7 @@ export class ChaseMovement {
       x *= this.multiplier;
     }
     // apply velocity
-    this.rigidBody?.breakDistJoints();
+    this.rigidBody?.breakStickyJoints();
     this.rigidBody?.body.SetLinearVelocity({ x, y });
   }
 
@@ -372,7 +372,7 @@ export class ProjectileMovement {
 
   /** Set a new velocity for the actor */
   updateVelocity(x: number, y: number) {
-    this._rigidBody?.breakDistJoints();
+    this._rigidBody?.breakStickyJoints();
     this._rigidBody?.body.SetLinearVelocity({ x, y });
   }
 
@@ -516,7 +516,7 @@ export class ManualMovement {
    * @param y The new y velocity
    */
   updateVelocity(x: number, y: number) {
-    this.rigidBody?.breakDistJoints();
+    this.rigidBody?.breakStickyJoints();
     this.rigidBody?.body.SetLinearVelocity({ x, y });
   }
 
@@ -526,7 +526,7 @@ export class ManualMovement {
    * @param x The new x velocity
    */
   updateXVelocity(x: number) {
-    this.rigidBody?.breakDistJoints();
+    this.rigidBody?.breakStickyJoints();
     this.rigidBody?.body.SetLinearVelocity({ x, y: this.rigidBody.body.GetLinearVelocity().y });
   }
 
@@ -536,7 +536,7 @@ export class ManualMovement {
    * @param y The new x velocity
    */
   updateYVelocity(y: number) {
-    this.rigidBody?.breakDistJoints();
+    this.rigidBody?.breakStickyJoints();
     this.rigidBody?.body.SetLinearVelocity({ x: this.rigidBody.body.GetLinearVelocity().x, y });
   }
 
