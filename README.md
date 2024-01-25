@@ -20,7 +20,7 @@ multi-touch and gesture support, and also enables accelerometer by default.
 ## Documentation and Support
 
 There is a tutorial series for JetLag, which is available at
-<https://www.cse.lehigh.edu/~spear/cse098/tutorials.html>.
+<https://www.cse.lehigh.edu/~spear/jetlag_tutorials/>.
 
 Documentation for JetLag is available on
 [GitHub Pages](https://mfs409.github.io/jetlag/ "JetLag GitHub Pages")
