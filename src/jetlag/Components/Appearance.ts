@@ -5,7 +5,7 @@ import { Actor } from "../Entities/Actor";
 import { AnimationSequence, AnimationState } from "../Config";
 import { StateEvent, IStateObserver, ActorState, DIRECTION } from "./StateManager";
 import { stage } from "../Stage";
-import { Graphics, Sprite as PixiSprite } from "pixi.js";
+import { Graphics, Sprite as PixiSprite, VideoResource } from "pixi.js";
 
 /**
  * ZIndex is a convenience type to enforce that there are five Z indices in
@@ -217,7 +217,7 @@ export class ImageSprite {
     this.image = stage.imageLibrary.getSprite(imgName);
   }
 
-  /** Perform any custom updates to the text before displaying it */
+  /** Perform any custom updates to the image before displaying it */
   prerender(_elapsedMs: number) { }
 
   /**
@@ -678,6 +678,90 @@ export class AnimatedSprite implements IStateObserver {
 }
 
 /**
+ * VideoSprite describes any object whose visual representation is achieved by
+ * playing a video.
+ */
+export class VideoSprite {
+  /** The Actor to which this ImageSprite is attached */
+  public actor?: Actor;
+  /** The image to display for this actor */
+  public sprite: Sprite;
+  /** Width of the image */
+  width: number;
+  /** Height of the image */
+  height: number;
+  /** Z index of the image */
+  z: ZIndex;
+  /** The name of the video file */
+  src: string;
+
+  /**
+   * Build a VideoSprite
+   *
+   * @param opts.width  The width of the image, in meters
+   * @param opts.height The height of the image, in meters
+   * @param opts.vid    The name of the video file to use
+   * @param opts.z      An optional z index in the range [-2,2]
+   */
+  constructor(opts: { width: number, height: number, vid: string, z?: ZIndex }) {
+    this.width = opts.width;
+    this.height = opts.height;
+    this.z = opts.z ? opts.z : 0;
+    this.src = opts.vid;
+    this.sprite = stage.imageLibrary.getVideo(this.src);
+  }
+
+  /**
+   * Render the video
+   *
+   * @param camera      The camera for the current stage
+   * @param _elapsedMs  The time since the last render
+   */
+  render(camera: CameraSystem, _elapsedMs: number) {
+    if (this.actor)
+      stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.sprite, camera, this.z);
+  }
+
+  /** Start playing this VideoSprite's video */
+  play() {
+    (this.sprite.sprite.texture.baseTexture.resource as VideoResource).source.play();
+  }
+
+  /** Pause this VideoSprite's video */
+  pause() {
+    (this.sprite.sprite.texture.baseTexture.resource as VideoResource).source.pause();
+  }
+
+  /**
+   * Render the video when it does not have a rigidBody. This is only used for
+   * Parallax
+   *
+   * @param anchor      The center x/y at which to draw the image
+   * @param camera      The camera for the current stage
+   * @param _elapsedMs  The time since the last render
+   * @param z           A z index (overrides the image's z)
+   */
+  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraSystem, _elapsedMs: number, z: ZIndex) {
+    stage.renderer.addPictureToFrame(anchor, this, this.sprite, camera, z);
+  }
+
+  /** Perform any custom updates to the video before displaying it */
+  prerender(_elapsedMs: number) { }
+
+  /**
+   * Change the size of the video.  You shouldn't call this directly.  It gets
+   * called by Actor.resize().
+   *
+   * @param scale The amount to scale the size by.  1 means "no change", >1
+   *              means "grow", fraction means "shrink".
+   */
+  resize(scale: number) {
+    this.width *= scale;
+    this.height *= scale;
+  }
+}
+
+/**
  * FilledBox describes any object whose visual representation is a filled box.
  */
 export class FilledBox {
@@ -908,4 +992,4 @@ export class FilledPolygon {
 /**
  * AppearanceComponent is the type of anything that can be drawn to the screen.
  */
-export type AppearanceComponent = TextSprite | ImageSprite | AnimatedSprite | FilledBox | FilledCircle | FilledPolygon;
+export type AppearanceComponent = TextSprite | ImageSprite | AnimatedSprite | VideoSprite | FilledBox | FilledCircle | FilledPolygon;

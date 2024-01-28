@@ -197,9 +197,10 @@ export interface JetLagGameConfig {
   readonly soundNames: string[];
   /** The list of audio files that can be used as (looping) background music */
   readonly musicNames: string[];
+  /** The list of video files that can be used for cut scenes */
+  readonly videoNames?: string[];
   /** The prefix for all resources */
   readonly resourcePrefix: string;
   /** Accelerometer mode (customize for each device target and orientation) */
-  // TODO: turn this off
   readonly accelerometerMode: AccelerometerMode;
 }

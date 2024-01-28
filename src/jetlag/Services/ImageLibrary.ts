@@ -1,4 +1,4 @@
-import { Assets, Graphics, Sprite as PixiSprite, Text as PixiText, Texture } from "pixi.js";
+import { Assets, Graphics, Sprite as PixiSprite, Text as PixiText, Texture, VideoResource } from "pixi.js";
 import { JetLagGameConfig } from "../Config";
 import { stage } from "../Stage";
 
@@ -69,11 +69,19 @@ export class Text {
  */
 export class ImageLibraryService {
   /**
-   * A map with all the game's textures in it.  This is slightly easier than
-   * PIXI.Assets, since we don't have to deal with promises, but of course that
-   * means we handle the caching ourselves.
+   * A map with all of the game's image-based textures in it.  This is slightly
+   * easier using than PIXI.Assets directly, since we don't have to deal with
+   * promises, but of course that means we handle the caching ourselves.
    */
-  private textures = new Map<string, Texture>;
+  private imgTextures = new Map<string, Texture>;
+
+  /**
+   * A map with all of the game's video-based textures in it.
+   *
+   * TODO:  It would be beneficial to figure out if the way we are currently
+   *        loading textures is appropriate for high-performance games.
+   */
+  private vidTextures = new Map<string, VideoResource>;
 
   /**
    * Load all of the graphics assets, then call the callback to start the game
@@ -81,16 +89,29 @@ export class ImageLibraryService {
    * @param callback The code to run once all assets are loaded
    */
   loadAssets(callback: () => void) {
+    // Fetch all of the videos first
+    //
+    // TODO:  Video fetching has an asynchronous aspect to it.  We are currently
+    //        calling `load()` and ignoring the timing of the callback.  For
+    //        lots of large video assets, this could mean that a cut scene would
+    //        be requested before it was available.
+    for (let vidName of this.config.videoNames!) {
+      const res = new VideoResource(this.config.resourcePrefix + "/" + vidName, { autoPlay: false });
+      res.load().then(x => x.source.autoplay = false)
+      this.vidTextures.set(vidName, res);
+    }
+    // Next load all of the image assets, using the PIXI Assets infrastructure.
+    // When they're all loaded, invoke the callback.
     Assets.load(this.config.imageNames).then((textures) => {
       for (let imgName of this.config.imageNames) {
         // If we loaded a sprite sheet, then we need to deconstruct it to get
         // all its image names.  Otherwise it's easy...
         if (imgName.match(".json") != null) {
           for (let o of Object.keys(textures[imgName].textures))
-            this.textures.set(o, textures[imgName].textures[o]);
+            this.imgTextures.set(o, textures[imgName].textures[o]);
         }
         else {
-          this.textures.set(imgName, textures[imgName]);
+          this.imgTextures.set(imgName, textures[imgName]);
         }
       }
       callback();
@@ -112,10 +133,15 @@ export class ImageLibraryService {
    * Get an image that has been loaded by the renderer, or a blank image if the
    * provided filename is the empty string.
    *
+   * TODO:  Screenshots currently necessitate the use of `""` as the imgName.
+   *        Can we refactor so that's no longer an issue?
+   *
    * @param imgName The name of the image to load
+   *
+   * @returns A Sprite built from the image
    */
   public getSprite(imgName: string) {
-    let texture = this.textures.get(imgName);
+    let texture = this.imgTextures.get(imgName);
     if (!texture) {
       if (imgName !== "")
         throw "Unable to find graphics asset '" + imgName + "'";
@@ -124,5 +150,21 @@ export class ImageLibraryService {
     // NB:  If we wanted to use Pixi to modify the texture, then we'd need to
     //      clone it first.
     return new Sprite(imgName, new PixiSprite(texture));
+  }
+
+  /**
+   * Get a video that has been loaded by the renderer
+   *
+   * @param vidName The name of the video to load
+   *
+   * @returns A Sprite built from the video
+   */
+  public getVideo(vidName: string) {
+    let texture = this.vidTextures.get(vidName);
+    texture!.source.autoplay = false;
+    texture!.source.preload = "auto";
+    if (!texture)
+      throw `Unable to find graphics asset '${vidName}'`;
+    return new Sprite(vidName, new PixiSprite(Texture.from(texture.source)));
   }
 }
