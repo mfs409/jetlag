@@ -63,7 +63,7 @@ const tut_src = {
     "overhead_fight_farm_game", "overview", "package_desktop", "package_mobile",
     "platformer_game", "projectiles", "rigidbody", "roles", "score",
     "simulation_conway", "stage_transitions", "storage", "svg", "text_hud",
-    "timers",
+    "timers", "video",
   ],
   md: [
     "graphic_assets", "audio", "animations", "camera_gravity", "collisions",
@@ -72,7 +72,7 @@ const tut_src = {
     "package_desktop", "package_mobile", "platformer_game", "projectiles",
     "roles_goodies_destinations_sensors", "roles_obstacles_enemies", "score_1",
     "score_2", "simulation_conway", "stage_transitions", "storage", "svg",
-    "text_hud", "timers",
+    "text_hud", "timers", "video",
   ],
 };
 
