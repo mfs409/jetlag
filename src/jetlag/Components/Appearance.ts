@@ -743,6 +743,11 @@ export class VideoSprite {
     return (this.sprite.sprite.texture.baseTexture.resource as VideoResource).source.duration;
   }
 
+  /** Reset the video playback to the beginning */
+  reset() {
+    (this.sprite.sprite.texture.baseTexture.resource as VideoResource).source.currentTime = 0;
+  }
+
   /**
    * Render the video when it does not have a rigidBody. This is only used for
    * Parallax
