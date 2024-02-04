@@ -165,14 +165,13 @@ function builder(level: number) {
       (a.appearance[0] as VideoSprite).onEnd(() => {
         stage.clearOverlay();
         stage.switchTo(builder, 4);
-        (a.appearance[0] as VideoSprite).pause();
       });
     }
   }
 
   // This level just puts a message on the screen.  Tapping resets the game to
   // level 1
-  if (level == 4) {
+  else if (level == 4) {
     new Actor({
       appearance: new TextSprite({ center: true, face: "Arial", color: "#000000", size: 24 }, "Start Over"),
       rigidBody: new BoxBody({ cx: 8, cy: 4.5, width: 16, height: 9 }),
