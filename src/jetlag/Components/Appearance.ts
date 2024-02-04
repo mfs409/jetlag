@@ -729,7 +729,18 @@ export class VideoSprite {
 
   /** Pause this VideoSprite's video */
   pause() {
+    // NB: currentTime ought to tell how far into playback we've made it
     (this.sprite.sprite.texture.baseTexture.resource as VideoResource).source.pause();
+  }
+
+  /** Run code when the video playback reaches the end */
+  onEnd(callback: () => void) {
+    (this.sprite.sprite.texture.baseTexture.resource as VideoResource).source.onended = () => callback();
+  }
+
+  /** Report the duration of the video associated with this VideoSprite */
+  duration() {
+    return (this.sprite.sprite.texture.baseTexture.resource as VideoResource).source.duration;
   }
 
   /**
