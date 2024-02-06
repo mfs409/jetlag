@@ -95,10 +95,12 @@ export class ImageLibraryService {
     //        calling `load()` and ignoring the timing of the callback.  For
     //        lots of large video assets, this could mean that a cut scene would
     //        be requested before it was available.
-    for (let vidName of this.config.videoNames!) {
-      const res = new VideoResource(this.config.resourcePrefix + "/" + vidName, { autoPlay: false });
-      res.load().then(x => x.source.autoplay = false)
-      this.vidTextures.set(vidName, res);
+    if (this.config.videoNames) {
+      for (let vidName of this.config.videoNames) {
+        const res = new VideoResource(this.config.resourcePrefix + "/" + vidName, { autoPlay: false });
+        res.load().then(x => x.source.autoplay = false)
+        this.vidTextures.set(vidName, res);
+      }
     }
     // Next load all of the image assets, using the PIXI Assets infrastructure.
     // When they're all loaded, invoke the callback.
