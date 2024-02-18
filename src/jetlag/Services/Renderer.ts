@@ -1,7 +1,7 @@
 import { Application, Container, Graphics, BlurFilter, NoiseFilter, SCALE_MODES, Sprite as PixiSprite } from "pixi.js";
 import { GodrayFilter, AsciiFilter, OldFilmFilter } from "pixi-filters";
 import { stage } from "../Stage";
-import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, ZIndex } from "../Components/Appearance";
+import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, FilledRoundedBox, ZIndex } from "../Components/Appearance";
 import { RigidBodyComponent, BoxBody, CircleBody, PolygonBody } from "../Components/RigidBody";
 import { CameraSystem } from "../Systems/Camera";
 import { Sprite, Text } from "./ImageLibrary";
@@ -200,7 +200,7 @@ export class RendererService {
    * @param camera      The camera (and by extension, the world)
    * @param z           The Z index of the sprite
    */
-  public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon, body: RigidBodyComponent, graphic: Graphics, camera: CameraSystem, z: ZIndex) {
+  public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, body: RigidBodyComponent, graphic: Graphics, camera: CameraSystem, z: ZIndex) {
     graphic.clear();
     // If the actor isn't on screen, skip it
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
@@ -216,6 +216,15 @@ export class RendererService {
       let w = s * appearance.width;
       let h = s * appearance.height;
       graphic.drawRect(x, y, w, h);
+      graphic.position.set(x, y);
+      graphic.pivot.set(x + w / 2, y + h / 2);
+      graphic.rotation = body.getRotation();
+    }
+    else if (appearance instanceof FilledRoundedBox) {
+      let w = s * appearance.width;
+      let h = s * appearance.height;
+      let r = s * appearance.radius;
+      graphic.drawRoundedRect(x, y, w, h, r);
       graphic.position.set(x, y);
       graphic.pivot.set(x + w / 2, y + h / 2);
       graphic.rotation = body.getRotation();

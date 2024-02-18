@@ -19,7 +19,7 @@ export type ZIndex = -2 | -1 | 0 | 1 | 2;
  * @param cfg     The object being validated
  * @param cfgName The type of the object, for error messages
  */
-function validateFilledConfig(cfg: FilledBox | FilledCircle | FilledPolygon, cfgName: string) {
+function validateFilledConfig(cfg: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, cfgName: string) {
   // Validate: if there's a line width, there needs to be a line color
   if (cfg.lineWidth !== undefined && cfg.lineColor === undefined)
     stage.console.log(`Error: ${cfgName} with lineWidth must have lineColor`);
@@ -846,6 +846,81 @@ export class FilledBox {
 }
 
 /**
+ * FilledRoundedBox describes any object whose visual representation is a filled
+ * box with rounded corners.  These are particularly useful as the background
+ * for text messages.
+ */
+export class FilledRoundedBox {
+  /** The Actor to which this FilledSprite is attached */
+  public actor?: Actor;
+  /** The low-level graphics object that we pass to the Renderer */
+  readonly graphics = new Graphics();
+  /** Width of the box */
+  width: number;
+  /** Height of the box */
+  height: number;
+  /** Radius of the corners */
+  radius: number;
+  /** Z index of the box */
+  z: ZIndex;
+  /** Line width */
+  lineWidth?: number;
+  /** Line color */
+  lineColor?: string;
+  /** Fill color */
+  fillColor: string;
+
+  /**
+   * Build a FilledRoundedBox
+   *
+   * @param opts.width      Width of the box 
+   * @param opts.height     Height of the box 
+   * @param opts.radius     Radius of the corners
+   * @param opts.lineWidth  Optional width of the border
+   * @param opts.lineColor  Optional color for the border
+   * @param opts.fillColor  Color to fill the box
+   * @param opts.z          An optional z index in the range [-2,2]
+   */
+  public constructor(opts: { width: number, height: number, radius: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex }) {
+    this.width = opts.width;
+    this.height = opts.height;
+    this.z = opts.z ? opts.z : 0;
+    this.radius = opts.radius;
+    this.lineWidth = opts.lineWidth;
+    this.lineColor = opts.lineColor;
+    this.fillColor = opts.fillColor;
+    validateFilledConfig(this, "FilledRoundedBox");
+  }
+
+  /**
+   * Render the FilledRoundedBox
+   *
+   * @param camera      The camera for the current stage
+   * @param _elapsedMs  The time since the last render
+   */
+  render(camera: CameraSystem, _elapsedMs: number) {
+    if (this.actor)
+      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
+  }
+
+  /** Perform any custom updates to the box before displaying it */
+  prerender(_elapsedMs: number) { }
+
+  /**
+   * Change the size of the box.  You shouldn't call this directly.  It gets
+   * called by Actor.resize().
+   *
+   * @param scale The amount to scale the size by.  1 means "no change", >1
+   *              means "grow", fraction means "shrink".
+   */
+  resize(scale: number) {
+    this.width *= scale;
+    this.height *= scale;
+    this.radius *= scale;
+  }
+}
+
+/**
  * FilledCircle describes any object whose visual representation is a filled
  * circle.
  */
@@ -1008,4 +1083,4 @@ export class FilledPolygon {
 /**
  * AppearanceComponent is the type of anything that can be drawn to the screen.
  */
-export type AppearanceComponent = TextSprite | ImageSprite | AnimatedSprite | VideoSprite | FilledBox | FilledCircle | FilledPolygon;
+export type AppearanceComponent = TextSprite | ImageSprite | AnimatedSprite | VideoSprite | FilledBox | FilledRoundedBox | FilledCircle | FilledPolygon;
