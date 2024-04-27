@@ -8,13 +8,21 @@ import { JetLagGameConfig } from "./Config";
 import { ConsoleService } from "./Services/Console";
 import { KeyboardService } from "./Services/Keyboard";
 import { RendererService } from "./Services/Renderer";
-import { AccelerometerService } from "./Services/Accelerometer";
+import { AccelerometerMode, AccelerometerService } from "./Services/Accelerometer";
 import { StorageService } from "./Services/Storage";
 import { TiltSystem } from "./Systems/Tilt";
 import { AdvancedCollisionSystem, BasicCollisionSystem } from "./Systems/Collisions";
 import { ImageLibraryService } from "./Services/ImageLibrary";
 import { ImageSprite } from "./Components/Appearance";
 import { HtmlPlatformService, PlatformService } from "./Services/Platform";
+
+/**
+ * PPM4UF: Pixels per Meter for Unscaled Fonts.  This is an empirically derived
+ * value that represents the pixel-per-meter ratio at which font sizes do not
+ * need to be scaled in order for a font value in the game to match what you'd
+ * expect.
+ */
+const PPM4UF = 75;
 
 /**
  * Stage is the container for all of the functionality for the playable portion
@@ -72,14 +80,17 @@ export class Stage {
   public gameMusic: MusicComponent | undefined;
   /** Persistent storage + volatile storage for a game session and a level */
   readonly storage: StorageService;
-  /** Amount to scale fonts so everything fits on the screen. */
+  /**
+   * Amount to scale fonts so everything fits on the screen.  This is relative
+   * to the PPM4UF constant, defined above.
+   */
   fontScaling = 1;
-  /** The real screen width */
-  screenWidth: number;
-  /** The real screen height */
-  screenHeight: number;
-  /** The real pixel-meter ratio */
-  pixelMeterRatio: number;
+  /** The screen width (dummy value... gets computed early) */
+  screenWidth = 0;
+  /** The screen height (dummy value... gets computed early) */
+  screenHeight = 0;
+  /** The pixel-meter ratio (dummy value... gets computed early) */
+  pixelMeterRatio = 0;
   /** Code to run at the end of the next render step (used for screenshots) */
   private afterRender?: () => void;
 
@@ -109,8 +120,8 @@ export class Stage {
     let action = () => {
       if (this.renderer.mostRecentScreenShot) {
         let screenshot = new ImageSprite({
-          width: this.config.screenDimensions.width / this.config.pixelMeterRatio,
-          height: this.config.screenDimensions.height / this.config.pixelMeterRatio,
+          width: this.screenWidth / this.pixelMeterRatio,
+          height: this.screenHeight / this.pixelMeterRatio,
           img: "",
           z: -2
         });
@@ -233,7 +244,7 @@ export class Stage {
   }
 
   /**
-   * Set up the stage
+   * Set up the stage.  This is the first step in starting a game.
    *
    * @param config    The game-wide configuration object
    * @param domId     The Id of the DOM element where the game exists
@@ -241,24 +252,19 @@ export class Stage {
    *                  game
    * @param platform  Platform-specific features
    */
-  constructor(readonly config: JetLagGameConfig, domId: string, builder: (level: number) => void, readonly platform: PlatformService) {
+  constructor(readonly config: JetLagGameConfig, private domId: string, private builder: (level: number) => void, readonly platform: PlatformService) {
     this.console = new ConsoleService(config);
 
-    this.pixelMeterRatio = config.pixelMeterRatio;
-    this.screenWidth = config.screenDimensions.width;
-    this.screenHeight = config.screenDimensions.height;
-
     // Check if the config needs to be adapted, then check for errors
-    if (config.pixelMeterRatio <= 0) this.console.log("Invalid `pixelMeterRatio` in game config object");
-    if (config.adaptToScreenSize) this.adjustScreenDimensions();
-    if (this.screenWidth <= 0) this.console.log("`width` must be greater than zero in game config object");
-    if (this.screenHeight <= 0) this.console.log("`height` must be greater than zero in game config object");
+    if (config.aspectRatio.width <= 0 || config.aspectRatio.height <= 0)
+      this.console.log("Invalid `aspectRatio` in game config object");
+    this.computeScreenDimensions();
 
     // Configure the services
     this.storage = new StorageService();
     this.musicLibrary = new AudioLibraryService(config);
     this.keyboard = new KeyboardService();
-    this.accelerometer = new AccelerometerService(config.accelerometerMode);
+    this.accelerometer = new AccelerometerService(config.accelerometerMode ?? AccelerometerMode.DISABLED);
     this.renderer = new RendererService(this.screenWidth, this.screenHeight, domId, this.config.hitBoxes);
     this.imageLibrary = new ImageLibraryService(config);
 
@@ -267,48 +273,44 @@ export class Stage {
 
     // Configure any systems that should be running
     this.tilt = new TiltSystem;
+  }
 
-    // For the sake of tutorials, we can do a little bit of querystring parsing
-    // to override the default level
-    let level = 1;
-    let url = window.location.href;
-    let qs_level = url.split("?")[1]; // Level from query string
-    if (qs_level) {
-      level = parseInt(qs_level);
-      if (isNaN(level)) level = 1;
-    }
-
+  /**
+   * Load any images that need to be loaded, then launch the game.  This is the
+   * last step in starting a game.
+   */
+  public begin() {
     // Load the images asynchronously, then start rendering
     this.imageLibrary.loadAssets(() => {
-      this.gestures = new GestureService(domId, this);
-      this.switchTo(builder, level);
+      this.gestures = new GestureService(this.domId, this);
+      this.switchTo(this.builder, 1);
       this.renderer.startRenderLoop();
     });
   }
 
   /**
-   * If the game is supposed to fill the screen, this code will change the
-   * config object to maximize the div in which the game is drawn
+   * Compute the dimensions of the canvas into which the game will be drawn. Use
+   * this.config to determine the target ratio, then do a ratio-preserving
+   * expansion of the resulting box until it fills the screen in one dimension.
    */
-  private adjustScreenDimensions() {
-    // as we compute the new screen width, height, and pixel ratio, we need
-    // to be sure to remember the original ratio given in the game. JetLag
-    // can't stretch differently in X than in Y, because there is only one
-    // pixel/meter ratio.
-    let targetRatio = this.screenWidth / this.screenHeight;
+  private computeScreenDimensions() {
+    // Compute the target aspect ratio, which must be preserved
+    let targetRatio = this.config.aspectRatio.width / this.config.aspectRatio.height;
+    // Get the maximum x and y, based on the browser dimensions
     let screen = { x: window.innerWidth, y: window.innerHeight };
-    let old = { x: this.screenWidth, y: this.screenHeight };
     if (screen.y * targetRatio < screen.x) {
       // vertical is constraining
       this.screenHeight = screen.y;
       this.screenWidth = screen.y * targetRatio;
     } else {
+      // Horizontal is constraining
       this.screenWidth = screen.x;
       this.screenHeight = screen.x / targetRatio;
     }
-    this.pixelMeterRatio *= this.screenWidth / old.x;
-    // NB: the ratio above is also the font scaling ratio
-    this.fontScaling = this.screenWidth / old.x;
+    // Compute the pixel/meter ratio and the font scaling ratio.
+    // NB: A font scale of 1 corresponds to a 100 pixel/meter ratio
+    this.pixelMeterRatio = this.screenWidth / this.config.aspectRatio.width;
+    this.fontScaling = this.pixelMeterRatio / PPM4UF;
   }
 
   /** Close the window to exit the game */
@@ -322,14 +324,23 @@ export class Stage {
 /**
  * Start a game
  *
- * @param domId   The name of the DIV into which the game should be placed
- * @param config  The game configuration object
- * @param builder A function for building the first visible level of the game
- * @param platform  Platform-specific features.  Defaults to HTML5
+ * NB:  The `beforeBegin` method is only used when generating tutorials, and
+ *      `platform` is only used when deploying to mobile or desktop.  If you
+ *      need to use `platform`, then you can provide `()=>{}` as the beforeBegin
+ *      function.
+ *
+ * @param domId       The name of the DIV into which the game should be placed
+ * @param config      The game configuration object
+ * @param builder     A function for building the first visible level of the
+ *                    game
+ * @param beforeBegin A function to run before the builder runs.  This is used
+ *                    by the tutorial system, and should be ()=>{} otherwise.
+ * @param platform    Platform-specific features.  Defaults to HTML5
  */
-export function initializeAndLaunch(domId: string, config: JetLagGameConfig, builder: (level: number) => void, platform?: PlatformService) {
-  if (!platform) platform = new HtmlPlatformService();
+export function initializeAndLaunch(domId: string, config: JetLagGameConfig, builder: (level: number) => void, beforeBegin: () => void = () => { }, platform: PlatformService = new HtmlPlatformService()) {
   stage = new Stage(config, domId, builder, platform);
+  beforeBegin();
+  stage.begin();
 }
 
 /** A global reference to the Stage, suitable for use throughout JetLag */

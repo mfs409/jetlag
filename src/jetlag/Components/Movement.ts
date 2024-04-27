@@ -573,8 +573,8 @@ export class ManualMovement {
   /** Indicate that this actor should rotate based on its direction of movement */
   private rotateByMovement() {
     if (!this.rigidBody) return;
-    let x = -this.rigidBody.body.GetLinearVelocity().x ?? 0;
-    let y = -this.rigidBody.body.GetLinearVelocity().y ?? 0;
+    let x = -this.rigidBody.body.GetLinearVelocity().x;
+    let y = -this.rigidBody.body.GetLinearVelocity().y;
     let angle = Math.atan2(y, x) + Math.atan2(-1, 0);
     let transform = new b2Transform();
     transform.SetPositionAngle(this.rigidBody.body.GetPosition(), angle);

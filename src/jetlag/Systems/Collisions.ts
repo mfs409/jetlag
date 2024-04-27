@@ -1,4 +1,4 @@
-import { b2AABB, b2Contact, b2ContactImpulse, b2ContactListener, b2DistanceJoint, b2DistanceJointDef, b2Fixture, b2Manifold, b2Vec2, b2World, b2WorldManifold } from "@box2d/core";
+import { b2AABB, b2Contact, b2ContactImpulse, b2DistanceJoint, b2DistanceJointDef, b2Fixture, b2Manifold, b2Vec2, b2World, b2WorldManifold } from "@box2d/core";
 import { Actor } from "../Entities/Actor";
 import { Scene } from "../Entities/Scene";
 import { Sides } from "../Config";
@@ -78,6 +78,160 @@ export class BasicCollisionSystem {
 }
 
 /**
+ * ContactListener wraps up all of the functions that Box2D needs in order to
+ * run custom code on a collision event.  Strictly speaking, it is supposed to
+ * extend the b2ContactListener type, but b2ContactListener doesn't have any
+ * default implementations (meaning it ought to be an interface), and using a
+ * flat class hierarchy works slightly better for the way we build tutorials, so
+ * we omit the `extends` clause.
+ */
+class ContactListener {
+  /**
+   * Create a contact listener by saving the scene and collision system
+   */
+  constructor(private scene: Scene, private collisionSystem: AdvancedCollisionSystem) { /*super();*/ }
+
+  /**
+   * Figure out what to do when two bodies start to collide
+   *
+   * @param contact A description of the contact event
+   */
+  public BeginContact(contact: b2Contact) {
+    // Get the bodies, make sure both are actors
+    let a = contact.GetFixtureA().GetBody().GetUserData();
+    let b = contact.GetFixtureB().GetBody().GetUserData();
+    if (!(a instanceof Actor) || !(b instanceof Actor)) return;
+
+    // The world is in mid-render, so we can't really change anything, so
+    // defer handling the event until after the next render.
+    this.scene.oneTimeEvents.push(() => {
+      // NB: if `a` handles the collision, don't ask `b` to handle it
+      if (!a.role?.onCollide(b)) b.role?.onCollide(a);
+    });
+  }
+
+  /**
+   * Figure out what to do when two bodies stop being in contact with each
+   * other
+   *
+   * @param contact A description of the contact event
+   */
+  public EndContact(contact: b2Contact) {
+    // Get the bodies, make sure both are actors
+    let a = contact.GetFixtureA().GetBody().GetUserData();
+    let b = contact.GetFixtureB().GetBody().GetUserData();
+    if (!(a instanceof Actor) || !(b instanceof Actor)) return;
+
+    // If this pair is in the array, splice it out and run the array entry
+    for (let ch of this.collisionSystem.endContactHandlers)
+      if ((ch.actor1 == a && ch.actor2 == b) || (ch.actor1 == b && ch.actor2 == a)) {
+        let i = this.collisionSystem.endContactHandlers.indexOf(ch);
+        this.collisionSystem.endContactHandlers.splice(i, 1);
+        // The world is in mid-render, so we can't really change anything, so
+        // defer handling the event until after the next render.
+        this.scene.oneTimeEvents.push(() => {
+          ch.callback(ch.actor1, ch.actor2);
+        });
+      }
+  }
+
+  /**
+   * Before handling a collision, PreSolve runs.  We can use it to disable
+   * certain contacts
+   *
+   * @param contact     A description of the contact event
+   * @param oldManifold The manifold from the previous world step
+   */
+  public PreSolve(contact: b2Contact, _oldManifold: b2Manifold) {
+    // get the bodies, make sure both are actors
+    let a = contact.GetFixtureA().GetBody().GetUserData();
+    let b = contact.GetFixtureB().GetBody().GetUserData();
+    if (!(a instanceof Actor) || !(b instanceof Actor) || !a.rigidBody || !b.rigidBody) return;
+    let ab = a.rigidBody, bb = b.rigidBody;
+
+    // is either one-sided?
+    let oneSided: Actor | undefined = undefined;
+    let other: Actor | undefined = undefined;
+    if (ab.singleRigidSide != undefined) {
+      oneSided = a; other = b;
+    } else if (bb.singleRigidSide != undefined) {
+      oneSided = b; other = a;
+    }
+    // Should we disable a one-sided collision?
+    if (oneSided && other && !oneSided.rigidBody!.stickyDistJoint && !other.rigidBody!.stickyDistJoint) {
+      if (true) {
+        let ot = oneSided.rigidBody.getCenter().y - oneSided.rigidBody.h / 2;
+        let ob = oneSided.rigidBody.getCenter().y + oneSided.rigidBody.h / 2;
+        let ol = oneSided.rigidBody.getCenter().x - oneSided.rigidBody.w / 2;
+        let or = oneSided.rigidBody.getCenter().x + oneSided.rigidBody.w / 2;
+        let ct = other.rigidBody.getCenter().y - other.rigidBody.h / 2;
+        let cb = other.rigidBody.getCenter().y + other.rigidBody.h / 2;
+        let cl = other.rigidBody.getCenter().x - other.rigidBody.w / 2;
+        let cr = other.rigidBody.getCenter().x + other.rigidBody.w / 2;
+        let vx = other.rigidBody.getVelocity().x;
+        let vy = other.rigidBody.getVelocity().y;
+        if (oneSided.rigidBody!.singleRigidSide == Sides.TOP && cb >= ot && vy <= 0) contact.SetEnabled(false);
+        else if (oneSided.rigidBody!.singleRigidSide == Sides.LEFT && cr >= ol && vx <= 0) contact.SetEnabled(false);
+        else if (oneSided.rigidBody!.singleRigidSide == Sides.RIGHT && cl <= or && vx >= 0) contact.SetEnabled(false);
+        else if (oneSided.rigidBody!.singleRigidSide == Sides.BOTTOM && ct <= ob && vy >= 0) contact.SetEnabled(false);
+
+      }
+    }
+
+    // If at least one entity is sticky, then see about making them stick
+    if (ab.stickySides.length > 0) {
+      this.collisionSystem.handleSticky(a, b, contact);
+      return;
+    } else if (bb.stickySides.length > 0) {
+      this.collisionSystem.handleSticky(b, a, contact);
+      return;
+    }
+
+    // if the entities have a matching passthrough ID
+    //
+    // TODO: is there a more efficient option than this n^2 code?
+    if (ab.passThroughId && bb.passThroughId) {
+      for (let i1 of ab.passThroughId) {
+        for (let i2 of bb.passThroughId) {
+          if (i1 == i2) {
+            contact.SetEnabled(false);
+            return;
+          }
+        }
+      }
+    }
+
+    // if the entities have a special exemption to keep them from
+    // interacting, then disable the contact
+    let exA = a.role?.collisionRules;
+    let exB = b.role?.collisionRules;
+    if (exA && exB) {
+      for (let a of exA.ignores)
+        for (let b of exB.properties)
+          if (a == b) {
+            contact.SetEnabled(false);
+            return;
+          }
+      for (let b of exB.ignores)
+        for (let a of exA.properties)
+          if (b == a) {
+            contact.SetEnabled(false);
+            return;
+          }
+    }
+    // If we get here, it's a real collision
+  }
+
+  /**
+   * This runs after handling the collision.  Right now we don't use it.
+   *
+   * @param contact A description of the contact event
+   * @param impulse The impulse of the contact
+   */
+  public PostSolve(_contact: b2Contact, _impulse: b2ContactImpulse) { }
+}
+
+/**
  * AdvancedCollisionSystem is a physics system that provides the ability to run
  * code in response to collisions.
  */
@@ -90,7 +244,7 @@ export class AdvancedCollisionSystem extends BasicCollisionSystem {
    *      with O(n) search overhead.  The assumption is that the array will be
    *      small.  If that changes, then this will need to be redesigned.
    */
-  private endContactHandlers: { actor1: Actor, actor2: Actor, callback: (a: Actor, b: Actor) => void }[] = [];
+  public endContactHandlers: { actor1: Actor, actor2: Actor, callback: (a: Actor, b: Actor) => void }[] = [];
 
   /** Provide a scene, so we can route collision events to it */
   public setScene(scene: Scene) {
@@ -112,153 +266,7 @@ export class AdvancedCollisionSystem extends BasicCollisionSystem {
 
   /** Configure collision handling for the current level */
   private configureCollisionHandlers(scene: Scene) {
-    this.world.SetContactListener(
-      new (class myContactListener extends b2ContactListener {
-        /** 
-         * Create a contact listener by saving the scene and collision system
-         */
-        constructor(private scene: Scene, private collisionSystem: AdvancedCollisionSystem) { super(); }
-
-        /**
-         * Figure out what to do when two bodies start to collide
-         *
-         * @param contact A description of the contact event
-         */
-        public BeginContact(contact: b2Contact) {
-          // Get the bodies, make sure both are actors
-          let a = contact.GetFixtureA().GetBody().GetUserData();
-          let b = contact.GetFixtureB().GetBody().GetUserData();
-          if (!(a instanceof Actor) || !(b instanceof Actor)) return;
-
-          // The world is in mid-render, so we can't really change anything, so
-          // defer handling the event until after the next render.
-          this.scene.oneTimeEvents.push(() => {
-            // NB: if `a` handles the collision, don't ask `b` to handle it
-            if (!a.role?.onCollide(b, contact)) b.role?.onCollide(a, contact);
-          });
-        }
-
-        /**
-         * Figure out what to do when two bodies stop being in contact with each
-         * other
-         *
-         * @param contact A description of the contact event
-         */
-        public EndContact(contact: b2Contact) {
-          // Get the bodies, make sure both are actors
-          let a = contact.GetFixtureA().GetBody().GetUserData();
-          let b = contact.GetFixtureB().GetBody().GetUserData();
-          if (!(a instanceof Actor) || !(b instanceof Actor)) return;
-
-          // If this pair is in the array, splice it out and run the array entry
-          for (let ch of this.collisionSystem.endContactHandlers)
-            if ((ch.actor1 == a && ch.actor2 == b) || (ch.actor1 == b && ch.actor2 == a)) {
-              let i = this.collisionSystem.endContactHandlers.indexOf(ch);
-              this.collisionSystem.endContactHandlers.splice(i, 1);
-              // The world is in mid-render, so we can't really change anything, so
-              // defer handling the event until after the next render.
-              this.scene.oneTimeEvents.push(() => {
-                ch.callback(ch.actor1, ch.actor2);
-              });
-            }
-        }
-
-        /**
-         * Before handling a collision, PreSolve runs.  We can use it to disable
-         * certain contacts
-         *
-         * @param contact     A description of the contact event
-         * @param oldManifold The manifold from the previous world step
-         */
-        public PreSolve(contact: b2Contact, _oldManifold: b2Manifold) {
-          // get the bodies, make sure both are actors
-          let a = contact.GetFixtureA().GetBody().GetUserData();
-          let b = contact.GetFixtureB().GetBody().GetUserData();
-          if (!(a instanceof Actor) || !(b instanceof Actor) || !a.rigidBody || !b.rigidBody) return;
-          let ab = a.rigidBody, bb = b.rigidBody;
-
-          // is either one-sided?
-          let oneSided: Actor | undefined = undefined;
-          let other: Actor | undefined = undefined;
-          if (ab.singleRigidSide != undefined) {
-            oneSided = a; other = b;
-          } else if (bb.singleRigidSide != undefined) {
-            oneSided = b; other = a;
-          }
-          // Should we disable a one-sided collision?
-          if (oneSided && other && !oneSided.rigidBody!.stickyDistJoint && !other.rigidBody!.stickyDistJoint) {
-            if (true) {
-              let ot = oneSided.rigidBody.getCenter().y - oneSided.rigidBody.h / 2;
-              let ob = oneSided.rigidBody.getCenter().y + oneSided.rigidBody.h / 2;
-              let ol = oneSided.rigidBody.getCenter().x - oneSided.rigidBody.w / 2;
-              let or = oneSided.rigidBody.getCenter().x + oneSided.rigidBody.w / 2;
-              let ct = other.rigidBody.getCenter().y - other.rigidBody.h / 2;
-              let cb = other.rigidBody.getCenter().y + other.rigidBody.h / 2;
-              let cl = other.rigidBody.getCenter().x - other.rigidBody.w / 2;
-              let cr = other.rigidBody.getCenter().x + other.rigidBody.w / 2;
-              let vx = other.rigidBody.getVelocity().x;
-              let vy = other.rigidBody.getVelocity().y;
-              if (oneSided.rigidBody!.singleRigidSide == Sides.TOP && cb >= ot && vy <= 0) contact.SetEnabled(false);
-              else if (oneSided.rigidBody!.singleRigidSide == Sides.LEFT && cr >= ol && vx <= 0) contact.SetEnabled(false);
-              else if (oneSided.rigidBody!.singleRigidSide == Sides.RIGHT && cl <= or && vx >= 0) contact.SetEnabled(false);
-              else if (oneSided.rigidBody!.singleRigidSide == Sides.BOTTOM && ct <= ob && vy >= 0) contact.SetEnabled(false);
-
-            }
-          }
-
-          // If at least one entity is sticky, then see about making them stick
-          if (ab.stickySides.length > 0) {
-            this.collisionSystem.handleSticky(a, b, contact);
-            return;
-          } else if (bb.stickySides.length > 0) {
-            this.collisionSystem.handleSticky(b, a, contact);
-            return;
-          }
-
-          // if the entities have a matching passthrough ID
-          //
-          // TODO: is there a more efficient option than this n^2 code?
-          if (ab.passThroughId && bb.passThroughId) {
-            for (let i1 of ab.passThroughId) {
-              for (let i2 of bb.passThroughId) {
-                if (i1 == i2) {
-                  contact.SetEnabled(false);
-                  return;
-                }
-              }
-            }
-          }
-
-          // if the entities have a special exemption to keep them from
-          // interacting, then disable the contact
-          let exA = a.role?.collisionRules;
-          let exB = b.role?.collisionRules;
-          if (exA && exB) {
-            for (let a of exA.ignores)
-              for (let b of exB.properties)
-                if (a == b) {
-                  contact.SetEnabled(false);
-                  return;
-                }
-            for (let b of exB.ignores)
-              for (let a of exA.properties)
-                if (b == a) {
-                  contact.SetEnabled(false);
-                  return;
-                }
-          }
-          // If we get here, it's a real collision
-        }
-
-        /**
-         * This runs after handling the collision.  Right now we don't use it.
-         *
-         * @param contact A description of the contact event
-         * @param impulse The impulse of the contact
-         */
-        public PostSolve(_contact: b2Contact, _impulse: b2ContactImpulse) { }
-      })(scene, this)
-    );
+    this.world.SetContactListener(new ContactListener(scene, this));
   }
 
   /**
@@ -268,7 +276,7 @@ export class AdvancedCollisionSystem extends BasicCollisionSystem {
    * @param other   The other actor
    * @param contact A description of the contact event
    */
-  private handleSticky(sticky: Actor, other: Actor, contact: b2Contact) {
+  public handleSticky(sticky: Actor, other: Actor, contact: b2Contact) {
     // don't create a joint if we've already got one
     if (other.rigidBody?.stickyDistJoint) return;
     // don't create a joint if we're supposed to wait

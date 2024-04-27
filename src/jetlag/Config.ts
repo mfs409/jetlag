@@ -178,29 +178,28 @@ export interface PhysicsCfg {
  * makes one of these to tell JetLag how to run their game.
  */
 export interface JetLagGameConfig {
-  /** How many pixels are equivalent to a meter in the game? */
-  readonly pixelMeterRatio: number;
-  /** The default game screen width, in pixels */
-  readonly screenDimensions: { width: number, height: number };
-  /** Should we adapt the game size based on the size of the browser window? */
-  readonly adaptToScreenSize: boolean;
-  /** Should the phone vibrate on certain events? */
-  // TODO: remove this... it's part of the platform, and nothing auto-vibrates
-  readonly canVibrate: boolean;
+  /**
+   * The width and height of the game, in meters.  Common values are 16/9
+   * (landscape) and 9/16 (portrait)
+   */
+  readonly aspectRatio: { width: number, height: number };
   /** Should JetLag print an outline around each actor in the game? */
   readonly hitBoxes: boolean;
+  /** Configuration of any assets used by the game */
+  readonly resources?: {
+    /** The prefix for all resources */
+    readonly prefix: string,
+    /** The list of image files that can be used by the game */
+    readonly imageNames?: string[];
+    /** The list of audio files that can be used as sound effects by the game */
+    readonly soundNames?: string[];
+    /** The list of audio files that can be used as (looping) background music */
+    readonly musicNames?: string[];
+    /** The list of video files that can be used for cut scenes */
+    readonly videoNames?: string[];
+  };
   /** Key for accessing persistent storage */
-  readonly storageKey: string;
-  /** The list of image files that can be used by the game */
-  readonly imageNames: string[];
-  /** The list of audio files that can be used as sound effects by the game */
-  readonly soundNames: string[];
-  /** The list of audio files that can be used as (looping) background music */
-  readonly musicNames: string[];
-  /** The list of video files that can be used for cut scenes */
-  readonly videoNames?: string[];
-  /** The prefix for all resources */
-  readonly resourcePrefix: string;
+  readonly storageKey?: string;
   /** Accelerometer mode (customize for each device target and orientation) */
-  readonly accelerometerMode: AccelerometerMode;
+  readonly accelerometerMode?: AccelerometerMode;
 }

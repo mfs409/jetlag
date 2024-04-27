@@ -40,10 +40,12 @@ export class AudioLibraryService {
    * @param config The game-wide configuration
    */
   constructor(config: JetLagGameConfig) {
-    for (let name of config.soundNames!)
-      this.sounds[name] = new Howl({ src: [config.resourcePrefix + name] });
-    for (let name of config.musicNames!)
-      this.music[name] = new Howl({ src: [config.resourcePrefix + name], loop: true });
+    if (!config.resources)
+      return;
+    for (let name of config.resources.soundNames ?? [])
+      this.sounds[name] = new Howl({ src: [config.resources.prefix + name] });
+    for (let name of config.resources.musicNames ?? [])
+      this.music[name] = new Howl({ src: [config.resources.prefix + name], loop: true });
   }
 
   /**

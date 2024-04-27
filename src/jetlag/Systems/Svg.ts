@@ -80,7 +80,9 @@ export class SvgSystem {
     // send the request.  On completion, we'll be in onFileLoaded
     let xhr = new XMLHttpRequest();
     xhr.addEventListener("load", (aa: ProgressEvent) => svg.onFileLoaded(aa));
-    xhr.open("GET", stage.config.resourcePrefix + file, true);
+    if (!stage.config.resources)
+      throw "Error: to use SVG resources, you must provide a 'resources' field in your game's configuration";
+    xhr.open("GET", stage.config.resources.prefix + file, true);
     xhr.send();
   }
 
@@ -258,10 +260,10 @@ export class SvgSystem {
     y2 -= this.top_left!.y;
 
     // convert the coordinates to meters
-    x1 /= stage.config.pixelMeterRatio;
-    y1 /= stage.config.pixelMeterRatio;
-    x2 /= stage.config.pixelMeterRatio;
-    y2 /= stage.config.pixelMeterRatio;
+    x1 /= stage.pixelMeterRatio;
+    y1 /= stage.pixelMeterRatio;
+    x2 /= stage.pixelMeterRatio;
+    y2 /= stage.pixelMeterRatio;
 
     // add in the user transform in meters and draw it
     x1 += this.translate.x;

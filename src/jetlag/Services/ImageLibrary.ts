@@ -89,35 +89,49 @@ export class ImageLibraryService {
    * @param callback The code to run once all assets are loaded
    */
   loadAssets(callback: () => void) {
+    // If there are no assets, run the callback immediately
+    if (!this.config.resources) {
+      callback();
+      return;
+    }
+
     // Fetch all of the videos first
     //
     // TODO:  Video fetching has an asynchronous aspect to it.  We are currently
     //        calling `load()` and ignoring the timing of the callback.  For
     //        lots of large video assets, this could mean that a cut scene would
     //        be requested before it was available.
-    if (this.config.videoNames) {
-      for (let vidName of this.config.videoNames) {
-        const res = new VideoResource(this.config.resourcePrefix + "/" + vidName, { autoPlay: false });
+    if (this.config.resources.videoNames) {
+      for (let vidName of this.config.resources.videoNames) {
+        const res = new VideoResource(this.config.resources.prefix + "/" + vidName, { autoPlay: false });
         res.load().then(x => x.source.autoplay = false)
         this.vidTextures.set(vidName, res);
       }
     }
+
     // Next load all of the image assets, using the PIXI Assets infrastructure.
     // When they're all loaded, invoke the callback.
-    Assets.load(this.config.imageNames).then((textures) => {
-      for (let imgName of this.config.imageNames) {
-        // If we loaded a sprite sheet, then we need to deconstruct it to get
-        // all its image names.  Otherwise it's easy...
-        if (imgName.match(".json") != null) {
-          for (let o of Object.keys(textures[imgName].textures))
-            this.imgTextures.set(o, textures[imgName].textures[o]);
+    //
+    // If there are no images to load, just run the callback immediately
+    if (this.config.resources.imageNames) {
+      Assets.load(this.config.resources.imageNames).then((textures) => {
+        for (let imgName of this.config.resources!.imageNames!) {
+          // If we loaded a sprite sheet, then we need to deconstruct it to get
+          // all its image names.  Otherwise it's easy...
+          if (imgName.match(".json") != null) {
+            for (let o of Object.keys(textures[imgName].textures))
+              this.imgTextures.set(o, textures[imgName].textures[o]);
+          }
+          else {
+            this.imgTextures.set(imgName, textures[imgName]);
+          }
         }
-        else {
-          this.imgTextures.set(imgName, textures[imgName]);
-        }
-      }
+        callback();
+      });
+    }
+    else {
       callback();
-    })
+    }
   }
 
   /**
@@ -126,9 +140,11 @@ export class ImageLibraryService {
    * @param config The game-wide configuration
    */
   constructor(private config: JetLagGameConfig) {
+    if (!config.resources)
+      return;
     // Set the names of the graphics assets, but don't load them yet.
-    for (let imgName of config.imageNames!)
-      Assets.add({ alias: imgName, src: config.resourcePrefix + imgName });
+    for (let imgName of config.resources.imageNames ?? [])
+      Assets.add({ alias: imgName, src: config.resources.prefix + imgName });
   }
 
   /**
