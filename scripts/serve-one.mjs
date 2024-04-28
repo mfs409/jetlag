@@ -15,34 +15,41 @@ import { DEV_OUTPUT_FOLDER, run_dev_server } from './common.mjs';
 // *this file*, which is assumed to be in the `scripts/` subfolder of the root).
 const root_folder = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-// Compute the source and destination folders
-const src_folder = path.join(root_folder, "src", "tutorials");
-const dest_folder = path.join(root_folder, DEV_OUTPUT_FOLDER);
+// Query the environment to figure out which of the games/tutorials to build.
+// If none is provided, default to the demo game.
+const chapter = process.env.CHAPTER;
+if (!chapter) {
+    throw "You must define the CHAPTER environment variable";
+}
 
 // Query the environment to figure out which of the games/tutorials to build.
 // If none is provided, default to the demo game.
-const target = process.env.TUT;
-if (!target) {
-    throw "You must define the TUT environment variable";
+const name = process.env.NAME;
+if (!name) {
+    throw "You must define the NAME environment variable";
 }
-console.log(`Launching a development server for ${target}`);
+
+// Compute the source and destination folders
+const src_folder = path.join(root_folder, "src", chapter);
+const dest_folder = path.join(root_folder, DEV_OUTPUT_FOLDER);
 
 // Figure out paths to the tutorial's main `ts` file, its `html` file, and its
 // `assets` folder
 const src = {
     folder: src_folder,
-    html: path.join(src_folder, `${target}.html`),
-    ts: path.join(src_folder, `${target}.ts`),
-    assets: path.join(root_folder, "tut_assets"),
+    html: path.join(src_folder, `${name}.html`),
+    ts: path.join(src_folder, `${name}.ts`),
+    assets: path.join(root_folder, "src/assets"),
 }
 
 // Figure out the paths where everything is going to be put
 const dest = {
     folder: dest_folder,
     html: path.join(dest_folder, "index.html"),
-    js: path.join(dest_folder, `${target}.js`),
+    js: path.join(dest_folder, `${name}.js`),
     assets: path.join(dest_folder, "assets"),
 }
 
 // Launch the development server
+console.log(`Launching a development server for ${chapter}/${name}`);
 run_dev_server(src, dest);

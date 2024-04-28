@@ -1,0 +1,20 @@
+[book]
+authors = ["Michael Spear"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Game Development with JetLag"
+[output.html]
+additional-css = ["./jetlag.css", "./mdbook-admonish.css"]
+additional-js = ["./mermaid.min.js", "./mermaid-init.js"]
+print.enable = false
+
+[preprocessor.katex]
+after = ["links"]
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[preprocessor.admonish]
+command = "mdbook-admonish"
+assets_version = "3.0.2"

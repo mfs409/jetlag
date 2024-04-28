@@ -4,3 +4,5 @@ check/
 dev-serve/
 tut-dist/
 src/jetlag
+src/jetlag.ts
+book/

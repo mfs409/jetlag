@@ -10,17 +10,6 @@ import esbuildServe from 'esbuild-serve';
  */
 export const DEV_OUTPUT_FOLDER = "dev-serve";
 
-/**
- * The folder where we put build files when preparing tutorials for distribution
- */
-export const TUT_DIST_FOLDER = "tut-dist";
-
-/**
- * The folder where we put build files when making a single game for
- * distribution
- */
-export const GAME_DIST_FOLDER = "dist";
-
 /** The folder where `npm run check` will put its outputs */
 export const TYPE_CHECK_FOLDER = "check";
 
@@ -72,34 +61,4 @@ export function run_dev_server(src, dest) {
     .on('change', rebuild)
     .on('unlink', rebuild)
     .on('error', function (error) { console.error('Unexpected error:', error); })
-}
-
-/**
- * Build and bundle (production mode) the game specified by the `src`
- * parameters, placing it into the folder specified by the `dest` parameter.
- *
- * @param src   The source folder, html file, ts file, and asset folder paths
- * @param dest  The destination folder, html file, js file, and asset folder
- *              paths
- */
-export function production_builder(src, dest) {
-  // Try to make the destination folder.  Don't erase it first, since we
-  // sometimes build several things into one place
-  fs.mkdirSync(dest.folder, { recursive: true });
-
-  // Copy the html file and the assets folder
-  //
-  // NB:  This will try to overwrite the assets folder, which is OK
-  fs.copyFileSync(src.html, dest.html);
-  fs.cpSync(src.assets, dest.assets, { recursive: true });
-
-  // Build the game into the destination folder
-  esbuildServe({
-    logLevel: "info",
-    entryPoints: [src.ts],
-    bundle: true,
-    outfile: dest.js,
-    minify: true,
-    sourcemap: false,
-  });
 }

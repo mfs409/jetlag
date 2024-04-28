@@ -18,10 +18,10 @@
     "skipLibCheck": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/jetlag"
   ],
   "include": [
-    "src/tutorials/*",
-    "src/viewer/*",
+    "src/*/*.ts",
   ]
 }
