@@ -25,6 +25,13 @@ import { HtmlPlatformService, PlatformService } from "./Services/Platform";
 const PPM4UF = 75;
 
 /**
+ * PPM4SVG: Pixels per Meter for SVG.  This is an empirically derived value that
+ * represents the pixel-per-meter ratio at which SVG files do not require
+ * scaling.
+ */
+const PPM4SVG = 75;
+
+/**
  * Stage is the container for all of the functionality for the playable portion
  * of a game.  Stage has several components:
  * - The world, where all the action of the game happens
@@ -91,6 +98,11 @@ export class Stage {
   screenHeight = 0;
   /** The pixel-meter ratio (dummy value... gets computed early) */
   pixelMeterRatio = 0;
+  /**
+   * The scaling ratio for SVG coords.  This is relative to the PPM4SVG
+   * constant, defined above
+   */
+  svgScaling = 1;
   /** Code to run at the end of the next render step (used for screenshots) */
   private afterRender?: () => void;
 
@@ -311,6 +323,7 @@ export class Stage {
     // NB: A font scale of 1 corresponds to a 100 pixel/meter ratio
     this.pixelMeterRatio = this.screenWidth / this.config.aspectRatio.width;
     this.fontScaling = this.pixelMeterRatio / PPM4UF;
+    this.svgScaling = this.pixelMeterRatio / PPM4SVG;
   }
 
   /** Close the window to exit the game */

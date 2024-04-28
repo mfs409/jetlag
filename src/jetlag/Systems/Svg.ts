@@ -259,7 +259,12 @@ export class SvgSystem {
     y1 -= this.top_left!.y;
     y2 -= this.top_left!.y;
 
-    // convert the coordinates to meters
+    // convert the coordinates to meters.  Be sure to scale according to the
+    // screen scaling factor.
+    x1 *= stage.svgScaling;
+    y1 *= stage.svgScaling
+    x2 *= stage.svgScaling
+    y2 *= stage.svgScaling
     x1 /= stage.pixelMeterRatio;
     y1 /= stage.pixelMeterRatio;
     x2 /= stage.pixelMeterRatio;
