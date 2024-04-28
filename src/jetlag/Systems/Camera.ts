@@ -221,12 +221,12 @@ export class CameraSystem {
     // w and h are the visible world's width and height in pixels
     if (this.maxX != undefined && this.minX != undefined) {
       let w = this.ratio * (this.maxX - this.minX);
-      if (w < this.screenDims.x) stage.console.log("Warning, the visible game area is less than the screen width");
+      if (Math.round(w) < Math.round(this.screenDims.x)) stage.console.log("Warning, the visible game area is less than the screen width");
     }
 
     if (this.maxY != undefined && this.minY != undefined) {
       let h = this.ratio * (this.maxY - this.minY);
-      if (h < this.screenDims.y) stage.console.log("Warning, the visible game area is less than the screen height");
+      if (Math.round(h) < Math.round(this.screenDims.y)) stage.console.log("Warning, the visible game area is less than the screen height");
     }
   }
 
