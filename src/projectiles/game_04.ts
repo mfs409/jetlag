@@ -50,7 +50,7 @@ function builder(level: number) {
   }
 
   // Now let's cover the HUD with a button for shooting these "laser beams".
-  // This will have the same "toggle" feeling from the Gesture tutorial.  But
+  // This will have the same "toggle" feeling from the Gesture chapter.  But
   // we'll use gestures to figure out *where* to toss the projectile, and a
   // timer to limit the rate at which they are tossed.
   let v = new b2Vec2(0, 0);

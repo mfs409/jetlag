@@ -6,17 +6,35 @@ In Box2D, a rigid body can have one of three different types.
 - Kinematic bodies can move, but are not subject to forces
 - Dynamic bodies can move, and are subject to forces
 
-We're going start our exploration of this idea through the following game:
+We're going to build the following game to start understanding what these different types mean.  Be sure to try to cause the green ball to collide with each purple ball:
 
 <iframe src="./game_01.iframe.html"></iframe>
+
+Before we begin, you'll need to download two image files and put them in your
+`assets` folder:
+
+- [green_ball.png](rigidbody/green_ball.png)
+- [purple_ball.png](rigidbody/purple_ball.png)
+
+Once that's set, set up an empty game ([game.ts](../empty/game.ts)) and then update your `Config` object by
+adding these lines:
+
+```typescript
+{{#include game_01.ts:12:15}}
+```
+
+In addition, since this mini-game will use the `enableTilt` and `boundingBox`
+functions from our `common.ts` file, we need to add this line up at the top,
+along with the other import statement:
+
+```typescript
+{{#include game_01.ts:2}}
+```
 
 In builder, we'll start by turning on Tilt and drawing a bounding box:
 
 ```typescript
-    // We will use tilt to control the hero, with arrow keys simulating
-    // tilt on devices that lack an accelerometer
-    enableTilt(10, 10);
-    boundingBox();
+{{#include game_01.ts:33:36}}
 ```
 
 Next, let's make an actor who moves via Tilt.  Note that attaching a
@@ -25,46 +43,28 @@ Actually, attaching a `Hero` component also automatically transforms the body to
 be dynamic.  So this hero is **definitely** dynamic.
 
 ```typescript
-    // The actor who can move
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2, cy: 3, radius: 0.4 }),
-      movement: new TiltMovement(), // This makes it dynamic
-      role: new Hero(),
-    });
+{{#include game_01.ts:38:44}}
 ```
 
 Next, we'll draw three obstacles.  Obstacles default to being static, but we'll
 override that for the second and third obstacle.
 
 ```typescript
-    let s = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "purple_ball.png" }),
-      rigidBody: new CircleBody({ cx: 4, cy: 4, radius: 0.4 }),
-      role: new Obstacle(), // Defaults to static
-    });
-
-    let k = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "purple_ball.png" }),
-      rigidBody: new CircleBody({ cx: 6, cy: 4, radius: 0.4 }, { kinematic: true }),
-      role: new Obstacle(), // The prior line overrides to kinematic
-    });
-
-    let d = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "purple_ball.png" }),
-      rigidBody: new CircleBody({ cx: 8, cy: 4, radius: 0.4 }, { dynamic: true }),
-      role: new Obstacle(), // This one is overridden to be dynamic
-    });
+{{#include game_01.ts:46:62}}
 ```
 
-Right now, the kinematic and static obstacles don't seem to have any difference
-in their behavior.  Let's see what happens when we give each of the obstacles
-some velocity:
+So far, this is what the code should look like:
 
 ```typescript
-    k.rigidBody.body.SetLinearVelocity({ x: 1, y: 0 })
-    d.rigidBody.body.SetLinearVelocity({ x: -1, y: 0 })
-    s.rigidBody.body.SetLinearVelocity({ x: 1, y: 0 })
+{{#include game_01.ts}}
+```
+
+Unfortunately the kinematic and static obstacles don't seem to have any
+difference in their behavior.  Let's see what happens when we give each of the
+obstacles some velocity.  Let's start by rewriting the builder like this:
+
+```typescript
+{{#include game_02.ts:24:57}}
 ```
 
 You'll notice that *a lot* just changed:
@@ -78,34 +78,10 @@ You'll notice that *a lot* just changed:
 Let's add a few more kinematic and static obstacles:
 
 ```typescript
-    let k1 = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "purple_ball.png" }),
-      rigidBody: new CircleBody({ cx: 6, cy: 2, radius: 0.4 }, { kinematic: true }),
-      role: new Obstacle(),
-    });
-    let k2 = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "purple_ball.png" }),
-      rigidBody: new CircleBody({ cx: 8, cy: 2, radius: 0.4 }, { kinematic: true }),
-      role: new Obstacle(),
-    });
-    k1.rigidBody.body.SetLinearVelocity({ x: 1, y: 0 })
-    k2.rigidBody.body.SetLinearVelocity({ x: -1, y: 0 })
-
-    let d1 = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "purple_ball.png" }),
-      rigidBody: new CircleBody({ cx: 6, cy: 6, radius: 0.4 }, { dynamic: true }),
-      role: new Obstacle(),
-    });
-    let d2 = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "purple_ball.png" }),
-      rigidBody: new CircleBody({ cx: 8, cy: 6, radius: 0.4 }, { dynamic: true }),
-      role: new Obstacle(),
-    });
-    d1.rigidBody.body.SetLinearVelocity({ x: 1, y: 0 })
-    d2.rigidBody.body.SetLinearVelocity({ x: -1, y: 0 })
+{{#include game_02.ts:59:88}}
 ```
 
-Here's the complete game:
+Here's the resulting game:
 
 <iframe src="./game_02.iframe.html"></iframe>
 
@@ -114,21 +90,33 @@ and retain their velocity.  The dynamic obstacles experience a transfer of
 momentum, which means they both just stop.  If you made one move faster than the
 other, you'd see a different transfer of momentum.
 
+You might have also noticed some strange behavior on the right side of the
+screen (if not, refresh the page and look carefully).  Physics simulations are
+not perfect!  In this one, we had a kinematic body pushing a dynamic body into
+the wall.  At some point, the calculations for where things needed to be just
+stopped working, and the balls seemed to pass through each other.  It's
+important to pay attention to these kinds of little details, and to come up with
+workarounds when necessary.
+
 The other important issue here is that the dynamic bodies are subject to forces.
 We saw some version of this idea in the way that there was a transfer of
 momentum between static and dynamic bodies, and from kinematic bodies to dynamic
 bodies.  It also explains why the dynamic body bounces off of the static body.
 
-In the last tutorial, we added gravity, which is a force.  Let's add gravity to
-this level, and see what happens.  We just need to add one line:
+At this point, the code should look like [this](game_02.ts):
+
+Finally, in the last chapter, we added gravity, which is a force.  Let's add
+gravity to our original code from this chapter, and see what happens.  We just
+need to add one line:
 
 ```typescript
     // Note: you could have negative gravity, to make things float upward...
     stage.world.setGravity(0, 10);
 ```
 
-Now all of the dynamic bodies start falling, while the static and kinematic ones
-do not!  (To make it a bit clearer, my live demo takes out those extra obstacles
-that we had just added.)
+Now any dynamic bodies will start falling, while the static and kinematic ones
+do not!
 
 <iframe src="./game_03.iframe.html"></iframe>
+
+[Here is the final code](game_03.ts)

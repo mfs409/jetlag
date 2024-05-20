@@ -5,7 +5,7 @@ truth, SVG files can be used for much more than just this, but in 2D games, they
 are often used in a simple way: as a convenient way to represent a complex
 shape.  Part of the reason SVG is so nice is that it represents the shape as
 lines, so as you zoom in or out, there is never any blurring.  This is known as
-a "vector" format, instead of a "pixel" format, like SVG.
+a "vector" format, instead of a "pixel" format, like PNG.
 
 There are some challenges when using SVGs, though.  For one, the SVG format
 allows embedding images, which is not useful to us.  It also has its own notion

@@ -7,12 +7,12 @@ import { enableTilt, boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
 
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json"]
+    imageNames: ["red_ball.png", "green_ball.png"]
   };
 }
 
@@ -22,19 +22,8 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // There's lots more we can explore in the configuration of rigid bodies,
-  // but having some better ways of moving the hero would make it easier for
-  // us to explore them, so let's switch gears and start looking at ways to
-  // move an actor.  We've already seen Tilt, which is nice and
-  // straightforward.  We've also seen "Inert", the default movement policy.
-
-  // A rather uninteresting movement is the "GravityMovement".  This isn't
-  // really a movement at all... it just says that gravity will affect the
-  // actor.  It's not really any different from making the body "dynamic", but
-  // sometimes it's useful.  Let's try it out here.  We'll make "enemies" that
-  // fall from the sky, and the "hero" needs to dodge them.  When enemies
-  // collide with the ground, they'll disappear.  Don't worry if some of this
-  // doesn't make sense yet... we'll explain it all later.
+  // Make "enemies" that fall from the sky, and the "hero" needs to dodge them.
+  // When enemies collide with the ground, they'll disappear.
   enableTilt(10, 0); // Now tilt will only control left/right
   let walls = boundingBox();
   (walls.b.role as Obstacle).enemyCollision = (_thisActor: Actor, enemy: Actor) => {

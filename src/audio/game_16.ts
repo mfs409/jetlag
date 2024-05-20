@@ -7,7 +7,7 @@ import { drawMuteButton } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   // Here's where we name all the images/sounds/background music files.
   resources = {
@@ -16,9 +16,7 @@ class Config implements JetLagGameConfig {
       "flap_flap.ogg", "high_pitch.ogg", "low_pitch.ogg", "lose_sound.ogg",
       "slow_down.ogg", "win_sound.ogg"
     ],
-    imageNames: [
-      "alien.json", "sprites.json", "noise.png", "mid.png", "back.png"
-    ]
+    imageNames: ["sprites.json"]
   };
 }
 

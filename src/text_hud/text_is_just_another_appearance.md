@@ -4,7 +4,7 @@ JetLag uses the "Entity-Component-System" pattern, which means that as much as
 possible, the different components should be interchangeable.  Since
 `appearance` is a component, we should expect that actors with a text appearance
 should only differ from other actors in their `appearance` itself.  Here's a
-mini-game to illustrate this point:
+[demo](game_01.ts) to illustrate this point:
 
 <iframe src="./game_01.iframe.html"></iframe>
 
@@ -15,10 +15,7 @@ rigid body?  Let's look at our first actor, the red "JetLag" text in the top
 left corner:
 
 ```typescript
-    new Actor({
-      rigidBody: new CircleBody({ cx: 1, cy: 1, radius: .01 }),
-      appearance: new TextSprite({ center: true, face: "Arial", size: 22, color: "#FF0000" }, "JetLag")
-    });
+{{#include game_01.ts:28:31}}
 ```
 
 The rigid body is *tiny*, and the text is *centered* on the body.  This is
@@ -43,14 +40,8 @@ lets us control how things stack on top of each other.  The default is 0.  If
 two things have the same Z, the one we made second is the one on top.
 
 ```typescript
-    new Actor({
-      rigidBody: new CircleBody({ cx: 4, cy: 4, radius: .01 }),
-      appearance: new TextSprite({ center: true, face: "Arial", size: 64, color: "#FF0000aa", strokeColor: "#0000FF", strokeWidth: 2 }, "JetLag")
-    });
-    new Actor({
-      rigidBody: new CircleBody({ cx: 4, cy: 4, radius: .5 }),
-      appearance: new ImageSprite({ width: 1, height: 1, z: -1, img: "green_ball.png" })
-    });
+{{#include game_01.ts:36:39}}
+{{#include game_01.ts:46:49}}
 ```
 
 Since every actor has a body, we can make Text move, just like anything else.
@@ -62,10 +53,5 @@ interactive.  Be sure to press `F12` and watch for output in the console to
 convince yourself that only tapping the green box causes the `tap` code to run.
 
 ```typescript
-    new Actor({
-      rigidBody: new BoxBody({ cx: 1, cy: 1, width: .5, height: .5 }),
-      appearance: new TextSprite({ center: true, face: "Arial", size: 64, color: "#FF0000aa", strokeColor: "#0000FF", strokeWidth: 2 }, "Tap Me"),
-      movement: new PathMovement(new Path().to(1, 1).to(15, 1).to(15, 8).to(1, 8).to(1, 1), 4, true),
-      gestures: {tap: ()=> {console.log("Tapped"); return true;}}
-    });
+{{#include game_01.ts:55:60}}
 ```

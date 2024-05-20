@@ -1,6 +1,6 @@
 import { Actor, BoxBody, FilledBox, ImageSprite, MusicComponent, TextSprite, stage } from "../jetlag";
 import { splashBuilder } from "./splash";
-import { gameBuilder } from "./game";
+import { levelBuilder } from "./levels";
 
 /**
  * buildChooserScreen draws the level chooser screens.
@@ -89,7 +89,7 @@ function drawLevelButton(cx: number, cy: number, level: number) {
   new Actor({
     appearance: new ImageSprite({ width: 2, height: 2, img: "level_tile.png" }),
     rigidBody: new BoxBody({ cx, cy, width: 2, height: 2 }),
-    gestures: { tap: () => { stage.switchTo(gameBuilder, level); return true; } }
+    gestures: { tap: () => { stage.switchTo(levelBuilder, level); return true; } }
   });
   // Put some text over it
   new Actor({

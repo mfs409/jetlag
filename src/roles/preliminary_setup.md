@@ -1,19 +1,28 @@
 ## Preliminary Setup
 
-You should start by doing the "Preliminary Setup" section of the "Rigid Bodies"
-tutorial.  This will ensure you have the assets you need, and that the code is
-in a good starting place (e.g., the `builder()` function should be empty).
+The parts of this chapter each start from the same point.  You'll want to
+download these files:
 
-After you've done that, you should put these lines at the top of the `builder()`
-function.  In each of the mini-games, we'll want this common configuration:
+- [sprites.json](../assets/sprites.json)
+- [sprites.png](../assets/sprites.png)
+- [common.ts](./common.ts)
+
+Then you should re-set your game to look like this:
 
 ```typescript
-  // Throughout this tutorial, we'll have levels that can be "won" or "lost".
-  // In all cases, we'll go right back to the same level.
-  stage.score.onLose = { level, builder };
-  stage.score.onWin = { level, builder };
+{{#include ../empty/game.ts}}
+```
 
-  // Every level will use tilt, and every level will have a box around it
-  enableTilt(10, 10);
-  boundingBox();
+Finally, you'll want to put these lines at the top of the `builder()` function.
+They make sure that whenever the level is won or lost, it automatically
+restarts.
+
+```typescript
+{{#include game_01.ts:24:26}}
+```
+
+And lastly, you should set up a bounding box and tilt:
+
+```typescript
+{{#include game_01.ts:28:30}}
 ```

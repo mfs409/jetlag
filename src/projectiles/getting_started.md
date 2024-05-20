@@ -1,11 +1,17 @@
 ## Getting Started
 
-This tutorial requires the `sprites.json` and `sprites.png` files, as well as
-the `boundingBox()` function.  Since some of the examples involve winning and
-losing, you'll probably want to put these two lines at the top of your
-`builder()` function:
+This chapter requires the following supporting code:
+
+- [common.ts](common.ts)
+
+It also needs the following files in the `assets` folder:
+
+- [sprites.json](../assets/sprites.json)
+- [sprites.png](../assets/sprites.png)
+
+ Since some of the examples involve winning and losing, you'll probably want to
+put these two lines at the top of your `builder()` function:
 
 ```typescript
-  stage.score.onLose = { level, builder };
-  stage.score.onWin = { level, builder };
+{{#include game_01.ts:24:25}}
 ```

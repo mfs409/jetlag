@@ -1,8 +1,7 @@
 ## Getting Started
 
-In this tutorial, we will use the "sprites.json" spritesheet.  You'll want to
-make sure you download `sprites.png` and `sprites.json` to your `assets` folder,
-and then add `sprites.json` to `imageNames` in your `Config` object.
+Once again, you'll need the "sprites.json" spritesheet, and "common.ts".  Here they are:
 
-You should also make sure copy the `boundingBox()` and `enableTilt()` functions
-into your `game.ts` file.
+- [sprites.json](../assets/sprites.json)
+- [sprites.png](../assets/sprites.png)
+- [common.ts](common.ts)

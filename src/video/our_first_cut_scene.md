@@ -1,12 +1,11 @@
 ## Our First Cut Scene
 
-To make a cut scene, all we really need is a `VideoSprite`.  Let's say that level 2 is just a cut scene... there's no gameplay, just a video.  It's tempting to just do this:
+To make a cut scene, all we really need is a `VideoSprite`.  Let's say that
+level 2 is just a cut scene... there's no gameplay, just a video.  It's tempting
+to just do this:
 
 ```typescript
-    let a = new Actor({
-      appearance: new VideoSprite({ width: 16, height: 9, vid: "big_buck_bunny.mp4" }),
-      rigidBody: new CircleBody({ cx: 8, cy: 4.5, radius: .005 }),
-    });
+{{#include game.ts:47:50}}
 ```
 
 In fact, this might even work.  When you make a `VideoSprite`, it will try to
@@ -17,15 +16,13 @@ another cut scene, it will still be at the end.  So let's just be very explicit:
 we'll immediately reset the video and make it start playing:
 
 ```typescript
-    (a.appearance[0] as VideoSprite).reset();
-    (a.appearance[0] as VideoSprite).play();
+{{#include game.ts:51:52}}
 ```
 
 At this point, your video will play, but when it reaches the end, nothing
 happens.  "End-of-video-playback" is an event, so we can give JetLag some code
-to run when the video ends.  In this case, we'll just go to the second level:
+to run when the video ends.  In this case, we'll just go to the third level:
 
 ```typescript
-    (a.appearance[0] as VideoSprite).onEnd(() => stage.switchTo(builder, 3));
+{{#include game.ts:53}}
 ```
-

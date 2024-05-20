@@ -1,5 +1,7 @@
 ## Getting Started
 
-This tutorial uses the `enableTilt()` and `boundingBox()` functions.  It also
-uses the `sprites.json`/`sprites.png` sprite sheet.  Please follow the
-instructions from previous tutorials to get these set up and ready to use.
+You will need these files in order to create the games in this chapter:
+
+- [sprites.json](../assets/sprites.json)
+- [sprites.png](../assets/sprites.png)
+- [common.ts](./common.ts)

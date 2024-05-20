@@ -1,4 +1,4 @@
 # Timer Events
 
-This tutorial explores the different kinds of time-based events that JetLag
+This chapter explores the different kinds of time-based events that JetLag
 supports.

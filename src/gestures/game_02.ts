@@ -21,7 +21,7 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // There will be winning and losing in these tutorials, and we'll always want
+  // There will be winning and losing in these chapters, and we'll always want
   // to restart
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };

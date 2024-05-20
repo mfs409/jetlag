@@ -1,17 +1,17 @@
 import { Actor, CircleBody, Hero, ImageSprite, JetLagGameConfig, Obstacle, TiltMovement, initializeAndLaunch } from "../jetlag";
-import { boundingBox, enableTilt, levelController } from "./common";
+import { boundingBox, enableTilt } from "./common";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
  * the assets (images and sounds) used by this game.
  */
 class Config implements JetLagGameConfig {
-  // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+    // Use 16/9 for landscape mode, and 9/16 for portrait mode
+    aspectRatio = { width: 16, height: 9 };
     hitBoxes = true;
     resources = {
         prefix: "./assets/",
-        imageNames: ["sprites.json", "mid.png"]
+        imageNames: ["green_ball.png", "purple_ball.png"]
     };
 }
 
@@ -20,16 +20,10 @@ class Config implements JetLagGameConfig {
  *
  * @param level Which level should be displayed
  */
-function builder(level: number) {
-    // Set up the level controller, so we can easily switch among levels
-    levelController(level, 19, builder);
-
+function builder(_level: number) {
     // Hmm, kinematic and static looked the same!  This time, let's explicitly
     // give things a velocity, and watch what happens
-
-    // Let's have a bounding box
     boundingBox();
-
     enableTilt(10, 10);
 
     // The actor who can move

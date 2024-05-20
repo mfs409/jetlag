@@ -5,15 +5,13 @@ to use the `()=>{}` syntax to effectively keep track of all of the information
 that a level of your game needs.  The "level" storage feature lets you store
 information so that it is "globally accessible" throughout your code.  It gets
 reset each time JetLag calls `builder()`.  You can use different objects for
-different levels, but we'll just have an `LStore`.
+different levels, but in this game, we'll just have a single `LStore`.
 
 Since we know that each time we call `builder()`, the level storage will be
 empty, we can just put these two lines at the top of the builder function:
 
 ```typescript
-    // Set up level storage
-    let lstore = new LStore();
-    stage.storage.setLevel("stats", lstore);
+{{#include game_01.ts:47:49}}
 ```
 
 Now, throughout the `builder()`, we'll be able to use `lstore` directly.  And

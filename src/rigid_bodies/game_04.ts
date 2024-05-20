@@ -1,17 +1,17 @@
 import { Actor, BoxBody, CircleBody, ImageSprite, JetLagGameConfig, Obstacle, PolygonBody, TiltMovement, initializeAndLaunch } from "../jetlag";
-import { boundingBox, enableTilt, levelController } from "./common";
+import { boundingBox, enableTilt } from "./common";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
  * the assets (images and sounds) used by this game.
  */
 class Config implements JetLagGameConfig {
-  // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+    // Use 16/9 for landscape mode, and 9/16 for portrait mode
+    aspectRatio = { width: 16, height: 9 };
     hitBoxes = true;
     resources = {
         prefix: "./assets/",
-        imageNames: ["sprites.json", "mid.png"]
+        imageNames: ["blue_ball.png", "green_ball.png"]
     };
 }
 
@@ -20,16 +20,17 @@ class Config implements JetLagGameConfig {
  *
  * @param level Which level should be displayed
  */
-function builder(level: number) {
-    // Set up the level controller, so we can easily switch among levels
-    levelController(level, 19, builder);
+function builder(_level: number) {
+    // Now let's look at the different body shapes.  Keep in mind that the shape
+    // of the rigidBody is completely unrelated to the appearance.  Focus on the
+    // appearance of the hitbox, not the blue balls.
 
-    // Now let's look at the different kinds of bodies.  Keep in mind that the
-    // shape of the rigidBody is completely unrelated to the appearance.  Focus
-    // on the appearance of the hitbox, not the blue balls.
+    // Turn on tilt and put a box around the world
+    enableTilt(10, 10);
+    boundingBox();
 
     // Also, note that when we make a rigidBody, we can provide some "extra"
-    // configuration.  In this case, we'll make things rotate
+    // configuration.  In this case, we'll make some things rotate
 
     // Circles need a radius.
     new Actor({
@@ -68,10 +69,6 @@ function builder(level: number) {
             { rotationSpeed: .25 }),
         role: new Obstacle(),
     });
-
-    // Turn on tilt and put a box around the world
-    enableTilt(10, 10);
-    boundingBox();
 
     // Let's also draw an obstacle that is oblong (due to its width and height)
     // and that is rotated. Note that this should be a box, or it will not have

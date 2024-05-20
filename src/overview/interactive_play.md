@@ -41,7 +41,7 @@ simulation and change it.  In JetLag, there are three kinds of events:
 - User input: You can provide code to run in response to user gestures, clicks,
   keyboard presses, etc.
 
-In the rest of this tutorial, the terms "script" and "callback" will be used
+In the rest of this book, the terms "script" and "callback" will be used
 interchangeably to refer to the code that you provide, that runs in response to
 events.  The purpose of that code is to change the state of the physics
 simulation.

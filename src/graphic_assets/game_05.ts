@@ -7,18 +7,12 @@ import { boundingBox, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   // Here's where we name all the images/sounds/background music files.
   resources = {
     prefix: "./assets/",
-    soundNames: [
-      "flap_flap.ogg", "high_pitch.ogg", "low_pitch.ogg", "lose_sound.ogg",
-      "slow_down.ogg", "win_sound.ogg"
-    ],
-    imageNames: [
-      "alien.json", "sprites.json", "noise.png", "mid.png", "back.png"
-    ]
+    imageNames: ["sprites.json"]
   };
 }
 
@@ -30,10 +24,6 @@ class Config implements JetLagGameConfig {
 function builder(_level: number) {
   enableTilt(10, 10);
   boundingBox();
-  // Every appearance takes an optional "z" argument.  Z lets us control how
-  // things overlap.  There are 5 Z levels: -2, -1, 0, 1, and 2.  By default,
-  // everything goes in Z=0.  Also, by default, things within a Z index appear
-  // on top of things that were made before them.  Let's try it out.
 
   // This actor will go "under" everything else in Z=0, since it was drawn first
   new Actor({

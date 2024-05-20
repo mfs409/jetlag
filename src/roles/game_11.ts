@@ -1,5 +1,5 @@
 import { Actor, BoxBody, CircleBody, DIRECTION, FilledBox, Hero, ImageSprite, JetLagGameConfig, KeyCodes, Obstacle, TiltMovement, initializeAndLaunch, stage } from "../jetlag";
-import { boundingBox, enableTilt, levelController } from "./common";
+import { boundingBox, enableTilt } from "./common";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
@@ -7,7 +7,7 @@ import { boundingBox, enableTilt, levelController } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,8 +21,7 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // Throughout this tutorial, we'll have levels that can be "won" or "lost".
-  // In all cases, we'll go right back to the same level.
+  // Restart the level when we win or lose
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 
@@ -30,11 +29,8 @@ function builder(level: number) {
   enableTilt(10, 10);
   boundingBox();
 
-  // Set up for quick switching among levels
-  levelController(level, 17, builder);
-
   // We won't explore obstacle-projectile interactions (or projectiles at
-  // all!) in this tutorial.  But there's one more thing about obstacles to
+  // all!) in this chapter.  But there's one more thing about obstacles to
   // discuss.  We can use them to decide when a hero can jump again.
 
   stage.world.setGravity(0, 10);

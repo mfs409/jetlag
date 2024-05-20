@@ -6,11 +6,11 @@ import { Actor, AnimatedSprite, AnimationSequence, AnimationState, BoxBody, Circ
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json", "night_0.png", "night_1.png"]
+    imageNames: ["green_ball.png", "mustard_ball.png", "night_0.png", "night_1.png"]
   };
 }
 
@@ -27,16 +27,6 @@ function builder(level: number) {
   stage.world.setGravity(0, 10);
   stage.world.camera.setBounds(0, undefined, 16, 9);
 
-  // Every level will use tilt to control the hero, with arrow keys simulating
-  // tilt on devices that lack an accelerometer
-  stage.tilt.tiltMax.Set(10, 10);
-  if (!stage.accelerometer.tiltSupported) {
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
-  }
-
   // Make the floor
   new Actor({
     appearance: new FilledBox({ width: 16, height: .1, fillColor: "#ff0000" }),
@@ -44,31 +34,47 @@ function builder(level: number) {
     role: new Obstacle(),
   });
 
-  // Make the sides as enemies, but put them a tad off screen, because
-  // that's a bit more kind
-  new Actor({
-    appearance: new FilledBox({ width: .1, height: 36, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: -1, cy: -9, width: .1, height: 36 }),
-    role: new Enemy(),
-  });
-  new Actor({
-    appearance: new FilledBox({ width: .1, height: 36, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 17, cy: -9, width: .1, height: 36 }),
-    role: new Enemy(),
-  });
-  stage.score.onLose = { level: level, builder: builder }
-  // Note that there's an intentional bug in this code: these enemies don't go
-  // as high as they should.  Can you tell why?
-
-  let h = new Actor({
+  // Set up tilt, with arrow keys simulating tilt on devices that lack an
+  // accelerometer
+  stage.tilt.tiltMax.Set(10, 10);
+  if (!stage.accelerometer.tiltSupported) {
+    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
+    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
+    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
+    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
+  }
+  // Make the hero
+  const h = new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-    rigidBody: new CircleBody({ cx: 0.25, cy: 5.25, radius: 0.4 }, { density: 1, friction: 0.5, disableRotation: true }),
+    rigidBody: new CircleBody({ cx: 1.25, cy: 5.25, radius: 0.4 }, { density: 1, friction: 0.5, disableRotation: true }),
     movement: new TiltMovement(),
     role: new Hero(),
   });
+  // The camera should follow the hero, but it should focus on a spot 2 meters
+  // above the hero
   stage.world.camera.setCameraFocus(h, 0, -2);
+  // Set up the space bar to make the hero jump
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => (h.role as Hero).jump(0, -10));
 
+  // Make the sides as enemies, but put them a tad off screen, because that's a
+  // bit more kind
+  //
+  // Remember that the floor is at 9, and up is negative.  That means we're
+  // going up to about -41, which is a height of 50.  The center of that height
+  // would be -16.
+  new Actor({
+    appearance: new FilledBox({ width: .1, height: 50, fillColor: "#ff0000" }),
+    rigidBody: new BoxBody({ cx: -.5, cy: -16, width: .1, height: 50 }),
+    role: new Enemy(),
+  });
+  new Actor({
+    appearance: new FilledBox({ width: .1, height: 50, fillColor: "#ff0000" }),
+    rigidBody: new BoxBody({ cx: 16.5, cy: -16, width: .1, height: 50 }),
+    role: new Enemy(),
+  });
+  stage.score.onLose = { level: level, builder: builder }
+
+  // Add a destination that is "up high"
   new Actor({
     appearance: new ImageSprite({ width: 1, height: 1, img: "mustard_ball.png" }),
     rigidBody: new CircleBody({ cx: 15, cy: -26, radius: 0.5 }),
@@ -77,7 +83,7 @@ function builder(level: number) {
   stage.score.setVictoryDestination(1);
   stage.score.onWin = { level: level, builder: builder }
 
-  // create a platform that we can jump through from below
+  // create a function that makes a platform that we can jump through from below
   function platform(cx: number, cy: number) {
     new Actor({
       appearance: new FilledBox({ z: -1, width: 2, height: 0.2, fillColor: "#FF0000" }),
@@ -87,6 +93,7 @@ function builder(level: number) {
     });
   }
 
+  // Use that code to make many platforms
   platform(3, 7.5);
   platform(5, 3.5);
   platform(3, -1.5);
@@ -97,7 +104,7 @@ function builder(level: number) {
   platform(5, -21.5);
   platform(6, -24.5);
 
-  // Set up a nice background
+  // Set up a background
   let animations = new Map();
   animations.set(AnimationState.IDLE_E, AnimationSequence.makeSimple({ timePerFrame: 550, repeat: true, images: ["night_0.png", "night_1.png"] }))
   stage.background.addLayer({ anchor: { cx: 8, cy: 4.5 }, imageMaker: () => new AnimatedSprite({ width: 16, height: 9, animations }), speed: 0.3, isHorizontal: false, isAuto: false });

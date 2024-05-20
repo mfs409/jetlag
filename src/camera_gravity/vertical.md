@@ -13,72 +13,61 @@ This game requires the following assets:
 - [night_0.png](camera_gravity/night_0.png)
 - [night_1.png](camera_gravity/night_1.png)
 
-After you've downloaded them to your `assets` folder, be sure to update this
-line in your `Config` object:
+After you've downloaded them to your `assets` folder, re-set your `game.ts` file
+to look like [this](../empty/game.ts). Then add this line in your `Config`
+object:
 
 ```typescript
-  imageNames = ["green_ball.png", "mustard_ball.png", "night_0.png", "night_1.png"];
+{{#include game_04.ts:11:14}}
 ```
 
-We'll start by making a hero, setting up gravity, drawing a floor, and setting
-up the camera bounds:
+We'll start by setting up gravity and camera bounds:
 
 ```typescript
-    // Start with gravity and camera bounds
-    stage.world.setGravity(0, 10);
-    stage.world.camera.setBounds(0, undefined, 16, 9);
-
-    // Every level will use tilt to control the hero, with arrow keys simulating
-    // tilt on devices that lack an accelerometer
-    stage.tilt.tiltMax.Set(10, 10);
-    if (!stage.accelerometer.tiltSupported) {
-      stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
-      stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
-      stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
-      stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
-    }
-
-    // Make the floor
-    new Actor({
-      appearance: new FilledBox({ width: 16, height: .1, fillColor: "#ff0000" }),
-      rigidBody: new BoxBody({ cx: 8, cy: 9.05, width: 20, height: .1 }),
-      role: new Obstacle(),
-    });
-
-    let h = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 0.25, cy: 5.25, radius: 0.4 }, { disableRotation: true }),
-      movement: new TiltMovement(),
-      role: new Hero(),
-    });
-    stage.world.camera.setCameraFocus(h, 0, -2);
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => (h.role as Hero).jump(0, -10));
+{{#include game_04.ts:26:28}}
 ```
 
-This code is pretty similar to things we've seen before, but there are a few
-interesting differences.
+The arguments to `camera.setBounds` should seem a bit strange.  Up until now,
+our games all had the coordinate (0, 0) in the top-right corner.  Moving down
+meant bigger Y values, and moving right meant bigger X values.  But now we want
+a game that goes *upward*.  The bottom of the default game has a Y of 9... so
+that should be the maximum Y.  Since we don't want any left/right scrolling, the
+minimum X should be 0, and the maximum X should be 16.  That leaves the minimum
+Y.  Our game is going to move up and up, forever, into bigger and bigger
+**negative** Y values.  By saying that the *lower* bound is `undefined`, the
+camera will go as far up as the hero goes.
 
-The first thing to notice is that the call to `camera.setBounds` has `undefined`
-for its second argument.  If you hover your mouse over `setBounds`, you'll see
-that the second argument is the *minimum* Y value.  Remember that down is
-positive.  If we want a game that could keep going on forever, with the hero
-moving up, our only option is to have negative Y values that keep getting more
-and more negative.
+Next, let's put a floor into the world.  Notice that the floor is outside of the
+camera range, because its Y is centered at 9.05 and its height is .1.  That
+means it goes from 9.0 to 9.1 in the Y dimension, which is completely below the
+maximum Y value we just established for the camera.  We make the floor an
+`Obstacle`, so that the hero will be able to stand on it.
 
-The second thing that is a bit different is that the call to `setCameraFocus`
-has two extra arguments.  By providing `x=0` and `y=-2`, we're indicating that
-we want the camera to focus on a point that is 2 meters *above* the hero.  This
-will make it easier to see more of the screen while playing.
+```typescript
+{{#include game_04.ts:30:35}}
+```
 
-Third, notice that we didn't use the `enableTilt` function that we wrote
-earlier.  That's because we only want tilt for left/right.
+Next, we'll set up tilt, create a hero, tell the camera to follow the hero, and
+set up the space bar to make the hero jump:
+
+```typescript
+{{#include game_04.ts:37:57}}
+```
+
+You might have noticed that the call to `setCameraFocus` has two extra
+arguments.  By providing `x=0` and `y=-2`, we're indicating that we want the
+camera to focus on a point that is 2 meters *above* the hero.  This will make it
+easier to see more of the screen while playing.
+
+Note, too, that we didn't use the `enableTilt` function that we wrote earlier.
+That's because we only want tilt for left/right.
 
 Lastly, we set the space bar to make the hero `jump`.  There is a rather
 complicated concept here: if we just added a negative Y velocity to the hero,
 how could we know when the hero could jump again?  Our game kind of requires the
 hero to only jump after landing on a platform.  Fortunately, in JetLag, we can
 use the `Hero.jump` to give an upward velocity, and JetLag will not let the hero
-jump again until after it collides with an obstacle.  That gets us the desired
+jump again until after it collides with an Obstacle.  That gets us the desired
 condition for when the hero can jump again.
 
 If you just tried moving left or right, soon the hero would go off screen and
@@ -88,34 +77,14 @@ need to tell JetLag to restart this level if the hero collides with an enemy and
 "loses" the level.
 
 ```typescript
-    // Make the sides as enemies, but put them a tad off screen, because
-    // that's a bit more kind
-    new Actor({
-      appearance: new FilledBox({ width: .1, height: 36, fillColor: "#ff0000" }),
-      rigidBody: new BoxBody({ cx: -1, cy: -9, width: .1, height: 36 }),
-      role: new Enemy(),
-    });
-    new Actor({
-      appearance: new FilledBox({ width: .1, height: 36, fillColor: "#ff0000" }),
-      rigidBody: new BoxBody({ cx: 17, cy: -9, width: .1, height: 36 }),
-      role: new Enemy(),
-    });
-    stage.score.onLose = { level: level, builder: builder }
-    // Note that there's an intentional bug in this code: these enemies don't go
-    // as high as they should.  Can you tell why?
+{{#include game_04.ts:59:75}}
 ```
 
 Next, let's provide a way to win, by putting a destination very high up in the
 sky.  Remember that "high" means "negative y".
 
 ```typescript
-    new Actor({
-      appearance: new ImageSprite({ width: 1, height: 1, img: "mustard_ball.png" }),
-      rigidBody: new CircleBody({ cx: 15, cy: -26, radius: 0.5 }),
-      role: new Destination(),
-    });
-    stage.score.setVictoryDestination(1);
-    stage.score.onWin = { level: level, builder: builder }
+{{#include game_04.ts:77:84}}
 ```
 
 We need a way for the hero to get up to that destination.  Let's make a function
@@ -123,15 +92,7 @@ that can make obstacles (platforms).  You can put this function *inside* the
 `builder` function.
 
 ```typescript
-    // create a platform that we can jump through from below
-    function platform(cx: number, cy: number) {
-      new Actor({
-        appearance: new FilledBox({ z: -1, width: 2, height: 0.2, fillColor: "#FF0000" }),
-        rigidBody: new BoxBody({ cx, cy, width: 2, height: 0.2, }, { collisionsEnabled: true, singleRigidSide: Sides.TOP }),
-        // Set a callback, then re-enable the platform's collision effect.
-        role: new Obstacle({ heroCollision: (_thisActor: Actor, collideActor: Actor) => (collideActor.movement as ManualMovement).updateYVelocity(-5) }),
-      });
-    }
+{{#include game_04.ts:86:94}}
 ```
 
 In this function, we make an actor at the `cx, cy` coordinates that were
@@ -150,29 +111,15 @@ Now we can use our function to make a bunch of platforms, each higher than the
 last:
 
 ```typescript
-    platform(3, 7.5);
-    platform(5, 3.5);
-    platform(3, -1.5);
-    platform(6, -5.5);
-    platform(10, -9.5);
-    platform(3, -13.5);
-    platform(4, -17.5);
-    platform(5, -21.5);
-    platform(6, -24.5);
+{{#include game_04.ts:96:105}}
 ```
-
-(Now that it's possible to get very high, you should be able to figure out
-what's wrong with our enemies.)
 
 The last thing we'll do is make the background more interesting.  We saw before
 that it's possible to use an image for the background.  We can also *animate*
 images, by flipping between them rapidly.
 
 ```typescript
-    // Set up an animated parallax background
-    let animations = new Map();
-    animations.set(AnimationState.IDLE_E, AnimationSequence.makeSimple({ timePerFrame: 550, repeat: true, images: ["night_0.png", "night_1.png"] }))
-    stage.background.addLayer({ anchor: { cx: 8, cy: 4.5 }, imageMaker: () => new AnimatedSprite({ width: 16, height: 9, animations }), speed: 0.3, isHorizontal: false, isAuto: false });```
+{{#include game_04.ts:107:110}}
 ```
 
 Animations are a complex topic, and there is a whole chapter devoted to them.
@@ -189,124 +136,6 @@ generate its infinite tiles of background on demand.  We also gave it a speed of
 0.3, which means that it moves more slowly than the hero.  This is known as a
 "Parallax" background, and it gives a nice sense of depth.
 
-Here's the code for the whole game:
-
-```typescript
-import { initializeAndLaunch, stage } from "../jetlag/Stage";
-import { AnimationSequence, AnimationState, JetLagGameConfig, Sides } from "../jetlag/Config";
-import { AnimatedSprite, FilledBox, ImageSprite } from "../jetlag/Components/Appearance";
-import { ManualMovement, TiltMovement } from "../jetlag/Components/Movement";
-import { BoxBody, CircleBody } from "../jetlag/Components/RigidBody";
-import { Destination, Enemy, Hero, Obstacle } from "../jetlag/Components/Role";
-import { Actor } from "../jetlag/Entities/Actor";
-import { KeyCodes } from "../jetlag/Services/Keyboard";
-import { AccelerometerMode } from "../jetlag/Services/Accelerometer";
-
-/**
- * Screen dimensions and other game configuration, such as the names of all
- * the assets (images and sounds) used by this game.
- */
-class Config implements JetLagGameConfig {
-  pixelMeterRatio = 100;
-  screenDimensions = { width: 1600, height: 900 };
-  adaptToScreenSize = true;
-  canVibrate = true;
-  accelerometerMode = AccelerometerMode.DISABLED;
-  storageKey = "--no-key--";
-  hitBoxes = true;
-  resourcePrefix = "./assets/";
-  musicNames = [];
-  soundNames = [];
-  imageNames = ["green_ball.png", "mustard_ball.png", "night_0.png", "night_1.png"];
-}
-
-/**
- * Build the levels of the game.
- *
- * @param level Which level should be displayed
- */
-function builder(level: number) {
-  // Start with gravity and camera bounds
-  stage.world.setGravity(0, 10);
-  stage.world.camera.setBounds(0, undefined, 16, 9);
-
-  // Every level will use tilt to control the hero, with arrow keys simulating
-  // tilt on devices that lack an accelerometer
-  stage.tilt.tiltMax.Set(10, 10);
-  if (!stage.accelerometer.tiltSupported) {
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
-  }
-
-  // Make the floor
-  new Actor({
-    appearance: new FilledBox({ width: 16, height: .1, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 8, cy: 9.05, width: 20, height: .1 }),
-    role: new Obstacle(),
-  });
-
-  let h = new Actor({
-    appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-    rigidBody: new CircleBody({ cx: 0.25, cy: 5.25, radius: 0.4 }, { disableRotation: true }),
-    movement: new TiltMovement(),
-    role: new Hero(),
-  });
-  stage.world.camera.setCameraFocus(h, 0, -2);
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => (h.role as Hero).jump(0, -10));
-
-  // Make the sides as enemies, but put them a tad off screen, because
-  // that's a bit more kind
-  new Actor({
-    appearance: new FilledBox({ width: .1, height: 36, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: -1, cy: -9, width: .1, height: 36 }),
-    role: new Enemy(),
-  });
-  new Actor({
-    appearance: new FilledBox({ width: .1, height: 36, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 17, cy: -9, width: .1, height: 36 }),
-    role: new Enemy(),
-  });
-  stage.score.onLose = { level: level, builder: builder }
-  // Note that there's an intentional bug in this code: these enemies don't go
-  // as high as they should.  Can you tell why?
-
-  new Actor({
-    appearance: new ImageSprite({ width: 1, height: 1, img: "mustard_ball.png" }),
-    rigidBody: new CircleBody({ cx: 15, cy: -26, radius: 0.5 }),
-    role: new Destination(),
-  });
-  stage.score.setVictoryDestination(1);
-  stage.score.onWin = { level: level, builder: builder }
-
-  // create a platform that we can jump through from below
-  function platform(cx: number, cy: number) {
-    new Actor({
-      appearance: new FilledBox({ z: -1, width: 2, height: 0.2, fillColor: "#FF0000" }),
-      rigidBody: new BoxBody({ cx, cy, width: 2, height: 0.2, }, { collisionsEnabled: true, singleRigidSide: Sides.TOP }),
-      // Set a callback, then re-enable the platform's collision effect.
-      role: new Obstacle({ heroCollision: (_thisActor: Actor, collideActor: Actor) => (collideActor.movement as ManualMovement).updateYVelocity(-5) }),
-    });
-  }
-
-  platform(3, 7.5);
-  platform(5, 3.5);
-  platform(3, -1.5);
-  platform(6, -5.5);
-  platform(10, -9.5);
-  platform(3, -13.5);
-  platform(4, -17.5);
-  platform(5, -21.5);
-  platform(6, -24.5);
-
-  // Set up an animated parallax background
-  let animations = new Map();
-  animations.set(AnimationState.IDLE_E, AnimationSequence.makeSimple({ timePerFrame: 550, repeat: true, images: ["night_0.png", "night_1.png"] }))
-  stage.background.addLayer({ anchor: { cx: 8, cy: 4.5 }, imageMaker: () => new AnimatedSprite({ width: 16, height: 9, animations }), speed: 0.3, isHorizontal: false, isAuto: false });
-}
-
-// call the function that starts running the game in the `game-player` div tag
-// of `index.html`
-initializeAndLaunch("game-player", new Config(), builder);
-```
+Here is the [code for the whole game](game_04.ts).  Before you go on to the next
+chapter, be sure to play around with it.  Try changing some values, adding
+platforms, and moving things around.

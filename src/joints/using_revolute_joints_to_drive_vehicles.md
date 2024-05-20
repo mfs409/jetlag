@@ -17,33 +17,14 @@ In the code for this example, we'll start by setting up gravity and a border.
 We'll add friction to the bottom of the border:
 
 ```typescript
-    stage.world.setGravity(0, 10);
-    let sides = boundingBox();
-    sides.b.rigidBody.setPhysics({ friction: 1 });
+{{#include game_01.ts:24:29}}
 ```
 
 Next, we make the car as two wheels and a rectangle:
 
 ```typescript
-    let car = new Actor({
-      appearance: new FilledBox({ width: 2, height: 0.5, fillColor: "#FF0000" }),
-      rigidBody: new BoxBody({ cx: 1, cy: 8, width: 2, height: 0.5 }),
-      role: new Hero(),
-    });
-
-    // Connect a back wheel... heavy tires make for good traction
-    let backWheel = new Actor({
-      appearance: new ImageSprite({ width: 0.5, height: 0.5, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 0.75, cy: 8.5, radius: 0.25 }, { density: 3, friction: 1 }),
-      role: new Obstacle(),
-    });
-
-    // Connect a front wheel... it'll be all-wheel drive :)
-    let frontWheel = new Actor({
-      appearance: new ImageSprite({ width: 0.5, height: 0.5, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2.75, cy: 8.5, radius: 0.25 }, { density: 3, friction: 1 }),
-      role: new Obstacle(),
-    });
+{{#include game_01.ts:31:43}}
+{{#include game_01.ts:47:52}}
 ```
 
 All that remains is to set up joints that connect the wheels to the body of the
@@ -52,9 +33,7 @@ try different motor speeds, different torques, and front or rear-wheel drive (by
 only giving one wheel or the other a motor).
 
 ```typescript
-    backWheel.rigidBody.setRevoluteJoint(car, -1, 0.5, 0, 0);
-    backWheel.rigidBody.setRevoluteJointMotor(10, 10);
+{{#include game_01.ts:44:45}}
 
-    frontWheel.rigidBody.setRevoluteJoint(car, 1, 0.5, 0, 0);
-    frontWheel.rigidBody.setRevoluteJointMotor(10, 10);
+{{#include game_01.ts:53:54}}
 ```

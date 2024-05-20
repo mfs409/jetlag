@@ -1,6 +1,7 @@
 ## The Game
 
-Here is a playable version of the game, so you can quickly determine if there
-are aspects of it that you'd like to learn about:
+Here is a playable version of the game.  In addition to seeing how the "Game of
+Life" simulation works, you should think about the user interface.  Does it make
+sense?  Should I have provided more help?  What would you change?
 
-<iframe src="./game_01.iframe.html"></iframe>
+<iframe src="./game.iframe.html"></iframe>

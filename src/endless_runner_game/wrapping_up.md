@@ -8,4 +8,3 @@ that the game is playable, fun, and not repetitive.  For example, if you had
 twenty 64-meter-long chunks of world, each of which had a few ways to customize
 it, you could easily have several thousand meters of gameplay before anything
 seemed to repeat.
-

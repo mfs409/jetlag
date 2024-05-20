@@ -17,22 +17,7 @@ In your `game.ts` file, but *not* inside of the `builder()` function, let's
 create three classes:
 
 ```typescript
-/** This is for Level Storage */
-class LStore {
-  coins = 0; // Coins collected during a stage
-};
-
-/** This is for Session Storage */
-class SStore {
-  coins = 0; // Coins collected so far during this session
-}
-
-/** This is for Persistent Storage.  It shouldn't have any methods */
-class PStore {
-  num_times_played = 0;
-  last_played = new Date().toUTCString();
-  rubies = 0; // 5 coins should automatically become a ruby and get saved
-}
+{{#include game_01.ts:19:34}}
 ```
 
 JetLag's session, level, and persistent storage can keep track of many different
@@ -51,8 +36,5 @@ we'll need to turn the PStore into text, and then explicitly save it as the
 "persistent_info".  This function will handle it:
 
 ```typescript
-/** Save a PStore */
-function persist(p: PStore, key: string) {
-  stage.storage.setPersistent(key, JSON.stringify(p))
-}
+{{#include game_01.ts:36:39}}
 ```

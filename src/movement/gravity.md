@@ -8,17 +8,22 @@ Let's try it out here.  We'll make "enemies" that fall from the sky, and the
 disappear.  Don't worry if some of this doesn't make sense yet... we'll explain
 it all later.
 
-First, here's the game that we're going to make:
+First, here's the game that we're going to make (and [here](game_01.ts) is the code for it):
 
 <iframe src="game_01.iframe.html"></iframe>
 
-You'll notice right away that the camera/gravity combination is making it seem
-like we're looking at the stage from the side, not from above.  We can get that
-behavior just by setting up some gravity:
+To get started, you'll need an empty [game.ts](../empty/game.ts), [common.ts](../common/common.ts), and these
+files:
+
+- [red_ball.png](../assets/red_ball.png)
+- [green_ball.png](../assets/green_ball.png)
+
+In the game, you'll notice right away that the camera/gravity combination is
+making it seem like we're looking at the stage from the side, not from above.
+We can get that behavior just by setting up some gravity:
 
 ```typescript
-    // Downward gravity
-    stage.world.setGravity(0, 10);
+{{#include game_01.ts:40:41}}
 ```
 
 Next, we'll draw the walls.  Remember that `boundingBox()` returns the four
@@ -30,11 +35,7 @@ wall, because we want the enemies to start off screen, and slowly drop into
 view.
 
 ```typescript
-    let walls = boundingBox();
-    (walls.b.role as Obstacle).enemyCollision = (_thisActor: Actor, enemy: Actor) => {
-      (enemy.role as Enemy).defeat(false);
-    }
-    walls.t.enabled = false; // No top wall
+{{#include game_01.ts:28:32}}
 ```
 
 Next, we'll set up a timer that runs every second.  Every time the timer runs,
@@ -46,13 +47,7 @@ itself), so if we want the center to be between .5 and 15.5, then we need to
 multiply the random number by 15, and add .5.
 
 ```typescript
-    // Falling enemies
-    stage.world.timer.addEvent(new TimedEvent(1, true, () => new Actor({
-      appearance: new ImageSprite({ width: 1, height: 1, img: "red_ball.png" }),
-      rigidBody: new CircleBody({ radius: .5, cy: -.5, cx: .5 + (Math.random() * 15) }),
-      role: new Enemy(),
-      movement: new GravityMovement(),
-    })));
+{{#include game_01.ts:37:43}}
 ```
 
 The next part of this level is pretty straightforward: we'll add a hero who
@@ -60,15 +55,7 @@ moves via tilt.  Notice, though, that we are using a 0 as the second argument to
 `enableTilt`.  That means tilt doesn't cause any up/down movement.
 
 ```typescript
-    // A hero moving via tilt.  Notice that the ball "rolls" on the ground, even
-    // though there's no friction.  That's because of gravity.
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 8, cy: 8.6, radius: 0.4 }),
-      movement: new TiltMovement(),
-      role: new Hero(),
-    });
-    enableTilt(10, 0); // Now tilt will only control left/right
+{{#include game_01.ts:45:52}}
 ```
 
 Finally, since there is a hero and there are enemies, it's possible to lose this
@@ -77,7 +64,5 @@ that case.  We'll say "when the level is lost, make a new level by running
 builder and passing in the current level":
 
 ```typescript
-    // Any time it's possible to "lose", we need to tell JetLag what to do if the level is lost
-    stage.score.onLose = { level, builder }
+{{#include game_01.ts:54:55}}
 ```
-

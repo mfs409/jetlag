@@ -7,3 +7,6 @@ even making the appearance different from the underlying rigidBody.  You could
 also change the key behavior (for example, by increasing or decreasing the
 velocity).  At some point, you might also want to set `hitBoxes` to `false`, to
 see how everything's appearance changes, and becomes much cleaner!
+
+Before you move on to the next chapter, you should reset your `game.ts` file.
+You can get the original copy [here](game.ts).

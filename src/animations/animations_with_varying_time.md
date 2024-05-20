@@ -2,7 +2,7 @@
 
 Sometimes we want the different frames of an animation to display for different
 lengths of time.  For example, when a character is standing idly, we might want
-them to just shrug every now and then, so it's clear they aren't a statue.
+them to just shrug every now and then, so it's clear they aren't a statue.  Here's [the code](game_10.ts) for a game that shows this behavior, and here's how it looks when it runs:
 
 <iframe src="./game_10.iframe.html"></iframe>
 
@@ -15,18 +15,12 @@ by not using `let` to create a variable for the `AnimationSequence`... instead,
 I'm just making it on the fly, while putting it into the map.
 
 ```typescript
-    let animations = new Map();
-    animations.set(AnimationState.IDLE_E, new AnimationSequence(true).to("alien_thrust_r_0.png", 750).to("alien_thrust_r_1.png", 75));
+{{#include game_10.ts:27:28}}
 ```
 
 With the animation made, we can use it in the same way as before, by giving an
 actor an `AnimatedSprite` as its appearance:
 
 ```typescript
-    new Actor({
-      rigidBody: new BoxBody({ cx: 3, cy: 4, width: 1, height: 2 }),
-      appearance: new AnimatedSprite({ width: 2, height: 2, animations }),
-      role: new Hero(),
-    });
+{{#include game_10.ts:33:38}}
 ```
-

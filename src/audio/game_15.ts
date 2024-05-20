@@ -7,7 +7,7 @@ import { boundingBox, drawMuteButton, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   // Here's where we name all the images/sounds/background music files.
   resources = {
@@ -16,9 +16,7 @@ class Config implements JetLagGameConfig {
       "flap_flap.ogg", "high_pitch.ogg", "low_pitch.ogg", "lose_sound.ogg",
       "slow_down.ogg", "win_sound.ogg"
     ],
-    imageNames: [
-      "alien.json", "sprites.json", "noise.png", "mid.png", "back.png"
-    ]
+    imageNames: ["sprites.json"]
   };
 }
 
@@ -28,13 +26,6 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // We're not going to explore *music* in this tutorial, because the
-  // stage_transitions tutorial does a pretty good job with it.  But we should
-  // take a minute to look at sounds.  Sounds are for quick bursts of audio,
-  // not looped background tracks (that's "music").  To use sounds, we just
-  // add a sound component to an actor.  There are six sounds: toss,
-  // disappear, arrive, defeat, jump, and collide.  Let's test them all:
-
   boundingBox();
   enableTilt(10, 0);
   stage.world.setGravity(0, 10);
@@ -98,7 +89,7 @@ function builder(level: number) {
   stage.score.onWin = { level, builder };
 
   // You'll notice that long sounds don't work very well.  It's up to you to
-  // create delays as needed by your soundtrack.
+  // create delays in gameplay as needed by your sound files.
 }
 
 // call the function that kicks off the game

@@ -1,16 +1,17 @@
 ## Getting Started
 
-For this tutorial, you'll want top copy the `wideBoundingBox()` function from
-the tutorial on graphical assets.  You'll also need the regular `boundingBox()`
-function, the `sprites.json` spritesheet, and `noise.png`.  You should be able
-to find these files and configure them based on what you learned in previous
-tutorials.
+For this chapter, you'll need this file, which provides some helpful functions:
 
-In addition, the mini-games we make in this tutorial will involve winning and
-losing, so you'll probably want to put these lines at the top of `builder()`, so
-that they can be used by each mini-game:
+- [common.ts](./common.ts)
+
+You'll also want to put these in your assets folder:
+
+- [noise.png](../assets/noise.png)
+- [sprites.json](../assets/sprites.json)
+- [sprites.png](../assets/sprites.png)
+
+In addition, the games we make in this chapter will involve winning and losing.  The full code listings always make use of these lines, so that on any win or lose event, the level immediately restarts:
 
 ```typescript
-  stage.score.onLose = { level, builder };
-  stage.score.onWin = { level, builder };
+{{#include game_01.ts:26:27}}
 ```

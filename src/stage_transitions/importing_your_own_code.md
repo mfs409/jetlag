@@ -1,7 +1,7 @@
 ## Importing Your Own Code
 
-In this tutorial, we're going to have our `game.ts` file, and then a few more
-files: `common.ts`, `splash.ts`, `help.ts`, `chooser.ts`, and `play.ts`.  Each
+In this chapter, we're going to have our `game.ts` file, and then a few more
+files: `common.ts`, `splash.ts`, `help.ts`, `chooser.ts`, and `levels.ts`.  Each
 of these will include some functions that some of the other files will need.  To
 get this to work, you'll need to do two things:
 
@@ -12,12 +12,12 @@ get this to work, you'll need to do two things:
    `import { toggleMute } from "./common";`.  Notice that we don't include the
    `.ts` part of the file name.
 
-The end state for this tutorial will be several files:
+The end state for this chapter will be several files:
 
-- `game.ts` will just have the `Config` object and the call to
+- [`game.ts`](game.ts) will just have the `Config` object and the call to
   `initializeAndLaunch`
-- `common.ts` will export some helper functions
-- `splash.ts` will export a builder function for the welcome screen / main menu
-- `chooser.ts` will export a builder function for a level chooser
-- `help.ts` will export a builder function for the help screens
-- `play.ts` will export a builder function for the playable levels of the game
+- [`common.ts`](common.ts) will export some helper functions
+- [`splash.ts`](splash.ts) will export a builder function for the welcome screen / main menu
+- [`chooser.ts`](chooser.ts) will export a builder function for a level chooser
+- [`help.ts`](help.ts) will export a builder function for the help screens
+- [`levels.ts`](levels.ts) will export a builder function for the playable levels of the game

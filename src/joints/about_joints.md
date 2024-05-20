@@ -11,5 +11,5 @@ do anything advanced with joints, you'll probably want to start by visiting
 online Box2D documentation, such as this [Box2D Joint
 Overview](https://www.iforce2d.net/b2dtut/joints-overview).  Then you should
 look at how the JetLag code uses joints (that is, look at the parts of JetLag
-that are used by the code in this tutorial).  Hopefully that will be enough of a
+that are used by the code in this chapter).  Hopefully that will be enough of a
 starting point.

@@ -6,7 +6,7 @@ import { Actor, BoxBody, CircleBody, ImageSprite, JetLagGameConfig, Path, PathMo
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,10 +21,10 @@ class Config implements JetLagGameConfig {
  */
 function builder(_level: number) {
   // Everything is an actor, and text is just the 'appearance' of the actor.
-  // This mean1 that the actor's body is the "anchor" for where the text
-  // will go.  The easiest thing is to center the text on the anchor.  If
-  // the text isn't also supposed to be interactive, it is sufficient to
-  // make a tiny body for it:
+  // This means that the actor's body is the "anchor" for where the text will
+  // go.  The easiest thing is to center the text on the anchor.  If the text
+  // isn't also supposed to be interactive, it is sufficient to make a tiny body
+  // for it:
   new Actor({
     rigidBody: new CircleBody({ cx: 1, cy: 1, radius: .01 }),
     appearance: new TextSprite({ center: true, face: "Arial", size: 22, color: "#FF0000" }, "JetLag")

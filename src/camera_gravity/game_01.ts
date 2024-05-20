@@ -6,7 +6,7 @@ import { Actor, CircleBody, Enemy, FilledCircle, FilledPolygon, GridSystem, Hero
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
 }
 
@@ -35,7 +35,7 @@ function builder(level: number) {
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => { h.rigidBody.body.SetAngularVelocity(6); });
   stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => { h.rigidBody.body.SetAngularVelocity(0); });
 
-  // Shoot!
+  // Toss a projectile!
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => {
     let dx = Math.cos(h.rigidBody.getRotation() - Math.PI / 2);
     let dy = Math.sin(h.rigidBody.getRotation() - Math.PI / 2);

@@ -6,11 +6,11 @@ import { Actor, BoxBody, CircleBody, Destination, FilledBox, Hero, ImageSprite, 
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json", "noise.png"]
+    imageNames: ["green_ball.png", "mustard_ball.png", "noise.png"]
   };
 }
 
@@ -21,8 +21,38 @@ class Config implements JetLagGameConfig {
  */
 function builder(level: number) {
   // A simple overhead movement game with a big world and a HUD
-  // make the level really big
-  stage.world.camera.setBounds(0, 0, 64, 36);
+  let h = new Actor({
+    appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
+    rigidBody: new CircleBody({ cx: 2, cy: 3, radius: 0.4 }),
+    movement: new TiltMovement(),
+    role: new Hero(),
+  });
+
+  enableTilt(10, 10);
+
+  // By default, the camera is centered on the point 8, 4.5f.  We can instead
+  // have the camera stay centered on the hero, so that we can keep seeing the
+  // hero as it moves around the world.  Note that this is the most
+  // rudimentary way to follow the hero's movement, and it's not going to look
+  // good when the hero is close to the level's boundaries.
+  stage.world.camera.setCameraFocus(h);
+
+  // As the hero moves around, it's going to be hard to see that it's really
+  // moving.  Draw some "noise" in the background.  Note that we're changing
+  // the Z index.
+  //
+  // This code uses "for loops".  The outer loop will run 4 times (0, 16, 32,
+  // 48).  Each time, the inner loop will run 4 times (0, 9, 18, 27), drawing
+  // a total of 16 images.
+  for (let x = 0; x < 64; x += 16) {
+    for (let y = 0; y < 36; y += 9) {
+      // This is kind of neat: a picture is just an actor without a role or rigidBody
+      new Actor({
+        appearance: new ImageSprite({ width: 16, height: 9, img: "noise.png", z: -1 }),
+        rigidBody: new BoxBody({ cx: x + 8, cy: y + 4.5, width: 16, height: 9 }, { collisionsEnabled: false }),
+      });
+    }
+  }
 
   // Draw four walls, covering the four borders of the world
   new Actor({
@@ -46,42 +76,17 @@ function builder(level: number) {
     role: new Obstacle(),
   });
 
-  // We will use tilt to control the hero, with arrow keys simulating
-  // tilt on devices that lack an accelerometer
-  stage.tilt.tiltMax.Set(10, 10);
-  if (!stage.accelerometer.tiltSupported) {
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
-  }
+  // make the level really big
+  stage.world.camera.setBounds(0, 0, 64, 36);
 
-  let h = new Actor({
-    appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-    rigidBody: new CircleBody({ cx: 2, cy: 3, radius: 0.4 }),
-    movement: new TiltMovement(),
-    role: new Hero(),
-  });
-
+  // Set up a destination
   new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "mustard_ball.png" }),
     rigidBody: new CircleBody({ cx: 55, cy: 28, radius: 0.4 }),
     role: new Destination(),
   });
-
-
   stage.score.setVictoryDestination(1);
-
-  // By default, the camera is centered on the point 8, 4.5f.  We can instead
-  // have the camera stay centered on the hero, so that we can keep seeing the
-  // hero as it moves around the world.  Note that this is the most
-  // rudimentary way to follow the hero's movement, and it's not going to look
-  // good when the hero is close to the level's boundaries.
-  stage.world.camera.setCameraFocus(h);
+  stage.score.onWin = { level: level, builder: builder }
 
   // add zoom buttons. We are using blank images, which means that the buttons
   // will be invisible... that's nice, because we can make the buttons big
@@ -111,26 +116,29 @@ function builder(level: number) {
       }
     }
   });
-
-  // As the hero moves around, it's going to be hard to see that it's really
-  // moving.  Draw some "noise" in the background.  Note that we're changing
-  // the Z index.
-  //
-  // This code uses "for loops".  The outer loop will run 4 times (0, 16, 32,
-  // 48).  Each time, the inner loop will run 4 times (0, 9, 18, 27), drawing
-  // a total of 16 images.
-  for (let x = 0; x < 64; x += 16) {
-    for (let y = 0; y < 36; y += 9) {
-      // This is kind of neat: a picture is just an actor without a role or rigidBody
-      new Actor({
-        appearance: new ImageSprite({ width: 16, height: 9, img: "noise.png", z: -1 }),
-        rigidBody: new BoxBody({ cx: x + 8, cy: y + 4.5, width: 16, height: 9 }, { collisionsEnabled: false }),
-      });
-    }
-  }
-  stage.score.onWin = { level: level, builder: builder }
-  stage.score.onLose = { level: level, builder: builder }
 }
 
 // call the function that kicks off the game
 initializeAndLaunch("game-player", new Config(), builder);
+
+/**
+ * Enable Tilt, and set up arrow keys to simulate it
+ *
+ * @param xMax  The maximum X force
+ * @param yMax  The maximum Y force
+ */
+function enableTilt(xMax: number, yMax: number) {
+  // Put limits on how much force a tilt can produce
+  stage.tilt.tiltMax.Set(xMax, yMax);
+  // Set up arrows to simulate tilt on devices that don't have an accelerometer
+  if (!stage.accelerometer.tiltSupported) {
+    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = 0));
+    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 0));
+    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
+    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
+    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = -5));
+    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 5));
+    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
+    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
+  }
+}

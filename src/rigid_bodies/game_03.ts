@@ -1,17 +1,17 @@
 import { Actor, CircleBody, ImageSprite, JetLagGameConfig, Obstacle, initializeAndLaunch, stage } from "../jetlag";
-import { boundingBox, levelController } from "./common";
+import { boundingBox } from "./common";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
  * the assets (images and sounds) used by this game.
  */
 class Config implements JetLagGameConfig {
-  // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+    // Use 16/9 for landscape mode, and 9/16 for portrait mode
+    aspectRatio = { width: 16, height: 9 };
     hitBoxes = true;
     resources = {
         prefix: "./assets/",
-        imageNames: ["sprites.json", "mid.png"]
+        imageNames: ["purple_ball.png"]
     };
 }
 
@@ -20,10 +20,7 @@ class Config implements JetLagGameConfig {
  *
  * @param level Which level should be displayed
  */
-function builder(level: number) {
-    // Set up the level controller, so we can easily switch among levels
-    levelController(level, 19, builder);
-
+function builder(_level: number) {
     // It's also the case that gravity doesn't affect kinematic bodies!
     boundingBox();
     // Note: you could have negative gravity, to make things float upward...

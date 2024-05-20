@@ -33,7 +33,7 @@ southwest).  We might also want animations for when the actor is idle (not
 walking) but facing in one of these eight directions.  We might also want
 animations for jumping while moving in one of 8 directions, and for jumping
 while standing still.  And also crawling.  And also when the hero is invincible.
-Or tossing a projectile.  That's a lot of complexity.
+Or tossing a projectile.  That's a lot!
 
 Putting it all together, in JetLag we have 80 possible states.  It actually
 should be more, but we skip a few things, like "tossing while jumping while
@@ -53,4 +53,3 @@ directions:
 
 Not all games will use all 80 of these states.  In addition, sometimes we want
 to use a single Animation sequence for several of the states.
-

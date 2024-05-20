@@ -26,7 +26,7 @@ ways to defeat an enemy:
 - Projectile collides with it, decreases its damage
 - Hero jumps on it, it's able to be defeated by jump
 - Hero crawls into it, it's able to be defeated by crawl
-- You call enemy.defeat() on the enemy, e.g., in an obstacle callback, gesture
+- You call `enemy.defeat()` on the enemy, e.g., in an obstacle callback, gesture
   callback, or timer.
 
 JetLag also has several different ways for an event to lead to a level being
@@ -37,14 +37,14 @@ won:
 - Collect a certain amount of goodies (of each type)
 - Have enough heroes reach destinations
 - Survive for long enough
-- You call score.winLevel()
+- You call `score.winLevel()`
 
 Finally, there are a few events that lead to a level being lost:
 
 - All heroes are defeated
 - A specific, important hero is defeated
 - Time runs out
-- You call score.loseLevel()
+- You call `score.loseLevel()`
 
-In this tutorial and the next, we'll make several mini-games, and use them to
-show each of these behaviors.
+In this chapter, we'll make several mini-games, and use them to show each of
+these behaviors.

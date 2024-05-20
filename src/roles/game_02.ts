@@ -7,7 +7,7 @@ import { boundingBox, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,8 +21,7 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // Throughout this tutorial, we'll have levels that can be "won" or "lost".
-  // In all cases, we'll go right back to the same level.
+  // Restart the level when we win or lose
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 
@@ -82,17 +81,9 @@ function builder(level: number) {
   });
 
   // Set up a way to quickly get the goodie counts by pressing the '?' key
-  alertGoodies();
+  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SLASH, () =>
+    window.alert(`${stage.score.getGoodieCount(0)}, ${stage.score.getGoodieCount(1)}, ${stage.score.getGoodieCount(2)}, ${stage.score.getGoodieCount(3)}`));
 }
 
 // call the function that kicks off the game
 initializeAndLaunch("game-player", new Config(), builder);
-
-/**
- * Report the goodie counts in a pop-up window, as a way of sanity-checking
- * scores
- */
-function alertGoodies() {
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SLASH, () =>
-    window.alert(`${stage.score.getGoodieCount(0)}, ${stage.score.getGoodieCount(1)}, ${stage.score.getGoodieCount(2)}, ${stage.score.getGoodieCount(3)}`));
-}

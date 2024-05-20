@@ -9,4 +9,3 @@ to work around this limitation.  One option is to use the screenshot feature of
 overlays.  Another is to modify JetLag, so that winning and losing call
 functions that you provide, instead of immediately ending.  There are other
 ways, too... it all depends on what works best for the game you're making.
-

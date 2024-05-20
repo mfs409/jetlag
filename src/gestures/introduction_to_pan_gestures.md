@@ -1,8 +1,8 @@
 ## Introduction to Pan Gestures
 
 Pan gestures are extremely powerful: they let us draw and drag, which can both
-lead to exciting gameplay options.  In this example, we'll make an on-screen
-joystick that uses pan gestures to control a hero.
+lead to exciting gameplay options.  In this [game](game_03.ts), we'll make an
+on-screen joystick that uses pan gestures to control a hero.
 
 <iframe src="./game_03.iframe.html"></iframe>
 
@@ -15,22 +15,7 @@ direction (i.e., a vector) and then apply that to the actor to make it move.
 We'll start by making a border, a hero, and a destination:
 
 ```typescript
-    boundingBox();
-
-    // A hero with ManualMovement, so that the joystick can control it
-    let hero = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 1, cy: 1.5, radius: 0.4 }),
-      movement: new ManualMovement(),
-      role: new Hero(),
-    });
-
-    // A destination to reach
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "mustard_ball.png" }),
-      rigidBody: new CircleBody({ cx: 11, cy: 6, radius: 0.4 }),
-      role: new Destination(),
-    });
+{{#include game_03.ts:36:51}}
 ```
 
 Before we draw the joystick, we need to make a plan:
@@ -49,37 +34,29 @@ Before we draw the joystick, we need to make a plan:
   we'll multiply it by a `scale`.  By putting `scale` in a variable, we can
   easily change it by changing one number in one place in the code.
 
+As a quick reminder, "compute a vector" means we're going to use the Pythagorean Theorem:
+
+$$
+c^2 = a^2 + b^2
+$$
+
+$$
+c = \sqrt{a^2+b^2}
+$$
+
 The functions for moving and stopping, along with the constants for the joystick
 location and scale, look like this:
 
 ```typescript
-    let jcx = 1, jcy = 8; // center of joystick
-    let scale = 2;
-    // here's code for moving the hero, based on how hard we're pushing the
-    // joystick and where the touch is relative to the joystick center
-    function doMove(_actor: Actor, hudCoords: { x: number; y: number }) {
-      (hero.movement as ManualMovement).setAbsoluteVelocity(scale * (hudCoords.x - jcx), scale * (hudCoords.y - jcy));
-      return true;
-    }
-    // And here's code for stopping the hero:
-    function doStop() {
-      (hero.movement as ManualMovement).setAbsoluteVelocity(0, 0);
-      hero.rigidBody.clearRotation(); // be sure to try without this
-      return true;
-    }
+{{#include game_03.ts:55:68}}
 ```
 
 Now we can draw the joystick on the HUD.
 
 ```typescript
-    // Make a joystick
-    new Actor({
-      appearance: new ImageSprite({ width: 2, height: 2, img: "grey_ball.png" }),
-      rigidBody: new CircleBody({ cx: jcx, cy: jcy, radius: 1 }, { scene: stage.hud }),
-      gestures: { panStart: doMove, panMove: doMove, panStop: doStop },
-    });
+{{#include game_03.ts:70:75}}
 ```
 
-Notice that if you glide your finger off the joystick, the panStop event won't
+Notice that if you glide your finger off the joystick, the `panStop` event won't
 happen.  That is a problem that can be fixed, but we're not going to worry about
 it for now.

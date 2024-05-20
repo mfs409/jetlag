@@ -7,7 +7,7 @@ import { boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,13 +21,13 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  boundingBox();
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 
   // It can be useful to make a hero stick to an obstacle. As an example, if
   // the hero should stand on a platform that moves along a path, then we will
   // want the hero to "stick" to it, even as the platform moves downward.
+  boundingBox();
   stage.world.setGravity(0, 10);
   let hero = new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),

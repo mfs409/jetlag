@@ -1,10 +1,10 @@
 # List the basenames
-BASENAMES = game_01
+BASENAMES = game
 
 # Declare the extra dependencies for each .js that will be built
 #
 # ** DO NOT INCLUDE THE BASE .TS FILES **
-game_01.js: ./common.ts
+game.js: ./common.ts
 
 # Include the common makefile, it does the rest
 include ../../common.mk

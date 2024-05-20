@@ -1,5 +1,5 @@
 import { Actor, CircleBody, Destination, Hero, ImageSprite, JetLagGameConfig, TiltMovement, initializeAndLaunch, stage } from "../jetlag";
-import { boundingBox, enableTilt, levelController } from "./common";
+import { boundingBox, enableTilt } from "./common";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
@@ -7,7 +7,7 @@ import { boundingBox, enableTilt, levelController } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,17 +21,13 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // Throughout this tutorial, we'll have levels that can be "won" or "lost".
-  // In all cases, we'll go right back to the same level.
+  // Restart the level when we win or lose
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 
   // Every level will use tilt, and every level will have a box around it
   enableTilt(10, 10);
   boundingBox();
-
-  // Set up for quick switching among levels
-  levelController(level, 17, builder);
 
   // We can let a destination hold more than one hero (and we can change the
   // victory condition)

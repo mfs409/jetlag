@@ -7,7 +7,7 @@ import { boundingBox, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,11 +21,11 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  boundingBox();
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 
   // Sometimes, we want to say that certain actors can pass through others
+  boundingBox();
   enableTilt(10, 10);
   let h = new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),

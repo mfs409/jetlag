@@ -1,7 +1,7 @@
 ## Destinations
 
 In maze-like games, a hero usually needs to reach a destination.  We can see
-such behavior in the following game:
+such behavior in the following [game](game_03.ts):
 
 <iframe src="game_03.iframe.html"></iframe>
 
@@ -13,18 +13,8 @@ hero and a destination, and make sure the hero has some kind of movement (in
 this case, tilt) so that we can get it to collide with the destination.
 
 ```typescript
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2, cy: 3, radius: 0.4 }),
-      movement: new TiltMovement(),
-      role: new Hero(),
-    });
-
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "mustard_ball.png" }),
-      rigidBody: new CircleBody({ cx: 12, cy: 3, radius: 0.4 }),
-      role: new Destination(),
-    });
+{{#include game_03.ts:33:44}}
 ```
 
-Of course, you might want to have a nice fade-out or other visual effect, instead of immediately restarting.  We'll get to that in a later tutorial.
+Of course, you might want to have a nice fade-out or other visual effect,
+instead of immediately restarting.  We'll get to that in a later chapter.

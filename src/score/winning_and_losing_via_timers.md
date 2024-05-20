@@ -4,18 +4,19 @@ In the following game, there is a timer, and the level wins after 5 seconds:
 
 <iframe src="./game_01.iframe.html"></iframe>
 
-The code for this level is just one line:
+The full code for the game is [here](game_01.ts).  There'The only interesting
+part is this:
 
 ```typescript
-    // Automatically win in 5 seconds
-    stage.score.setVictorySurvive(5);
+{{#include game_01.ts:33:34}}
 ```
 
-If we instead want to lose after 5 seconds, we can do it like this:
+Here's another game, where we lose after 5 seconds.  
 
 <iframe src="./game_02.iframe.html"></iframe>
 
+The [code](game_02.ts) is similarly simple, with the interesting part being just one line:
+
 ```typescript
-    // Automatically lose in 5 seconds
-    stage.score.setLoseCountdownRemaining(5);
+{{#include game_02.ts:33:34}}
 ```

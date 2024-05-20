@@ -1,6 +1,6 @@
 # Packaging A JetLag Game For Mobile Devices
 
-This tutorial shows how to use Capacitor to package a game so that it can be
+This chapter shows how to use Capacitor to package a game so that it can be
 installed as an app on a mobile device.  It also discusses games with vertical
 (portrait) orientation.
 

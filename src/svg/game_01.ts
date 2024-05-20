@@ -7,7 +7,7 @@ import { boundingBox, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,12 +21,6 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(_level: number) {
-  // Drawing terrain by hand can be tedious.  In this level, we demonstrate
-  // JetLag's rudimentary support for SVG files.  If you use Inkscape, or
-  // another SVG tool, to make a picture that consists of only one line, then
-  // you can import it into your game as a set of obstacles. Drawing a picture
-  // on top of the obstacle is probably a good idea, though we don't bother in
-  // this level
   enableTilt(10, 10);
   boundingBox();
 

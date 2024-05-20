@@ -7,7 +7,7 @@ import { boundingBox, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -33,7 +33,6 @@ function builder(level: number) {
     rigidBody: new CircleBody({ cx: 15, cy: 8, radius: 0.4 }),
     role: new Destination(),
   });
-  stage.score.setVictoryDestination(1);
 
   let h = new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
@@ -45,6 +44,7 @@ function builder(level: number) {
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => (h.role as Hero).jump(0, -10));
 
   // Specify default win and lose behaviors
+  stage.score.setVictoryDestination(1);
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 

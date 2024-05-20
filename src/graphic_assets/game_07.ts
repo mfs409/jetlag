@@ -7,18 +7,12 @@ import { enableTilt, wideBoundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   // Here's where we name all the images/sounds/background music files.
   resources = {
     prefix: "./assets/",
-    soundNames: [
-      "flap_flap.ogg", "high_pitch.ogg", "low_pitch.ogg", "lose_sound.ogg",
-      "slow_down.ogg", "win_sound.ogg"
-    ],
-    imageNames: [
-      "alien.json", "sprites.json", "noise.png", "mid.png", "back.png"
-    ]
+    imageNames: ["sprites.json", "mid.png", "back.png"]
   };
 }
 
@@ -44,10 +38,18 @@ function builder(_level: number) {
   stage.backgroundColor = "#4050D0";
   // These get layered in the order they are made.  You probably want them to
   // be layered from speed 1 down to speed 0.
-  stage.background.addLayer({ anchor: { cx: 8, cy: 4.5 }, imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "back.png" }), speed: 1 })
+  stage.background.addLayer({
+    anchor: { cx: 8, cy: 4.5 },
+    imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "back.png" }),
+    speed: 1
+  });
   // Speed 0 is "same as hero"; Speed 1 is "seems not to move".  In between
   // will seem like layers in the distance.
-  stage.background.addLayer({ anchor: { cx: 8, cy: 4.5 }, imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "mid.png" }), speed: 0 })
+  stage.background.addLayer({
+    anchor: { cx: 8, cy: 4.5 },
+    imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "mid.png" }),
+    speed: 0
+  });
 
   // JetLag also supports foregrounds.  They work in the same way :)
 }

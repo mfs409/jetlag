@@ -10,40 +10,15 @@ also lets you win by collecting a certain number of goodies:
 
 In the above game, you need to collect one of each type of goodie.  You can, of
 course, require different numbers of each type of goodie, too.  To write this
-mini-game, we start by creating a hero and a few goodies:
+[game](game_09.ts), we start by creating a hero and a few goodies:
 
 ```typescript
-    new Actor({
-      appearance: new ImageSprite({ width: 1, height: 1, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: .5, cy: 8.5, radius: .5 }),
-      movement: new TiltMovement(),
-      role: new Hero({ strength: 10 })
-    });
-    new Actor({
-      appearance: new ImageSprite({ width: 1, height: 1, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2.5, cy: 8.5, radius: .5 }),
-      role: new Goodie({ onCollect: () => { stage.score.addToGoodieCount(0, 1); return true; } }),
-    });
-    new Actor({
-      appearance: new ImageSprite({ width: 1, height: 1, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 3.5, cy: 8.5, radius: .5 }),
-      role: new Goodie({ onCollect: () => { stage.score.addToGoodieCount(1, 1); return true; } }),
-    });
-    new Actor({
-      appearance: new ImageSprite({ width: 1, height: 1, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 4.5, cy: 8.5, radius: .5 }),
-      role: new Goodie({ onCollect: () => { stage.score.addToGoodieCount(2, 1); return true; } }),
-    });
-    new Actor({
-      appearance: new ImageSprite({ width: 1, height: 1, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 5.5, cy: 8.5, radius: .5 }),
-      role: new Goodie({ onCollect: () => { stage.score.addToGoodieCount(3, 1); return true; } }),
-    });
+{{#include game_09.ts:38:64}}
 ```
 
 Then we tell JetLag that we want to win via collecting goodies.  This also
 indicates the minimum number of each goodie type that must be collected.
 
 ```typescript
-    stage.score.setVictoryGoodies(1, 1, 1, 1);
+{{#include game_09.ts:65}}
 ```

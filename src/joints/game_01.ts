@@ -6,7 +6,7 @@ import { Actor, BoxBody, CircleBody, FilledBox, ImageSprite, JetLagGameConfig, O
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -20,11 +20,6 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(_level: number) {
-  // JetLag does not really do much to make Joints easy to use.  There are a few
-  // demonstrations below, but if you need to use joints, you will probably want
-  // to look at references like https://www.iforce2d.net/b2dtut/joints-overview,
-  // and then figure out how to translate that code from C++ to TypeScript.
-
   // In this level, a joint relates the rectangle to the circle.  The circle
   // is the pivot point, and the rectangle rotates around it
   let revolving = new Actor({

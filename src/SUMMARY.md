@@ -1,21 +1,27 @@
 # Game Development with JetLag
 
+# Introduction and Background
+
 - [Introduction](./intro/intro.md)
-    - [TODO: Basic Programming](./intro/basic_programming.md)
+    - [Basic Programming]()
 
-- [TODO: Getting Started (needs better terminal screenshots)](./getting_started/getting_started.md)
-    - [Required Software](./getting_started/required_software.md)
-    - [Extra Software Configuration](./getting_started/extra_software_configuration.md)
-    - [Getting the JetLag Code](./getting_started/getting_the_jetlag_code.md)
-    - [Running for the First Time (Outdated Terminal Screenshots)](./getting_started/running_for_the_first_time.md)
-    - [About the Code (outdated screenshot and folder listing)](./getting_started/about_the_code.md)
+- [Getting Started](./getting_started_native/getting_started.md)
+    - [Required Software](./getting_started_native/required_software.md)
+    - [Extra Software Configuration](./getting_started_native/extra_software_configuration.md)
+    - [Getting the JetLag Code](./getting_started_native/getting_the_jetlag_code.md)
+    - [Running for the First Time](./getting_started_native/running_for_the_first_time.md)
+    - [About the Code](./getting_started_native/about_the_code.md)
+    
+- [Getting Started (Browser-Based Development Only)]()
 
-- [An Overview Of JetLag (content review stopped here)](./overview/overview.md)
+- [An Overview Of JetLag](./overview/overview.md)
     - [Software Foundations](./overview/software_foundations.md)
     - [The Parts of the Default Game](./overview/parts_of_the_default_game.md)
     - [A Game is Like an Interactive Play](./overview/interactive_play.md)
     - [Breaking Down the Builder](./overview/the_builder.md)
     - [Next Steps](./overview/next_steps.md)
+
+# Features
 
 - [The Camera And Gravity](./camera_gravity/camera_gravity.md)
     - [Tilt, as a Prelude to Gravity](./camera_gravity/tilt.md)
@@ -41,11 +47,21 @@
     - [Chasing An Actor](./movement/chasing.md)
     - [Chasing In One Dimension](./movement/chasing_one_dimension.md)
     - [Explicitly Controlling Movement With ManualMovement](./movement/manual_movement.md)
-    - [Controlling Movement In One Dimension](./movement/manual_movement_one.md)
+    - [ Controlling Movement In One Dimension](./movement/manual_movement_one.md)
     - [Violating The Laws Of Physics](./movement/violating_physics.md)
     - [Dampened Motion](./movement/damp_motion.md)
     - [Defying Gravity](./movement/defy_gravity.md)
     - [Wrapping Up](./movement/wrap_up.md)
+
+- [Graphical Assets](./graphic_assets/graphic_assets.md)
+    - [Exploring Appearance Concepts With Filled Sprites](./graphic_assets/exploring_appearance_concepts_with_filled_sprites.md)
+    - [Using Graphics](./graphic_assets/using_graphics.md)
+    - [Dealing With Errors](./graphic_assets/dealing_with_errors.md)
+    - [Sprite Sheets](./graphic_assets/sprite_sheets.md)
+    - [Using The Z Index](./graphic_assets/using_the_z_index.md)
+    - [Changing Images On The Fly](./graphic_assets/changing_images_on_the_fly.md)
+    - [Parallax Backgrounds And Foregrounds](./graphic_assets/parallax_backgrounds_and_foregrounds.md)
+    - [Wrapping Up](./graphic_assets/wrapping_up.md)
 
 - [Roles that Actors Play](./roles/roles.md)
     - [Preliminary Setup](./roles/preliminary_setup.md)
@@ -53,14 +69,14 @@
     - [Counting Different Types of Goodies](./roles/counting_different_types_of_goodies.md)
     - [Destinations](./roles/destinations.md)
     - [Advanced Destinations](./roles/advanced_destinations.md)
-    - ["Activating a Destination"](./roles/activating_a_destination.md)
+    - ["Activating" a Destination](./roles/activating_a_destination.md)
     - [Changing The Hero's Behavior With Sensors](./roles/changing_the_hero_behavior_with_sensors.md)
     - [An Introduction To Obstacles](./roles/an_Introduction_to_obstacles.md)
     - [Obstacle-Enemy Collisions](./roles/obstacle_enemy_collisions.md)
     - [Obstacle-Hero Collisions](./roles/obstacle_hero_collisions.md)
     - [Enabling Jump](./roles/enabling_jump.md)
-    - [Enemies](./roles/enemies.md)
     - [More About Jumping](./roles/more_about_jumping.md)
+    - [Enemies](./roles/enemies.md)
     - [Crawling And Jumping To Defeat Enemies](./roles/crawling_and_jumping_to_defeat_enemies.md)
     - [Staying Alive](./roles/staying_alive.md)
     - [Invincibility](./roles/invincibility.md)
@@ -73,17 +89,8 @@
     - [Text Anchors](./text_hud/text_anchors.md)
     - [Reporting Game Information](./text_hud/reporting_game_information.md)
     - [Using Custom Fonts](./text_hud/using_custom_fonts.md)
+    - [Stacking Appearances](./text_hud/stacking.md)
     - [Wrapping Up](./text_hud/wrapping_up.md)
-
-- [Graphical Assets](./graphic_assets/graphic_assets.md)
-    - [Exploring Appearance Concepts With Filled Sprites](./graphic_assets/exploring_appearance_concepts_with_filled_sprites.md)
-    - [Using Graphics](./graphic_assets/using_graphics.md)
-    - [Dealing With Errors](./graphic_assets/dealing_with_errors.md)
-    - [Sprite Sheets](./graphic_assets/sprite_sheets.md)
-    - [Using The Z Index](./graphic_assets/using_the_z_index.md)
-    - [Changing Images On The Fly](./graphic_assets/changing_images_on_the_fly.md)
-    - [Parallax Backgrounds And Foregrounds](./graphic_assets/parallax_backgrounds_and_foregrounds.md)
-    - [Wrapping Up](./graphic_assets/wrapping_up.md)
 
 - [Animations](./animations/animations.md)
     - [A Warning About Imports](./animations/a_warning_about_imports.md)
@@ -107,11 +114,10 @@
 - [Transitions Among Stages](./stage_transitions/stage_transitions.md)
     - [Importing Your Own Code](./stage_transitions/importing_your_own_code.md)
     - [The game.ts File](./stage_transitions/the_game_file.md)
-    - [The common.ts File](./stage_transitions/the_common_file.md)
     - [The splash.ts File](./stage_transitions/the_splash_file.md)
     - [The chooser.ts File](./stage_transitions/the_chooser_file.md)
     - [The help.ts File](./stage_transitions/the_help_file.md)
-    - [The Hard Part: play.ts](./stage_transitions/the_hard_part_play.md)
+    - [The Hard Part: levels.ts](./stage_transitions/the_hard_part_play.md)
     - [Wrapping Up](./stage_transitions/wrapping_up.md)
 
 - [Timer Events](./timers/timers.md)
@@ -139,7 +145,6 @@
     - [Wrapping Up](./score/wrapping_up.md)
 
 - [Gesture Input](./gestures/gestures.md)
-    - [A Warning About Imports](./gestures/a_warning_about_imports.md)
     - [Getting Started](./gestures/getting_started.md)
     - [Tap: The Most Basic Gesture](./gestures/tap.md)
     - [Using The HUD](./gestures/using_the_hud.md)
@@ -150,6 +155,7 @@
     - [Gestures In The HUD And World](./gestures/gestures_in_the_hud_and_world.md)
     - [Long Presses](./gestures/long_presses.md)
     - [Coordinating With Hover](./gestures/coordinating_with_hover.md)
+    - [MouseOver Events]()
     - [Wrapping Up](./gestures/wrapping_up.md)
 
 - [Projectiles And Actor Pools](./projectiles/projectiles.md)
@@ -175,7 +181,6 @@
     - [Wrapping Up](./collisions/wrapping_up.md)
 
 - [Temporary And Long-Term Storage](./storage/storage.md)
-    - [Overview](./storage/overview.md)
     - [Getting Started](./storage/getting_started.md)
     - [A Design That Uses All Three Kinds Of State](./storage/a_design_that_uses_all_three_kinds_of_state.md)
     - [Extra Game Configuration](./storage/extra_game_configuration.md)
@@ -184,6 +189,7 @@
     - [Setting Up The Session Storage](./storage/setting_up_the_session_storage.md)
     - [Setting Up The Persistent Storage](./storage/setting_up_the_persistent_storage.md)
     - [Greeting The Player](./storage/greeting_the_player.md)
+    - [Setting Up The Gameplay](./storage/gameplay.md)
     - [Wrapping Up](./storage/wrapping_up.md)
 
 - [Getting Started With Joints](./joints/joints.md)
@@ -206,6 +212,8 @@
     - [Our First Cut Scene](./video/our_first_cut_scene.md)
     - [Cut Scenes In Overlays, And Controlling Video Playback](./video/cut_scenes_in_overlays,_and_controlling_video_playback.md)
     - [Wrapping Up](./video/wrapping_up.md)
+
+# Demos
 
 - [Introduction To Simulation With Conway's Game Of Life](./simulation_conway/simulation_conway.md)
     - [The Game](./simulation_conway/the_game.md)
@@ -236,10 +244,15 @@
     - [The Code](./endless_runner_game/the_code.md)
     - [Wrapping Up](./endless_runner_game/wrapping_up.md)
 
----
+# Advanced Topics
 
-- [TODO: Discrete Movement](./discrete_movement/discrete_movement.md)
-- [TODO: Packaging For Desktop](./package_desktop/package_desktop.md)
-- [TODO: Packaging For Mobile](./package_mobile/package_mobile.md)
+- [Discrete Movement]()
+- [Packaging For Desktop]()
+- [Packaging For Mobile]()
+- [Multiplayer Games]()
+- [Image Generation]()
+- [Working With Filters]()
+
+---
 
 [Contributors](./contributors.md)

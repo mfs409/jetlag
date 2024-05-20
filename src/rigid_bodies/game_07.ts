@@ -1,17 +1,17 @@
 import { Actor, BoxBody, CircleBody, ImageSprite, JetLagGameConfig, Obstacle, TiltMovement, initializeAndLaunch } from "../jetlag";
-import { boundingBox, enableTilt, levelController } from "./common";
+import { boundingBox, enableTilt } from "./common";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
  * the assets (images and sounds) used by this game.
  */
 class Config implements JetLagGameConfig {
-  // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+    // Use 16/9 for landscape mode, and 9/16 for portrait mode
+    aspectRatio = { width: 16, height: 9 };
     hitBoxes = true;
     resources = {
         prefix: "./assets/",
-        imageNames: ["sprites.json", "mid.png"]
+        imageNames: ["green_ball.png"]
     };
 }
 
@@ -20,10 +20,7 @@ class Config implements JetLagGameConfig {
  *
  * @param level Which level should be displayed
  */
-function builder(level: number) {
-    // Set up the level controller, so we can easily switch among levels
-    levelController(level, 19, builder);
-
+function builder(_level: number) {
     enableTilt(10, 10);
     new Actor({
         appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
@@ -44,12 +41,6 @@ function builder(level: number) {
     walls.r.rigidBody.setPhysics({ friction: .6 })
     walls.t.rigidBody.setPhysics({ friction: .6 })
     walls.b.rigidBody.setPhysics({ friction: .6 })
-
-    // Note that the default is for everything to have density=1, elasticity=0,
-    // and friction=0.  You should make same-sized actors with different
-    // densities, and watch what happens when they collide!  You should also
-    // watch what happens when you make elasticity too big (try 100, for
-    // example...)
 }
 
 // call the function that kicks off the game

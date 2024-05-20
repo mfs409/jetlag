@@ -7,13 +7,13 @@ import { boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
     imageNames: ["sprites.json"]
   };
-  storageKey = "com.github.mfs409.jetlag.tut_storage";
+  storageKey = "com.github.mfs409.my-jetlag-tutorials";
 }
 
 /** This is for Level Storage */
@@ -44,30 +44,6 @@ function persist(p: PStore, key: string) {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // When the size of your game gets past a certain size, you'll find that it
-  // is hard to use the `()=>{}` syntax to effectively keep track of all of
-  // the information that a level of your game needs.  The "level" storage
-  // feature lets you store information so that it is "globally accessible"
-  // throughout your code.  It gets reset each time JetLag calls your
-  // builder() code.
-
-  // You can store *anything* in level storage, as a key/value pair.  You'll
-  // probably find that it is easier if you organize things in an object,
-  // though.
-
-  // Session storage is similar, except it gets reset whenever you *quit* or
-  // *refresh the browser*.
-
-  // Persistent storage is "forever".
-
-  // In this game, you can collect coins.  Every 5 coins becomes a "ruby".  If
-  // you lose the level, you don't keep the coins you collected.  If you leave
-  // the game with unconverted coins, they're lost, but rubies persist
-  // forever.
-
-  // We'll also print welcome messages for "first time playing" and "first
-  // time playing today".
-
   // Set up level storage
   let lstore = new LStore();
   stage.storage.setLevel("stats", lstore);
@@ -75,15 +51,11 @@ function builder(level: number) {
   // Only set up session storage if we don't have one already
   if (!stage.storage.getSession("session_state"))
     stage.storage.setSession("session_state", new SStore());
-  let sstore = stage.storage.getSession("session_state");
+  let sstore = stage.storage.getSession("session_state") as SStore;
 
   // Only set up persistent storage if we don't have one already. Note that
   // for our "first time playing" rules, we need this to be a bit more complex
   // than session storage.
-
-  // Persistent storage is trickier, because you have to explicitly save it
-  // back to persistent after any change.
-
   let first_time = false; // Is this the very first time?
   if (stage.storage.getPersistent("persistent_info") == undefined) {
     first_time = true;
@@ -173,8 +145,6 @@ function builder(level: number) {
     rigidBody: new CircleBody({ cx: 15, cy: 8, radius: 0.4 }),
     role: new Destination(),
   });
-  stage.score.setVictoryDestination(1);
-
 
   // Make the coin counter
   new Actor({
@@ -197,8 +167,22 @@ function builder(level: number) {
   });
 
   // Specify default win and lose behaviors
+  stage.score.setVictoryDestination(1);
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
+
+  // When the player loses, just give a message and let them start over
+  stage.score.loseSceneBuilder = (overlay) => {
+    new Actor({
+      appearance: new FilledBox({ width: 16, height: 9, fillColor: "#000000" }),
+      rigidBody: new BoxBody({ cx: 8, cy: 4.5, width: 16, height: 9 }, { scene: overlay }),
+      gestures: { tap: () => { stage.clearOverlay(); stage.switchTo(builder, level); return true; } }
+    });
+    new Actor({
+      appearance: new TextSprite({ center: true, face: "Arial", size: 32, color: "#FFFFFF" }, "Try Again"),
+      rigidBody: new CircleBody({ cx: 8, cy: 4.5, radius: .01 }, { scene: overlay }),
+    });
+  };
 
   // When the player wins, move coins from local to session storage, and then
   // compute ruby updates before printing a message
@@ -234,19 +218,6 @@ function builder(level: number) {
         rigidBody: new CircleBody({ cx: 8, cy: 5.5, radius: .01 }, { scene: overlay }),
       });
     }
-  }
-
-  // When the player loses, just give a message and let them start over
-  stage.score.loseSceneBuilder = (overlay) => {
-    new Actor({
-      appearance: new FilledBox({ width: 16, height: 9, fillColor: "#000000" }),
-      rigidBody: new BoxBody({ cx: 8, cy: 4.5, width: 16, height: 9 }, { scene: overlay }),
-      gestures: { tap: () => { stage.clearOverlay(); stage.switchTo(builder, level); return true; } }
-    });
-    new Actor({
-      appearance: new TextSprite({ center: true, face: "Arial", size: 32, color: "#FFFFFF" }, "Try Again"),
-      rigidBody: new CircleBody({ cx: 8, cy: 4.5, radius: .01 }, { scene: overlay }),
-    });
   }
 }
 

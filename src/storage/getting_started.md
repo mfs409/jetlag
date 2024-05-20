@@ -1,4 +1,10 @@
 ## Getting Started
 
-For this tutorial, you'll need the `boundingBox()` function and the
-`sprites.json`/`sprites.png` sprite sheet.
+This chapter requires the following supporting code:
+
+- [common.ts](common.ts)
+
+It also needs the following files in the `assets` folder:
+
+- [sprites.json](../assets/sprites.json)
+- [sprites.png](../assets/sprites.png)

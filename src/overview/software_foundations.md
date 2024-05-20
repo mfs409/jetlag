@@ -6,13 +6,13 @@ code (but not modify it!), we call their code a "library".
 
 JetLag relies on two important libraries.  The first is Box2D.  Box2D is an
 industrial-strength physics simulator.  A programmer can use Box2D to create a
-"world", put shapes into that world, and then see how those shapes move and
-collide.  The second important library is Pixi.js.  Pixi.js is a library for
-drawing 2D images.  Note that Box2D doesn't know anything about drawing, and
+"world", put shapes into that world, and then run a simulation where those
+shapes move and collide.  The second important library is Pixi.js.  Pixi.js is a
+library for drawing 2D images.  Box2D doesn't know anything about drawing, and
 Pixi.js doesn't know anything about physics.  However, they both do know about
 shapes, such as circles, rectangles, and polygons.
 
-Pixi.js and Box2D are general-purpose libraries... they can be used to make
+Pixi.js and Box2D are general-purpose libraries.  They can be used to make
 games, but also for many other purposes.  The main goal of JetLag is to provide
 a clean and easy way to develop games, by providing a game-specific interface to
 Pixi.js and Box2D.  JetLag tries to give you common building blocks for making
@@ -45,7 +45,7 @@ design will help you to avoid the problem illustrated in the next picture:
 
 Before we look at some code, there is one more important topic to discuss.  If
 you're looking at that first picture and thinking "I don't want my game to run
-in a web browser", JetLag is still a good tool for you.  In later tutorials,
+in a web browser", JetLag is still a good tool for you.  In later chapters,
 we'll show you how to use tools like [Capacitor](https://capacitorjs.com/) and
 [Electron](https://www.electronjs.org/) to run your game as a mobile or desktop
 app.

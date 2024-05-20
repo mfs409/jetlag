@@ -8,41 +8,11 @@ hero, which changes its size.
 
 <iframe src="game_12.iframe.html"></iframe>
 
-Here's the code for the above mini-game.  You should use this as an opportunity
-to check your understanding... if you copy this code into your `builder()`, and
-then hover over things that don't make sense, are you able to understand why
-this code delivers the behaviors you're seeing in the above game?
+Here's the [code](game_12.ts) for the above mini-game.  You should use this as
+an opportunity to check your understanding... if you copy this code into your
+`builder()`, and then hover over things that don't make sense, are you able to
+understand why this code delivers the behaviors you're seeing in the above game?
 
 ```typescript
-    new Actor({
-      appearance: new ImageSprite({ width: 0.4, height: 0.4, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2, cy: 3, radius: 0.2 }, { density: 2 }),
-      movement: new TiltMovement(),
-      role: new Hero({
-        onStrengthChange: (h) => {
-          if ((h.role as Hero).strength == 4) h.resize(2); else h.resize(.5);
-        }
-      }),
-    });
-
-    // The enemy either defeats the hero or decreases its strength.  If it just
-    // decreases the strength, we'll see the hero strength change code run.
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "red_ball.png" }),
-      rigidBody: new CircleBody({ cx: 12, cy: 3, radius: 0.4 }),
-      role: new Enemy(),
-    });
-
-    // This goodie changes the hero's strength, which, in turn, triggers the
-    // hero's strength change code
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 12, cy: 8, radius: 0.4 }),
-      role: new Goodie({
-        onCollect: (_g: Actor, h: Actor) => {
-          (h.role as Hero).strength += 3;
-          return true;
-        }
-      }),
-    });
+{{#include game_12.ts:34:62}}
 ```

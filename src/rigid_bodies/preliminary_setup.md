@@ -1,118 +1,49 @@
 ## Preliminary Setup
 
-In this tutorial, we're going to primarily work in the `builder` function.
-Let's set up the rest of `game.ts` first, so that we don't have distractions
-later.
+In each part of this chapter, we're going to build a mini game to explore some
+feature of rigid bodies.  Most of the time, we're going to use tilt to control
+actors, because it's easy.  We're also going to put a border around the window,
+so things can't wander off the screen.
 
-The first step is to clean out your `game.ts` file.  Erase everything, and
-replace it with this:
+In the last chapter, that we made use of a helper function in our `game.ts`
+file.  But we can do even better!  We can make a separate *file* for storing
+helper functions.  This will let us re-use code even more easily.  In addition,
+it's good to learn how to split your code into multiple files, because games can
+get *very* big, and we don't want to have thousands of lines of code in one
+file.
 
-```typescript
-import { initializeAndLaunch } from "../jetlag/Stage";
-import { JetLagGameConfig } from "../jetlag/Config";
-import { AccelerometerMode } from "../jetlag/Services/Accelerometer";
+In VSCode, the panel on the left hand side lists folders and files.  You should
+see that there is a file called `game.ts` in your `src/game` folder.  Now we're
+going to add a new file, called `common.ts`.  You can do this by right-clicking
+on the `src/game` folder and selecting "New File...".
 
-/**
- * Screen dimensions and other game configuration, such as the names of all
- * the assets (images and sounds) used by this game.
- */
-class Config implements JetLagGameConfig {
-  pixelMeterRatio = 100;
-  screenDimensions = { width: 1600, height: 900 };
-  adaptToScreenSize = true;
-  canVibrate = true;
-  accelerometerMode = AccelerometerMode.DISABLED;
-  storageKey = "--no-key--";
-  hitBoxes = true;
-  resourcePrefix = "./assets/";
-  musicNames = [];
-  soundNames = [];
-  imageNames = [];
-}
-
-/**
- * Build the levels of the game.
- *
- * @param level Which level should be displayed
- */
-function builder(_level: number) {
-}
-
-// call the function that starts running the game in the `game-player` div tag
-// of `index.html`
-initializeAndLaunch("game-player", new Config(), builder);
-```
-
-Next, let's set up the assets that we'll use throughout these tutorials.
-Download these files to your `assets` folder:
-
-- [green_ball.png](rigidbody/green_ball.png)
-- [purple_ball.png](rigidbody/purple_ball.png)
-- [blue_ball.png](rigidbody/blue_ball.png)
-- [red_ball.png](rigidbody/red_ball.png)
-- [grey_ball.png](rigidbody/grey_ball.png)
-- [mustard_ball.png](rigidbody/mustard_ball.png)
-- [mid.png](rigidbody/mid.png)
-
-Then update your 'Config' object:
+The first thing we'll put into this file is the code for enabling tilt.  This is
+almost the same as the code in the last chapter, except that it adds the word
+`export` before `function`.  This lets other files `import` the `enableTilt`
+function.
 
 ```typescript
-  imageNames = ["green_ball.png", "purple_ball.png", "blue_ball.png", "red_ball.png", "grey_ball.png", "mustard_ball.png", "mid.png"];
+{{#include common.ts:3:21}}
 ```
 
-Most of the mini-games in this tutorial are going to use tilt, and most of them
-will also need to surround the 16x9 world with obstacles that keep the actors
-from going off screen.  We can put two functions at the bottom of `game.ts` so
-that we don't have to write that code over and over again:
+Hopefully that code looks pretty familiar.  Now let's make another useful
+function.  This one will draw a box around the outside of the 16x9 world.
 
 ```typescript
-/** Draw a bounding box that surrounds the default world viewport */
-function boundingBox() {
-  // Draw a box around the world
-  let t = new Actor({
-    appearance: new FilledBox({ width: 16, height: .1, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 8, cy: -.05, width: 16, height: .1 }),
-    role: new Obstacle(),
-  });
-  let b = new Actor({
-    appearance: new FilledBox({ width: 16, height: .1, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 8, cy: 9.05, width: 16, height: .1 }),
-    role: new Obstacle(),
-  });
-  let l = new Actor({
-    appearance: new FilledBox({ width: .1, height: 9, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: -.05, cy: 4.5, width: .1, height: 9 }),
-    role: new Obstacle(),
-  });
-  let r = new Actor({
-    appearance: new FilledBox({ width: .1, height: 9, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 16.05, cy: 4.5, width: .1, height: 9 }),
-    role: new Obstacle(),
-  });
-  // Return the four sides as an object with fields "t", "b", "l", and "r" 
-  // (for top/bottom/left/right)
-  return { t, b, l, r };
-}
-
-/**
- * Enable Tilt, and set up arrow keys to simulate it
- *
- * @param xMax  The maximum X force
- * @param yMax  The maximum Y force
- */
-function enableTilt(xMax: number, yMax: number) {
-  stage.tilt.tiltMax.Set(xMax, yMax);
-  if (!stage.accelerometer.tiltSupported) {
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
-  }
-}
+{{#include common.ts:23:51}}
 ```
 
-Now it's time to get started!
+The only unusual thing about that function is that it returns the four walls
+that make up the bounding box.  If you were to say `let walls = boundingBox()`,
+then you could refer to the top wall as `walls.t`, for example.
+
+While we're at it, let's give ourselves another function for making wide
+bounding boxes:
+
+```typescript
+{{#include common.ts:53:76}}
+```
+
+[Here's the final code](common.ts).  Note that this file also includes a
+function for drawing a mute button.  We'll discuss this code in the chapter
+about sound effects.

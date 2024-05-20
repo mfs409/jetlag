@@ -6,7 +6,7 @@ import { Actor, CircleBody, Enemy, GravityMovement, ImageSprite, JetLagGameConfi
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -20,7 +20,7 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // Lastly, notice that you can make a timer "speed up" by having it go *very
+  // Nqotice that you can make a timer "speed up" by having it go *very
   // fast* and then making it seem to to run so often.  Part of the trick is
   // that we know that it will never run faster than 1/45 of a second.
   stage.score.setVictoryEnemyCount(20);

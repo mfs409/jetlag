@@ -7,12 +7,12 @@ SRC_IIFE = $(SRC_ROOT)/jetlag.ts
 OUT_IIFE = $(OUT_ROOT)/jetlag.js
 
 # Chapters that have games that need to be built
-CHAPTERS = animations audio camera_gravity collisions discrete_movement      \
-           empty endless_runner_game gestures getting_started graphic_assets \
-           joints maze_game movement overhead_fight_farm_game overview       \
-           platformer_game projectiles rigid_bodies roles score              \
-           simulation_conway stage_transitions storage svg text_hud timers   \
-           video
+CHAPTERS = animations audio camera_gravity collisions discrete_movement  \
+           empty endless_runner_game gestures graphic_assets             \
+           image_generation joints maze_game movement multiplayer        \
+           overhead_fight_farm_game overview platformer_game projectiles \
+           rigid_bodies roles score simulation_conway stage_transitions  \
+           storage svg text_hud timers video
 
 # Specifying the chapter targets like this lets us build them all in parallel
 CHAP_TGTS = $(patsubst %, %.link, $(CHAPTERS))

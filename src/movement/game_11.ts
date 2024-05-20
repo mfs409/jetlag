@@ -12,7 +12,7 @@ class Config implements JetLagGameConfig {
 
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json"]
+    imageNames: ["green_ball.png"]
   };
 }
 

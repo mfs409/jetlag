@@ -7,7 +7,7 @@ import { boundingBox, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -21,8 +21,7 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // Throughout this tutorial, we'll have levels that can be "won" or "lost".
-  // In all cases, we'll go right back to the same level.
+  // Restart the level when we win or lose
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 
@@ -36,11 +35,6 @@ function builder(level: number) {
     movement: new TiltMovement(),
     role: new Hero(),
   });
-
-  // Now draw three sensors, with different collision behaviors.  Note that
-  // the Z-index completely controls if the hero goes over or under two of
-  // these. For the third, an index of 0 (the default), coupled with it being
-  // drawn after the hero, means the hero still goes under it
 
   // This pad effect multiplies by -1, causing a "bounce off" effect even
   // though collisions are not enabled

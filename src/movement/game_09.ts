@@ -7,12 +7,12 @@ import { boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
 
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json", "mid.png"]
+    imageNames: ["green_ball.png", "mid.png"]
   };
 }
 
@@ -47,7 +47,11 @@ function builder(_level: number) {
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_S, () => ((hero.movement as ManualMovement).updateAngularVelocity(1)));
 
   stage.backgroundColor = "#17b4ff";
-  stage.background.addLayer({ anchor: { cx: 8, cy: 4.5, }, imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "mid.png" }), speed: 0 });
+  stage.background.addLayer({
+    anchor: { cx: 8, cy: 4.5, },
+    imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "mid.png" }),
+    speed: 0
+  });
 }
 
 // call the function that kicks off the game

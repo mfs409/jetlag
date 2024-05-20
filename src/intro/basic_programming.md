@@ -1,8 +1,8 @@
 TODO:
-
 - Finish the chapter
 - Split it into files
 - Add a wrap-up section
+- Update the intro section once this is made
 
 ## Basic Programming
 

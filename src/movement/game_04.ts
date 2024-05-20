@@ -7,12 +7,12 @@ import { enableTilt, boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
 
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json"]
+    imageNames: ["green_ball.png", "red_ball.png"]
   };
 }
 

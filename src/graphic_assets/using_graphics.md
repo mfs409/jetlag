@@ -9,8 +9,8 @@ blurry, unless you stretch them too much.
 
 Below are links to two images:
 
-- [green_ball.png](graphic_assets/green_ball.png)
-- [noise.png](graphic_assets/noise.png)
+- [green_ball.png](../assets/green_ball.png)
+- [noise.png](../assets/noise.png)
 
 Every image is a rectangle, but the green ball uses transparency to *seem* like
 it's a circle.  This is a key idea in games... your image assets need to use
@@ -26,13 +26,21 @@ replace `builder()`'s code with the following:
     });
 ```
 
-You should see something like this:
+You should see something like [this](game_02.ts):
 
 <iframe src="./game_02.iframe.html"></iframe>
 
 Next, add `green_ball.png` to your `imageNames`, and then change `noise.png` to
 `green_ball.png`.  Since the rigid body is a circle, the green ball is a much
 better choice.
+
+```admonish Warning
+You might have noticed that the image is `green_ball.png`, not `green ball.png`.  JetLag does not support spaces in file names, so please use underscores instead.
+
+The same is true for special characters like `(`
+and `)`.  You should try to only use letters, numbers, and underscores in asset
+file names.
+```
 
 Also, remember that right now, `hitBoxes` is `true`.  If you set it `false`, the
 outline of the rigid body will no longer show... you'll want to do that when you

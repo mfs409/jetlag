@@ -7,12 +7,14 @@ import { enableTilt, boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
 
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json"]
+    imageNames: [
+      "green_ball.png", "purple_ball.png", "red_ball.png", "grey_ball.png"
+    ]
   };
 }
 
@@ -63,9 +65,7 @@ function builder(level: number) {
     movement: new PathMovement(new Path().to(.5, 2.5).to(15.5, 2.5).to(.5, 2.5), 5, true),
   });
 
-  // Of course, paths can go from anywhere to anywhere... even off the screen.
-  // The default is that Actors on paths are kinematic, so they can go through
-  // walls.
+  // Put a box around the world, even though paths can go through it
   boundingBox();
   // Since we're going to make a complex path, let's use some code to make it:
   let p = new Path();
@@ -85,8 +85,7 @@ function builder(level: number) {
     movement: new PathMovement(p, 5, true),
   });
 
-  // If a point on the path is directly between two other points, you won't
-  // notice it's there.  The velocity is all that matters
+  // We're going to use this path several times:
   let p2 = new Path().to(-.5, 5).to(8, 5).to(16.5, 5).to(-.5, 5);
   new Actor({
     appearance: new ImageSprite({ width: 1, height: 1, img: "purple_ball.png" }),
@@ -95,8 +94,7 @@ function builder(level: number) {
     movement: new PathMovement(p2, 5, true),
   });
 
-  // But once we've done that, we can re-use the path, letting the next actor
-  // jump forward by a waypoint:
+  // Now re-use the path, letting the next actor jump forward by a waypoint:
   let a2 = new Actor({
     appearance: new ImageSprite({ width: 1, height: 1, img: "purple_ball.png" }),
     rigidBody: new CircleBody({ radius: .5, cx: p2.getPoint(0).x, cy: p2.getPoint(0).y }),
@@ -107,9 +105,7 @@ function builder(level: number) {
   // Notice that we didn't get cx and cy right.  That's OK, as long as you
   // don't have too many dynamic things with the same cx/cy.
 
-  // We can make actors on paths dynamic.  This is usually a bad idea if
-  // collisions are enabled (which is, of course, the default).  Try colliding
-  // with this.  It will mess up the whole path system.
+  // Dynamic actor + path is usually a bad idea!
   new Actor({
     appearance: new ImageSprite({ width: 1, height: 1, img: "grey_ball.png" }),
     rigidBody: new CircleBody({ radius: .5, cx: 2.5, cy: 1.5 }, { dynamic: true }),
@@ -117,9 +113,7 @@ function builder(level: number) {
     movement: new PathMovement(new Path().to(.5, 6.5).to(15.5, 6.5).to(.5, 6.5), 5, true),
   });
 
-  // Lastly, let's observe that we can run code whenever an actor reaches a
-  // waypoint.  In this example, we'll only do something on the second
-  // waypoint (waypoint #1):
+  // Run extra code on the second waypoint (waypoint #1):
   new Actor({
     appearance: new ImageSprite({ width: 1, height: 1, img: "grey_ball.png" }),
     rigidBody: new CircleBody({ radius: .5, cx: 2.5, cy: 7.5 }),

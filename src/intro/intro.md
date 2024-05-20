@@ -6,7 +6,7 @@ using JetLag.
 We tried really hard to make sure that everything in this book will make sense
 *even if you don't have any experience with computer programming*.  Of course,
 everyone makes mistakes.  It's part of life.  It's part of making a game.  And
-it's part of writing a book.  
+it's part of writing a book.
 
 Sometimes this book will have errors.  Sometimes, we might assume you know
 something about programming that you shouldn't be expected to know.  Sometimes a

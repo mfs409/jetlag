@@ -1,5 +1,5 @@
 ## Wrapping Up
 
-Text is "just another appearance".  So far, we've used filled shapes, text, and
-images.  In the next tutorial, we'll explore appearances in  even more detail.
-
+Text is "just another appearance", and for the most part, we can us it anywhere
+we can use a filled shape or ImageSprite.  In later chapters, we'll explore a
+few more appearance components.

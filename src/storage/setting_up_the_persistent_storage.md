@@ -5,26 +5,22 @@ have one already. Note that for our "first time playing" rules, we need this to
 be a bit more complex than session storage.
 
 ```typescript
-    let first_time = false; // Is this the very first time?
-    if (stage.storage.getPersistent("persistent_info") == undefined) {
-      first_time = true;
-      persist(new PStore(), "persistent_info"); // explicitly save it back
-    }
-    let pstore = JSON.parse(stage.storage.getPersistent("persistent_info")!) as PStore;
+{{#include game_01.ts:59:64}}
 ```
 
 As with the other storage types, you can get a local variable for accessing the
 persistent information at any time, like this:
 
 ```typescript
-    let pstore = JSON.parse(stage.storage.getPersistent("persistent_info")!) as PStore;
+{{#include game_01.ts:64}}
 ```
 
 However, don't forget that if you make changes to `pstore`, you will need to
 call `persist(pstore, "persistent_info");`, or else your changes won't be saved
 for the next time the game is played.
 
-@@red WARNING@@ This kind of persistent storage is only intended for small
+```admonish Warning
+This kind of persistent storage is only intended for small
 amounts of data (up to 5MB).  For larger amounts of storage, you'll want to have
 a different strategy:
 
@@ -36,3 +32,4 @@ a different strategy:
 - If you are using Capacitor.js to create a mobile game, or Electron.js to
   create a desktop game, your options include SQLite and filesystem-based
   storage.
+```

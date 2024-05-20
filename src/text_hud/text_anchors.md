@@ -16,17 +16,10 @@ We can achieve this by changing `center` to `false`.  Then JetLag will align the
 center of the rigid body with the top-left corner of the text:
 
 ```typescript
-    let tap_count = 0;
-    new Actor({
-      rigidBody: new BoxBody({ cx: 1, cy: 1, width: .5, height: .5 }),
-      appearance: new TextSprite(
-        { center: false, face: "Arial", size: 64, color: "#FF0000aa", strokeColor: "#0000FF", strokeWidth: 2 },
-        () => "Taps: " + tap_count),
-      gestures: { tap: () => { tap_count += 1; return true; } }
-    });
+{{#include game_05.ts:26:33}}
 ```
 
-When we test this game, we see that we've solved one problem, but created
+When we test this [game](game_05.ts), we see that we've solved one problem, but created
 another.  Now the rigid body is in an inconvenient location.  The best way to
 "fix" this problem is to have two actors: one for anchoring the text, one for
 receiving taps.  The tap actor should probably be invisible (which you can

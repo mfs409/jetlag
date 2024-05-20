@@ -11,35 +11,16 @@ hide from an enemy that is chasing it.
 
 <iframe src="game_09.iframe.html"></iframe>
 
-To make this mini-game, we start with a hero:
+To make this [mini-game](game_09.ts), we start with a hero:
 
 ```typescript
-    let h = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 3, cy: 3, radius: 0.4 }),
-      movement: new TiltMovement(),
-      role: new Hero(),
-    });
+{{#include game_09.ts:34:39}}
 ```
 
 Next, we'll add two enemies.  Notice that I'm using `extra` to mark one as being "weak":
 
 ```typescript
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "red_ball.png" }),
-      rigidBody: new CircleBody({ cx: 1, cy: 1, radius: 0.4 }, { dynamic: true }),
-      movement: new ChaseMovement({ target: h, speed: 1 }),
-      role: new Enemy(),
-      extra: { weak: true }
-    });
-
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "red_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2, cy: 2, radius: 0.4 }, { dynamic: true }),
-      movement: new ChaseMovement({ target: h, speed: 1 }),
-      role: new Enemy(),
-      extra: { weak: false }
-    });
+{{#include game_09.ts:51:65}}
 ```
 
 Finally, we'll make an obstacle.  When making the `Obstacle` role, I've added
@@ -48,13 +29,5 @@ through this wall.  The second is an `enemyCollision` function, which defeats
 the enemy only if it is weak.
 
 ```typescript
-    new Actor({
-      appearance: new FilledBox({ width: 0.2, height: 2, fillColor: "#FF0000" }),
-      rigidBody: new BoxBody({ cx: 12, cy: 8, width: .2, height: 2 }),
-      role: new Obstacle({
-        disableHeroCollision: true, enemyCollision: (_o: Actor, e: Actor) => {
-          if (e.extra.weak) (e.role as Enemy).defeat(true);
-        }
-      }),
-    });
+{{#include game_09.ts:41:49}}
 ```

@@ -7,7 +7,7 @@ import { boundingBox, enableTilt } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -35,7 +35,6 @@ function builder(level: number) {
     rigidBody: new CircleBody({ cx: 0.5 + 15 * Math.random(), cy: 0.5 + 8 * Math.random(), radius: 0.4 }),
     role: new Destination(),
   });
-  stage.score.setVictoryDestination(1);
 
   let h = new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
@@ -45,6 +44,7 @@ function builder(level: number) {
   });
 
   // Specify default win and lose behaviors
+  stage.score.setVictoryDestination(1);
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
 
@@ -53,12 +53,6 @@ function builder(level: number) {
   // having to think about when other codes would run.
   let ud = "up";
   let lr = "left";
-  stage.world.timer.addEvent(new TimedEvent(.01, true, () => {
-    ud = h.rigidBody.getCenter().y < d.rigidBody.getCenter().y ? "down" : "up";
-    lr = h.rigidBody.getCenter().x < d.rigidBody.getCenter().x ? "right" : "left";
-  }));
-
-  // Give some hints
   new Actor({
     appearance: new TextSprite({ face: "Arial", center: false, size: 22, color: "#000000" }, () => "go " + lr),
     rigidBody: new CircleBody({ cx: 0.5, cy: 0.2, radius: 0.01 }, { scene: stage.hud })
@@ -67,6 +61,12 @@ function builder(level: number) {
     appearance: new TextSprite({ face: "Arial", center: false, size: 22, color: "#000000" }, () => "go " + ud),
     rigidBody: new CircleBody({ cx: 0.5, cy: 0.7, radius: 0.01 }, { scene: stage.hud })
   });
+
+  // Update the hints
+  stage.world.timer.addEvent(new TimedEvent(.01, true, () => {
+    ud = h.rigidBody.getCenter().y < d.rigidBody.getCenter().y ? "down" : "up";
+    lr = h.rigidBody.getCenter().x < d.rigidBody.getCenter().x ? "right" : "left";
+  }));
 }
 
 // call the function that kicks off the game

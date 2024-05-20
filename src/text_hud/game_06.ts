@@ -6,7 +6,7 @@ import { Actor, CircleBody, ImageSprite, JetLagGameConfig, KeyCodes, ManualMovem
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -39,7 +39,6 @@ function builder(_level: number) {
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => (hero.movement as ManualMovement).addVelocity(0, -1))
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => (hero.movement as ManualMovement).addVelocity(0, 1))
 
-  // Oh no, adding this doesn't do what we want
   stage.world.camera.setCameraFocus(hero);
 }
 

@@ -9,4 +9,3 @@ periodically test your game (without hitboxes!) to be sure that things look and
 feel the way you want.  A nice little trick is to add the line
 `stage.renderer.suppressHitBoxes = true;` in the code for a level, as a way to
 turn off hitboxes just for that level.
-

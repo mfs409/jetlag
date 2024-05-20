@@ -1,14 +1,17 @@
 ## Getting Started
 
-This tutorial uses the `boundingBox()` and `enableTilt()` functions, as well as
-the `sprites.json` and `sprites.png` files.  Be sure to copy them over from
-previous tutorials before continuing.
+This chapter requires the following supporting code:
 
-Also, since the examples are likely to involve winning and losing, you'll
-probably want these three lines at the top of `builder()`:
+- [common.ts](common.ts)
+
+It also needs the following files in the `assets` folder:
+
+- [sprites.json](../assets/sprites.json)
+- [sprites.png](../assets/sprites.png)
+
+ Since some of the examples involve winning and losing, you'll probably want to
+put these two lines at the top of your `builder()` function:
 
 ```typescript
-  boundingBox();
-  stage.score.onLose = { level, builder };
-  stage.score.onWin = { level, builder };
+{{#include game_01.ts:24:25}}
 ```

@@ -1,6 +1,6 @@
 ## Using the SvgSystem
 
-Here is the game we are going to make.  It's really quite ugly, but hopefully it
+Here is the [game](game_01.ts) we are going to make.  It's really quite ugly, but hopefully it
 is enough to get you thinking about how SVG can be useful for some kinds of
 games.
 
@@ -10,32 +10,7 @@ This level doesn't take much code to write: we just set up an actor, and then
 use `SvgSystem.processFile()` to process the shape.
 
 ```typescript
-    enableTilt(10, 10);
-    boundingBox();
-
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 0.25, cy: 5.25, radius: 0.4 }, { density: 5, friction: 0.6 }),
-      movement: new TiltMovement(),
-      role: new Hero(),
-    });
-
-    // draw an obstacle from SVG.  We are stretching it in the X and Y
-    // dimensions, and also moving it rightward and downward
-    //
-    // Notice that "shape.svg" is just a file in assets.  We didn't load it 
-    // through the `Config` object.  Instead, it gets loaded right here, when we
-    //  make the call to processFile.
-    SvgSystem.processFile("shape.svg", 2, 2, 1.5, 1.5, (centerX: number, centerY: number, width: number, rotation: number) => {
-      // Make an obstacle and rotate it
-      let a = new Actor({
-        appearance: new FilledBox({ width, height: 0.05, fillColor: "#FF0000" }),
-        rigidBody: new BoxBody({ cx: centerX, cy: centerY, width, height: 0.05 }),
-        role: new Obstacle(),
-      });
-      a.rigidBody.setRotation(rotation);
-      a.rigidBody.setPhysics({ density: 1, elasticity: .2, friction: .4 });
-    });
+{{#include game_01.ts:34:48}}
 ```
 
 In the call to `processFile()`, we pass in  the name of the shape file.  JetLag

@@ -6,18 +6,12 @@ import { Actor, AnimatedSprite, AnimationSequence, AnimationState, CircleBody, J
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   // Here's where we name all the images/sounds/background music files.
   resources = {
     prefix: "./assets/",
-    soundNames: [
-      "flap_flap.ogg", "high_pitch.ogg", "low_pitch.ogg", "lose_sound.ogg",
-      "slow_down.ogg", "win_sound.ogg"
-    ],
-    imageNames: [
-      "alien.json", "sprites.json", "noise.png", "mid.png", "back.png"
-    ]
+    imageNames: ["sprites.json"]
   };
 }
 
@@ -27,9 +21,6 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(_level: number) {
-  // Next, let's look at animations.  They're a lot harder.  We start by
-  // making an animation map:
-  let animation_map = new Map();
   // The default animation is called "IDLE_E", representing when something
   // faces rightward/eastward.  You must provide it.  So in this case, we'll
   // make an animation based on 8 coin images, they'll show for the same
@@ -39,6 +30,8 @@ function builder(_level: number) {
     repeat: true,
     images: ["coin0.png", "coin1.png", "coin2.png", "coin3.png", "coin4.png", "coin5.png", "coin6.png", "coin7.png"]
   });
+  // Now put them in a map
+  let animation_map = new Map();
   animation_map.set(AnimationState.IDLE_E, coins);
 
   // Now we can use it:

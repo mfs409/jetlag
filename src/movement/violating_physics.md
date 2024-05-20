@@ -1,7 +1,8 @@
 ## Violating The Laws Of Physics
 
 In this next mini-game, we'll start building out something common in
-"platformer" games: a hero who can jump onto a floating platform.
+"platformer" games: a hero who can jump onto a floating platform.  You can play
+the game below, and find its code [here](game_08.ts)
 
 <iframe src="game_08.iframe.html"></iframe>
 
@@ -17,19 +18,7 @@ accidentally rotate.  You should try turning the `false` to `true`, and watch
 how the behavior of the Hero changes when it's walking off the platform.
 
 ```typescript
-    // In the last level, there was a "disableRotation" parameter.  This can be
-    // very useful, especially in platformer-type games.
-    stage.world.setGravity(0, 10);
-    boundingBox();
-
-    // If we don't have the `disableRotation` option here, then if the hero just
-    // barely nicks the corner of the platform, it will rotate as it falls!
-    let hero = new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new BoxBody({ cx: 1, cy: 5.25, width: .8, height: .8 }, { disableRotation: false }),
-      movement: new ManualMovement(),
-      role: new Hero(),
-    });
+{{#include game_08.ts:25:37}}
 ```
 
 Next, we make a floating platform.  Since it's an Obstacle, the hero won't pass
@@ -37,11 +26,7 @@ through it.  Since we didn't give it movement, it's a static body, so it won't
 fall.
 
 ```typescript
-    new Actor({
-      appearance: new FilledBox({ width: 2, height: .25, fillColor: "#FF0000" }),
-      rigidBody: new BoxBody({ width: 2, height: .25, cx: 4, cy: 7 }),
-      role: new Obstacle(),
-    });
+{{#include game_08.ts:39:43}}
 ```
 
 One weird thing here is that jumping is a special behavior.  It's not part of
@@ -53,11 +38,5 @@ so that jumping is a movement, not a part of the Hero role.  I did it this way,
 because it worked for my goals.  It's not objectively good or bad.
 
 ```typescript
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => ((hero.role as Hero).jump(0, -7.5)));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => ((hero.movement as ManualMovement).updateXVelocity(-5)));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => ((hero.movement as ManualMovement).updateXVelocity(5)));
-
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => ((hero.movement as ManualMovement).updateXVelocity(0)));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => ((hero.movement as ManualMovement).updateXVelocity(0)));
+{{#include game_08.ts:47:52}}
 ```
-

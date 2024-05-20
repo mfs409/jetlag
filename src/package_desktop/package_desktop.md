@@ -1,6 +1,6 @@
 # Packaging A JetLag Game As A Desktop Application
 
-This tutorial shows how to use Electron to package a game for desktop play
+This chapter shows how to use Electron to package a game for desktop play
 (e.g., Steam).
 
 - **TODO: Actually integrate with Steam APIs?**

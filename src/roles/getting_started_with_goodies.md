@@ -12,25 +12,12 @@ always makes the hero's `rigidBody` dynamic, since there are so many important
 collisions that involve heroes.
 
 ```typescript
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2, cy: 3, radius: 0.4 }),
-      movement: new TiltMovement(),
-      role: new Hero(),
-    });
-
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "blue_ball.png" }),
-      rigidBody: new CircleBody({ cx: 12, cy: 3, radius: 0.4 }),
-      role: new Goodie(),
-    });
-
-    // Set up a way to quickly get the goodie counts by pressing the '?' key
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SLASH, () =>
-      window.alert(`${stage.score.getGoodieCount(0)}, ${stage.score.getGoodieCount(1)}, ${stage.score.getGoodieCount(2)}, ${stage.score.getGoodieCount(3)}`));
+{{#include game_01.ts:38:53}}
 ```
 
 You'll also notice that there's a bit of code at the end that reports how many
 goodies have been collected.  This, of course, is a terrible way to report
 information in the middle of a game.  Since we haven't learned too much about
 `Text` yet, it'll do for now.
+
+(Here's the [complete game](game_01.ts).)

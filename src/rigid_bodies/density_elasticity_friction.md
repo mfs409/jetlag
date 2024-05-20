@@ -24,27 +24,7 @@ fact.  To show this, the code adds some elasticity to the left wall, and some
 friction to the bottom wall.
 
 ```typescript
-    enableTilt(10, 10);
-
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 2, cy: 3, radius: 0.4 }, { density: 5, friction: .3 }),
-      movement: new TiltMovement(),
-      role: new Obstacle(),
-    });
-
-    new Actor({
-      appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-      rigidBody: new BoxBody({ cx: 4, cy: 3, width: .8, height: .8 }, { density: 5, friction: .3 }),
-      movement: new TiltMovement(),
-      role: new Obstacle(),
-    });
-
-    // boundingBox returns the four walls.  We can customize their physics 
-    // properties:
-    let walls = boundingBox();
-    walls.b.rigidBody.setPhysics({ friction: .4 });
-    walls.l.rigidBody.setPhysics({ elasticity: .2 });
+{{#include game_06.ts}}
 ```
 
 Before moving on to the next example, be sure to change some numbers and see how

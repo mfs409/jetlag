@@ -11,7 +11,11 @@ another way, the *perspective* of the game was from above.  We were looking down
 at the game, so we didn't expect gravity to be pushing things around on the
 screen (unless the screen was tilted).
 
-In JetLag, this corresponds to a gravity of (0, 0).  That is, there is no default force in the x or y dimension.  If we instead had gravity in the Y dimension, it would seem like we were looking at the game from a side perspective, in which case the hero would fall to the ground.
+In JetLag, this corresponds to a gravity of (0, 0).  That is, there is no
+default force in the x or y dimension.  Every game has a gravity of (0, 0)
+*unless you tell it to do something else*.  If we instead had gravity in the Y
+dimension, it would seem like we were looking at the game from a side
+perspective, in which case the hero would fall to the ground.
 
 If you add this one line to the code, the whole perspective will shift:
 

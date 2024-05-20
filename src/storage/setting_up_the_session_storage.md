@@ -7,15 +7,12 @@ then, we can't just "make" the `sstore`, we'll need to check if it exists,
 first:
 
 ```typescript
-    // Only set up session storage if we don't have one already
-    if (!stage.storage.getSession("session_state"))
-      stage.storage.setSession("session_state", new SStore());
-    let sstore = stage.storage.getSession("session_state");
+{{#include game_01.ts:51:54}}
 ```
 
 And just like with local storage, in any code *other than the builder*, we can
 access the session storage like this:
 
 ```typescript
-  let sstore = stage.storage.getSession("session_state");
+{{#include game_01.ts:54}}
 ```

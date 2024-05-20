@@ -13,10 +13,7 @@ being something that manages many entities.
 The first thing you'll see in the game is this line:
 
 ```typescript
-  // Draw a grid on the screen, to help us think about the positions of actors.
-  // Remember that when `hitBoxes` is true, clicking the screen will show
-  // coordinates in the developer console.
-  GridSystem.makeGrid(stage.world, { x: 0, y: 0 }, { x: 16, y: 9 });
+{{#include ./game.ts:22:25}}
 ```
 
 This draws the grid that you see on the screen.  If you open the developer
@@ -24,10 +21,10 @@ console in your browser (in Chrome or Firefox: press F12, then pick console),
 and then click anywhere on the screen, you should see that the coordinates of
 your click are reported in the console:
 
-![When hitboxes are true, click positions are reported](./world_touch.png)
+![When hitBoxes is true, click positions are reported](./world_touch.png)
 
 Right now, "World Touch" and "HUD Touch" are the same.  We'll get to this in a
-later tutorial.  For now, you can ignore "HUD Touch".
+later chapter.  For now, you can ignore "HUD Touch".
 
 It turns out that the GridSystem is making lots and lots of lines.  Each of them
 is an Actor, but they're more like props than anything else... they don't move,
@@ -36,12 +33,13 @@ there to help you when you get started, so let's not think about it in any more
 detail.
 
 What is much more interesting is how the world relates to our `Config` object.
-The Config object asked for a screen that was 1600x900 meters, with a
-pixel-to-meter ratio of 100.  It also asked to adapt to the screen size.  If you
-resize your browser and refresh, you'll see that the game resizes, so it is
-always going to be in a 16x9 ratio (with black bars on the left/right or
-top/bottom, as necessary).  No matter what size your browser window, the game
-will be scaled so that it shows a simulated world that is 16x9 meters.
+The Config object asked for a screen that was 16x9 meters.  JetLag is figuring
+out how large it can stretch the world, so that nothing is distorted but the
+world is as big as possible.  If you resize your browser and refresh, you'll see
+that the game resizes, so it is always going to be in a 16x9 ratio (with black
+bars on the left/right or top/bottom, as necessary).  No matter what size your
+browser window, when you refresh the game will be scaled so that it shows a
+simulated world that is 16x9 meters.
 
 ### The Hero
 
@@ -57,20 +55,15 @@ they're optional.
 Let's look at the first actor:
 
 ```typescript
-  // Make a "hero" who moves via keyboard control and appears as a circle
-  let hero = new Actor({
-    appearance: new FilledCircle({ radius: .5, fillColor: "#ff0000", lineWidth: 4, lineColor: "#00ff00" }),
-    rigidBody: new CircleBody({ cx: 5, cy: 2, radius: .5 }),
-    role: new Hero(),
-    movement: new ManualMovement(),
-  })
+{{#include ./game.ts:27:33}}
 ```
 
 In this code we are making an actor.  This actor is going to get used in some
-code later, so we give it a name (`hero`) so that it is easy to keep track of
-it. For its appearance, we make a circle with radius .5, which means it will
-have a width of 1 and a height of 1.  We color it red (`#FF0000`), and give it a
-green border that is 4 pixels wide.
+code later, so we save it to a variable called `hero`, which makes it easy to
+keep track of it. For its appearance, we make a circle with radius .5, which
+means it will have a width of 1 and a height of 1.  We color it red (`#FF0000`),
+and give it a green border that is pretty wide (instead of $4$, we could use
+something smaller, like $1$).
 
 We make the body as a circle that also has radius .5.  We could have the
 appearance be something other than a circle, or a circle with a different
@@ -89,30 +82,18 @@ hero.)
 The last component we attached to this actor is its movement.  The
 `ManualMovement` component indicates that we're going to use code to manually
 move this actor around.  That will be important when we get to the last part of
-the code.
+the builder.
 
 ### The Obstacles
 
 The next part of the code makes two obstacles.  They are actors, but they don't
 have a `movement`, so we should expect that they're not going to be able to
 move.  Looking at these, we see that they follow the same pattern as the hero,
-but we don't assign them to variables (because we don't want to make changes to
+but we don't assign them to variables (because we don't need to do more with
 them later).  One has a box shape, and the other has a polygon shape.
 
 ```typescript
-  // Make an obstacle that is a rectangle
-  new Actor({
-    rigidBody: new BoxBody({ cx: 3, cy: 4, width: 1, height: 1 }),
-    appearance: new FilledBox({ width: 1, height: 1, fillColor: "#ff0000", lineWidth: 4, lineColor: "#00ff00" }),
-    role: new Obstacle(),
-  })
-
-  // Make an obstacle that is a polygon
-  new Actor({
-    rigidBody: new PolygonBody({ cx: 10, cy: 5, vertices: [0, -.5, .5, 0, 0, .5, -1, 0] }),
-    appearance: new FilledPolygon({ vertices: [0, -.5, .5, 0, 0, .5, -1, 0], fillColor: "#ff0000", lineWidth: 4, lineColor: "#00ff00" }),
-    role: new Obstacle(),
-  })
+{{#include ./game.ts:35:47}}
 ```
 
 Boxes are pretty easy to understand: they just have a width and a height.  But
@@ -124,13 +105,18 @@ saying that one point is at (0, -.5) relative to the center, the next is at (.5,
 right, and bottom vertices, respectively.  Note, again, that we make the
 `rigidBody` and the `appearance` identical.
 
+```admonish Note
+Polygons are kind of tricky.  The easiest way to get comfy with polygons is to
+change some numbers and see what happens.  When you make a real game, you'll
+use a lot of polygons, but you can wait until later to learn about them.
+```
+
 Finally, each of these obstacles has a role of `Obstacle`.  For now, that just
 means "the hero can collide with it".
 
-One quick note: the appearance right now is pretty bland, because we're just
-drawing solid shapes.  In a later tutorial, you'll see that we can use pictures,
-or animations (sequences of pictures), to make a much more visually appealing
-game.
+The appearance right now is pretty bland, because we're just drawing solid
+shapes.  In a later chapter, you'll see that we can use pictures, or animations
+(sequences of pictures), to make a much more visually appealing game.
 
 ### Events
 
@@ -140,15 +126,7 @@ code is going to make it possible for the player to control the hero.  We do
 this through events.
 
 ```typescript
-  // Pressing a key will change the hero's velocity
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_UP, () => (hero.movement as ManualMovement).updateYVelocity(0));
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_DOWN, () => (hero.movement as ManualMovement).updateYVelocity(0));
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (hero.movement as ManualMovement).updateXVelocity(0));
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (hero.movement as ManualMovement).updateXVelocity(0));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => (hero.movement as ManualMovement).updateYVelocity(-5));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => (hero.movement as ManualMovement).updateYVelocity(5));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (hero.movement as ManualMovement).updateXVelocity(-5));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (hero.movement as ManualMovement).updateXVelocity(5));
+{{#include ./game.ts:49:57}}
 ```
 
 In the above code, we are dealing with two kinds of events: keyboard
@@ -165,17 +143,18 @@ this case, we have eight lines of code, which say that for each arrow key, we'll
 provide code to run when the key is pressed and when the key is released.
 
 In each case, we'll update the hero's velocity (via its movement component)
-according to the key press.
+according to the key press.  Pressing down will make some part of the velocity
+nonzero.  Releasing that key will make that part of the velocity zero again.
 
 In the window below, you'll find an embedded, playable version of the game.  Be
 sure to click it, then use the arrow keys.  The hero should move around, and
 should collide with the obstacles.  You might also want to turn on the developer
 console as you play, to see messages as you click the screen.
 
-<iframe src="./game_01.iframe.html"></iframe>
+<iframe src="./game.iframe.html"></iframe>
 
 In the above code, I kind of glossed over one thing: the "stage".  You can think
 of the stage as an Entity, but a special one... there's only one stage in the
 game, and it has special features that actors don't have.  In this case, it's
 the only thing that understands keyboard events, via `stage.keyboard`.  We'll
-explore this in further detail in later tutorials.
+explore this in further detail in later chapters.

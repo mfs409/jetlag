@@ -20,18 +20,19 @@ JetLag) how to extract those images from the file.
 We load spritesheets just like we load other images in our `Config` object:
 
 ```typescript
-imageNames = ["sprites.json"];
+{{#include game_04.ts:7:16}}
 ```
 
 Then our code can use the image names, just like before:
 
 ```typescript
-    new Actor({
-      appearance: new ImageSprite({ width: 2, height: 2, img: "green_ball.png" }),
-      rigidBody: new CircleBody({ cx: 5, cy: 2, radius: 1 }),
-    });
+{{#include game_04.ts:30:33}}
 ```
 
 And the result is exactly what we'd expect:
 
 <iframe src="./game_04.iframe.html"></iframe>
+
+You can find the code for this example [here](game_04.ts).  Before moving on,
+you should take a moment to try to use some of the *other* images from the
+spritesheet.

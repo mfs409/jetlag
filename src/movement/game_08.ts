@@ -7,12 +7,12 @@ import { boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
 
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json"]
+    imageNames: ["green_ball.png"]
   };
 }
 
@@ -31,7 +31,7 @@ function builder(_level: number) {
   // barely nicks the corner of the platform, it will rotate as it falls!
   let hero = new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-    rigidBody: new BoxBody({ cx: 1, cy: 5.25, width: .8, height: .8 }, { disableRotation: false }),
+    rigidBody: new BoxBody({ cx: 1, cy: 5.25, width: .8, height: .8 }, { disableRotation: true }),
     movement: new ManualMovement(),
     role: new Hero(),
   });

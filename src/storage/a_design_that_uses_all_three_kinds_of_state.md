@@ -1,10 +1,11 @@
 ## A Design That Uses All Three Kinds Of State
 
-In this tutorial, we're going to build one example mini-game.  In the game, the
-hero needs to dodge enemies and collect coins.  The hero can go to the
-destination at any time, and when it does, all the coins it collects will get
-added to the bank.  Every bundle of five coins will get turned into a ruby.
-This creates some interesting storage requirements:
+In this chapter, we're going to build one game.  In the game, the hero needs to
+dodge enemies and collect coins.  The hero can go to the destination at any
+time, and when it does, all the coins it collects will get added to the bank.
+Every bundle of five coins will get turned into a ruby.
+
+This design creates some interesting storage requirements:
 
 - During gameplay, we'll need to track how many coins have been collected.
   However, if the hero collides with an enemy, those coins will be dropped.
@@ -19,3 +20,5 @@ This creates some interesting storage requirements:
 Here's the game:
 
 <iframe src="./game_01.iframe.html"></iframe>
+
+And here's the final [code](game_01.ts).

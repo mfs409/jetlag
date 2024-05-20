@@ -7,7 +7,7 @@ import { boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -26,6 +26,7 @@ function builder(level: number) {
 
   // We ran out of projectiles!  Let's get them back into the pool:
   boundingBox();
+  stage.world.setGravity(0, 10);
   let projectiles = new ActorPoolSystem();
   for (let i = 0; i < 10; ++i) {
     // Where we put them doesn't matter, because the pool will disable them
@@ -39,27 +40,20 @@ function builder(level: number) {
   }
   let hero = new Actor({
     appearance: new ImageSprite({ width: 0.8, height: 0.8, img: "green_ball.png" }),
-    rigidBody: new CircleBody({ cx: 0.25, cy: 5.25, radius: 0.4 }, { density: 2, disableRotation: true }),
+    rigidBody: new CircleBody({ cx: 1.25, cy: 5.25, radius: 0.4 }, { density: 2, disableRotation: true }),
     movement: new ManualMovement(),
     role: new Hero(),
-  });
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => {
-    let p = projectiles.get();
-    if (p) (p.role as Projectile).tossFrom(hero, .2, 0, 5, 0);
   });
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => { (hero.movement as ManualMovement).setAbsoluteVelocity(-5, hero.rigidBody.getVelocity().y); });
   stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => { (hero.movement as ManualMovement).setAbsoluteVelocity(0, hero.rigidBody.getVelocity().y); });
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => { (hero.movement as ManualMovement).setAbsoluteVelocity(5, hero.rigidBody.getVelocity().y); });
   stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => { (hero.movement as ManualMovement).setAbsoluteVelocity(0, hero.rigidBody.getVelocity().y); });
-  stage.world.setGravity(0, 10);
 
-  // While there are 10 projectiles, we re-use them over and over again.  This
-  // means there can never be more than 10 on the screen at a time.  If you
-  // also wanted to limit the total number of tosses, we can do that, too:
+  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_SPACE, () => {
+    let p = projectiles.get();
+    if (p) (p.role as Projectile).tossFrom(hero, .2, 0, 5, 0);
+  });
   projectiles.setLimit(15);
-  // You could use projectiles.getRemaining() to keep track of the remaining
-  // number of shots.  And you could make power-ups that called setLimit() to
-  // increase it.
 }
 
 // call the function that kicks off the game

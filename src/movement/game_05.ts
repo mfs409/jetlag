@@ -7,12 +7,12 @@ import { enableTilt, boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
 
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json", "mid.png"]
+    imageNames: ["green_ball.png", "red_ball.png", "mid.png"]
   };
 }
 
@@ -29,7 +29,12 @@ function builder(_level: number) {
 
   // Just for fun, we'll have an auto-scrolling background, to make it look
   // like we're moving all the time
-  stage.background.addLayer({ anchor: { cx: 8, cy: 4.5 }, imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "mid.png" }), speed: -5 / 1000, isAuto: true });
+  stage.background.addLayer({
+    anchor: { cx: 8, cy: 4.5 },
+    imageMaker: () => new ImageSprite({ width: 16, height: 9, img: "mid.png" }),
+    speed: -5 / 1000,
+    isAuto: true
+  });
 
   // Make a hero and an enemy that slowly moves toward the hero
   let h = new Actor({

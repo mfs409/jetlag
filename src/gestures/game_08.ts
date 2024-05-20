@@ -7,11 +7,11 @@ import { boundingBox } from "./common";
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
-    imageNames: ["sprites.json", "noise.png"]
+    imageNames: ["sprites.json"]
   };
 }
 
@@ -21,7 +21,7 @@ class Config implements JetLagGameConfig {
  * @param level Which level should be displayed
  */
 function builder(level: number) {
-  // There will be winning and losing in these tutorials, and we'll always want
+  // There will be winning and losing in these chapters, and we'll always want
   // to restart
   stage.score.onLose = { level, builder };
   stage.score.onWin = { level, builder };
@@ -82,11 +82,6 @@ function builder(level: number) {
     rigidBody: new BoxBody({ cx: 8, cy: 1, width: 12, height: 2 }, { scene: stage.hud }),
   });
   addToggleButton(u, () => (h.movement as ManualMovement).updateYVelocity(-5), () => { });
-  // One thing you'll notice about these buttons is that unexpected things
-  // happen if you slide your finger off of them.  Be sure to try to do things
-  // like that when testing your code.  Maybe you'll decide you like the
-  // unexpected behavior.  Maybe you'll decide that you need to make changes
-  // to JetLag to fix the problem :)
 
 }
 

@@ -1,5 +1,5 @@
 # Sound Effects
 
-This tutorial introduces sound effects.  We won't get into background music in
-this tutorial, since it is covered pretty well in the tutorial about
+This chapter introduces sound effects.  We won't get into background music in
+this chapter, since it is covered pretty well in the chapter about
 transitioning among stages.
