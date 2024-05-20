@@ -1,4 +1,4 @@
-import { Actor, AdvancedCollisionSystem, BoxBody, CircleBody, Hero, ImageSprite, JetLagGameConfig, Obstacle, TextSprite, TiltMovement, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, AdvancedCollisionService, BoxBody, CircleBody, Hero, ImageSprite, JetLagGameConfig, Obstacle, TextSprite, TiltMovement, initializeAndLaunch, stage } from "../jetlag";
 import { boundingBox, enableTilt } from "./common";
 
 /**
@@ -46,7 +46,7 @@ function builder(level: number) {
           appearance: new TextSprite({ center: false, face: "Arial", size: 30, color: "#FF00FF" }, () => messages[collisions]),
           rigidBody: new BoxBody({ cx: 12, cy: 6, width: .01, height: .01 })
         });
-        (stage.world.physics as AdvancedCollisionSystem).addEndContactHandler(o, h, () => {
+        (stage.world.physics as AdvancedCollisionService).addEndContactHandler(o, h, () => {
           collisions++;
           text.remove();
           if (collisions == 3) stage.score.winLevel();
