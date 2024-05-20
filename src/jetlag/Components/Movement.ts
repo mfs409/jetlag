@@ -2,7 +2,7 @@ import { b2BodyType, b2Transform, b2Vec2 } from "@box2d/core";
 import { Actor } from "../Entities/Actor";
 import { stage } from "../Stage";
 import { RigidBodyComponent } from "./RigidBody";
-import { CameraSystem } from "../Systems/Camera";
+import { CameraService } from "../Services/Camera";
 
 /**
  * Path specifies a set of points that an actor will move among, in order, at a
@@ -159,7 +159,7 @@ export class PathMovement {
   }
 
   /** Figure out where we need to go next when driving a path */
-  prerender(_elapsedMs: number, _camera: CameraSystem) {
+  prerender(_elapsedMs: number, _camera: CameraService) {
     // quit if we're done and we don't loop
     if (this.done || !this.rigidBody) return;
 
@@ -198,7 +198,7 @@ export class TiltMovement {
   constructor() { stage.tilt.addTiltActor(this); }
 
   /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraSystem) { }
+  prerender(_elapsedMs: number, _camera: CameraService) { }
 
   /** Update the Y velocity, without affecting the X velocity */
   updateYVelocity(v: number) {
@@ -238,7 +238,7 @@ export class ChaseMovement {
   private _rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraSystem) {
+  prerender(_elapsedMs: number, _camera: CameraService) {
     // This code only works if we've got a body, the target has a body, and both
     // are enabled
     if (!this.rigidBody || !this.target.rigidBody) return;
@@ -309,7 +309,7 @@ export class HoverMovement {
   private _rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, camera: CameraSystem) {
+  prerender(_elapsedMs: number, camera: CameraService) {
     if (!this.rigidBody) return;
     if (!this.hover) return;
     let pmr = stage.pixelMeterRatio;
@@ -368,7 +368,7 @@ export class ProjectileMovement {
   rotateVectorToss?: boolean;
 
   /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraSystem) { }
+  prerender(_elapsedMs: number, _camera: CameraService) { }
 
   /** Set a new velocity for the actor */
   updateVelocity(x: number, y: number) {
@@ -466,7 +466,7 @@ export class GravityMovement {
   private _rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraSystem) { }
+  prerender(_elapsedMs: number, _camera: CameraService) { }
 }
 
 /**
@@ -504,7 +504,7 @@ export class ManualMovement {
   }
 
   /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraSystem) {
+  prerender(_elapsedMs: number, _camera: CameraService) {
     if (this.rotationByDirection)
       this.rotateByMovement();
   }
@@ -645,7 +645,7 @@ export class InertMovement {
   private _rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraSystem) { }
+  prerender(_elapsedMs: number, _camera: CameraService) { }
 }
 
 /** MovementComponent is the type of any movement rules that an Actor can have */

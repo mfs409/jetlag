@@ -3,12 +3,12 @@ import { GodrayFilter, AsciiFilter, OldFilmFilter } from "pixi-filters";
 import { stage } from "../Stage";
 import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, FilledRoundedBox, ZIndex } from "../Components/Appearance";
 import { RigidBodyComponent, BoxBody, CircleBody, PolygonBody } from "../Components/RigidBody";
-import { CameraSystem } from "../Systems/Camera";
-import { Sprite, Text } from "./ImageLibrary";
+import { CameraService } from "../Services/Camera";
+import { Sprite, Text } from "../Services/ImageLibrary";
 import { b2Vec2 } from "@box2d/core";
 
 /**
- * RenderService is a wrapper around the PIXI Application object.  It
+ * RenderDevice is a wrapper around the PIXI Application object.  It
  * initializes the render loop, which fires at a regular interval to tell the
  * game to advance the simulation by some number of milliseconds.  Doing this
  * many times per second is what makes our game work :)
@@ -19,9 +19,9 @@ import { b2Vec2 } from "@box2d/core";
  * issues.  Re-check these casts as PIXI.js updates.
  *  -->
  */
-export class RendererService {
+export class RendererDevice {
   /** The pixi application object is responsible for drawing onto a canvas */
-  private pixi: Application;
+  public pixi: Application;
 
   /**
    * All of the sprites that will be rendered as part of the currently
@@ -200,7 +200,7 @@ export class RendererService {
    * @param camera      The camera (and by extension, the world)
    * @param z           The Z index of the sprite
    */
-  public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, body: RigidBodyComponent, graphic: Graphics, camera: CameraSystem, z: ZIndex) {
+  public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, body: RigidBodyComponent, graphic: Graphics, camera: CameraService, z: ZIndex) {
     graphic.clear();
     // If the actor isn't on screen, skip it
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
@@ -269,7 +269,7 @@ export class RendererService {
    *                    where
    * @param z           The Z index of the sprite
    */
-  public addBodyToFrame(appearance: AppearanceComponent, body: RigidBodyComponent, sprite: Sprite, camera: CameraSystem, z: ZIndex) {
+  public addBodyToFrame(appearance: AppearanceComponent, body: RigidBodyComponent, sprite: Sprite, camera: CameraService, z: ZIndex) {
     // If the actor isn't on screen, skip it
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
 
@@ -296,7 +296,7 @@ export class RendererService {
    * @param body    The rigid body whose outline we'll draw
    * @param camera  The camera related to where we're drawing
    */
-  private debugDraw(body: RigidBodyComponent, camera: CameraSystem) {
+  private debugDraw(body: RigidBodyComponent, camera: CameraService) {
     let s = camera.getScale();
     let r = body.getRotation();
     let x = s * (body.getCenter().x - camera.getLeft());
@@ -323,7 +323,7 @@ export class RendererService {
    *                    where
    * @param z           The Z index of the sprite
    */
-  public addPictureToFrame(anchor: { cx: number, cy: number }, appearance: AppearanceComponent, sprite: Sprite, camera: CameraSystem, z: ZIndex) {
+  public addPictureToFrame(anchor: { cx: number, cy: number }, appearance: AppearanceComponent, sprite: Sprite, camera: CameraService, z: ZIndex) {
     // If the picture isn't on screen, skip it
     let radius = Math.sqrt(Math.pow(appearance.width / 2, 2) + Math.pow(appearance.height / 2, 2))
     if (!camera.inBounds(anchor.cx, anchor.cy, radius)) return;
@@ -356,7 +356,7 @@ export class RendererService {
    * @param center  Should we center the text at its x/y coordinate?
    * @param z           The Z index of the sprite
    */
-  public addTextToFrame(text: Text, body: RigidBodyComponent, camera: CameraSystem, center: boolean, z: ZIndex) {
+  public addTextToFrame(text: Text, body: RigidBodyComponent, camera: CameraService, center: boolean, z: ZIndex) {
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
 
     // Compute screen coords of center

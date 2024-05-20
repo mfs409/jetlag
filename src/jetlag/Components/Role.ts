@@ -4,7 +4,7 @@ import { stage } from "../Stage";
 import { DIRECTION, StateEvent } from "./StateManager";
 import { AnimatedSprite } from "./Appearance";
 import { ProjectileMovement } from "./Movement";
-import { TimedEvent } from "../Systems/Timer";
+import { TimedEvent } from "../Services/Timer";
 
 /**
  * These are the different reasons why two entities might pass through each

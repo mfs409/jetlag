@@ -2,8 +2,8 @@ import { Scene } from "../Entities/Scene";
 import { Stage } from "../Stage";
 import Hammer from "hammerjs";
 
-/*** GestureService routes gesture events (as defined by hammerjs) to a Stage */
-export class GestureService {
+/*** GestureDevice routes gesture events (as defined by hammerjs) to a Stage */
+export class GestureDevice {
   /**
    * The DOM element that receives gesture events
    *
@@ -16,7 +16,7 @@ export class GestureService {
   public gestureHudFirst = true;
 
   /**
-   * Create the service by providing the name of an HTML element (typically
+   * Create the device by providing the name of an HTML element (typically
    * a DIV) that should begin receiving gestures.
    *
    * @param domId The Id of the DOM element that will receive gesture events

@@ -6,7 +6,7 @@
 // - `npm i @capacitor/haptics`
 // - `npm i @capacitor/preferences`
 //
-// You will also want to check the (TODO) capacitor tutorial
+// You will also want to check the (TODO) capacitor chapter
 
 import { StatusBar } from '@capacitor/status-bar';
 import { AccelerometerMode } from "./Services/Accelerometer";

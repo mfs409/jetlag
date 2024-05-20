@@ -16,7 +16,7 @@ enum VictoryType { DESTINATION, GOODIE_COUNT, ENEMY_COUNT, SURVIVE }
  * code on clock events, goodie collections, enemy defeats, hero defeats, and
  * destination arrivals, to decide when to automatically win or lose a level.
  */
-export class ScoreSystem {
+export class ScoreService {
   /** How to build the next level if the current level is lost */
   public onLose = { level: 0, builder: (_level: number) => { } };
 

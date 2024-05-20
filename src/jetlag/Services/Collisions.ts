@@ -54,11 +54,11 @@ class PointToActorCallback {
 }
 
 /**
- * BasicCollisionSystem is a physics system that is suitable for the HUD and
+ * BasicCollisionService is a physics simulator that is suitable for the HUD and
  * overlays.  It lacks a few complex/expensive features that might be desired in
  * a playable level of a game.
  */
-export class BasicCollisionSystem {
+export class BasicCollisionService {
   /** The physics world in which all actors interact */
   readonly world = b2World.Create(new b2Vec2(0, 0));
 
@@ -87,9 +87,9 @@ export class BasicCollisionSystem {
  */
 class ContactListener {
   /**
-   * Create a contact listener by saving the scene and collision system
+   * Create a contact listener by saving the scene and collision service
    */
-  constructor(private scene: Scene, private collisionSystem: AdvancedCollisionSystem) { /*super();*/ }
+  constructor(private scene: Scene, private collisionService: AdvancedCollisionService) { /*super();*/ }
 
   /**
    * Figure out what to do when two bodies start to collide
@@ -123,10 +123,10 @@ class ContactListener {
     if (!(a instanceof Actor) || !(b instanceof Actor)) return;
 
     // If this pair is in the array, splice it out and run the array entry
-    for (let ch of this.collisionSystem.endContactHandlers)
+    for (let ch of this.collisionService.endContactHandlers)
       if ((ch.actor1 == a && ch.actor2 == b) || (ch.actor1 == b && ch.actor2 == a)) {
-        let i = this.collisionSystem.endContactHandlers.indexOf(ch);
-        this.collisionSystem.endContactHandlers.splice(i, 1);
+        let i = this.collisionService.endContactHandlers.indexOf(ch);
+        this.collisionService.endContactHandlers.splice(i, 1);
         // The world is in mid-render, so we can't really change anything, so
         // defer handling the event until after the next render.
         this.scene.oneTimeEvents.push(() => {
@@ -180,10 +180,10 @@ class ContactListener {
 
     // If at least one entity is sticky, then see about making them stick
     if (ab.stickySides.length > 0) {
-      this.collisionSystem.handleSticky(a, b, contact);
+      this.collisionService.handleSticky(a, b, contact);
       return;
     } else if (bb.stickySides.length > 0) {
-      this.collisionSystem.handleSticky(b, a, contact);
+      this.collisionService.handleSticky(b, a, contact);
       return;
     }
 
@@ -232,10 +232,10 @@ class ContactListener {
 }
 
 /**
- * AdvancedCollisionSystem is a physics system that provides the ability to run
+ * AdvancedCollisionService is a physics simulator that provides the ability to run
  * code in response to collisions.
  */
-export class AdvancedCollisionSystem extends BasicCollisionSystem {
+export class AdvancedCollisionService extends BasicCollisionService {
   /**
    * Callbacks to consider running in response to a contact *ending*.  These are
    * always one-time callbacks.

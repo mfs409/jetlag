@@ -1,6 +1,6 @@
 import { b2Vec2 } from "@box2d/core";
 import { stage } from "../Stage";
-import { CameraSystem } from "../Systems/Camera";
+import { CameraService } from "./Camera";
 import { AnimatedSprite, ImageSprite, ZIndex } from "../Components/Appearance";
 
 /**
@@ -55,7 +55,7 @@ class ParallaxLayer {
    * @param elapsedMs The time since the last render
    * @param z         The z index at which to render the layer
    */
-  public render(camera: CameraSystem, elapsedMs: number, z: ZIndex) {
+  public render(camera: CameraService, elapsedMs: number, z: ZIndex) {
     for (let i of this.images)
       i.prerender(elapsedMs);
     if (this.isAuto) this.renderAuto(camera, elapsedMs, z);
@@ -69,7 +69,7 @@ class ParallaxLayer {
    * @param elapsedMs The elapsed time since we last drew this layer
    * @param z         The z index at which to render the layer
    */
-  private renderAuto(camera: CameraSystem, elapsedMs: number, z: ZIndex) {
+  private renderAuto(camera: CameraService, elapsedMs: number, z: ZIndex) {
     // Determine the position of a reference tile of the image
     if (this.isHorizontal) this.last.x += this.speed * elapsedMs;
     else this.last.y += this.speed * elapsedMs;
@@ -86,7 +86,7 @@ class ParallaxLayer {
    * @param elapsedMs The elapsed time since we last drew this layer
    * @param z         The z index at which to render the layer
    */
-  private renderRelative(camera: CameraSystem, elapsedMs: number, z: ZIndex) {
+  private renderRelative(camera: CameraService, elapsedMs: number, z: ZIndex) {
     // Determine the change in camera
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
@@ -104,7 +104,7 @@ class ParallaxLayer {
    * @param camera  The camera for the world that these layers accompany
    * @param z       The z index at which to render the layer
    */
-  private normalizeAndRender(camera: CameraSystem, elapsedMs: number, z: ZIndex) {
+  private normalizeAndRender(camera: CameraService, elapsedMs: number, z: ZIndex) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let camW = stage.screenWidth / stage.pixelMeterRatio;
@@ -136,7 +136,7 @@ class ParallaxLayer {
    * @param elapsedMs The elapsed time since we last drew this layer
    * @param z         The z index at which to render the layer
    */
-  private renderVisibleTiles(camera: CameraSystem, elapsedMs: number, z: ZIndex) {
+  private renderVisibleTiles(camera: CameraService, elapsedMs: number, z: ZIndex) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let camW = stage.screenWidth / stage.pixelMeterRatio;
@@ -202,7 +202,7 @@ export class ParallaxSystem {
    * @param elapsedMs The time since the last render
    * @param z         The z index at which to render the layer
    */
-  public render(camera: CameraSystem, elapsedMs: number, z: ZIndex) {
+  public render(camera: CameraService, elapsedMs: number, z: ZIndex) {
     for (let pl of this.layers)
       pl.render(camera, elapsedMs, z);
   }

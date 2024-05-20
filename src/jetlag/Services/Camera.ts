@@ -15,7 +15,7 @@ import { stage } from "../Stage";
  * Note that the camera center can be changed dynamically, in response to
  * changes in the world to which the camera is attached.
  */
-export class CameraSystem {
+export class CameraService {
   /** Anything in the world that can be rendered (5 planes [-2, -1, 0, 1, 2]) */
   protected readonly actors: Actor[] = [];
 

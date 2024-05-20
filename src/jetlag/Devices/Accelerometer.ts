@@ -14,7 +14,7 @@ export enum AccelerometerMode {
 }
 
 /**
- * AccelerometerService provides access to device orientation and motion events
+ * AccelerometerDevice provides access to device orientation and motion events
  * from a web browser. The support for orientation and motion varies among
  * browsers, but it seems that the "acceleration including gravity" component of
  * DeviceMotion events gives us roughly the data we need.
@@ -22,9 +22,9 @@ export enum AccelerometerMode {
  * DeviceMotion events happen whenever they want to happen, but JavaScript won't
  * let them happen in the middle of a render.  When the events happen, we copy
  * the event data, and then during render operations, other code can poll this
- * service for the most recent data.
+ * device for the most recent data.
  */
-export class AccelerometerService {
+export class AccelerometerDevice {
   /** The most recent accelerometer reading */
   readonly accel = new b2Vec2(0, 0);
 
@@ -32,7 +32,7 @@ export class AccelerometerService {
   readonly tiltSupported: boolean;
 
   /**
-   * Create the service
+   * Create the device
    *
    * @param mode      portrait vs. landscape information, so we can interpret
    *                  x/y/z correctly
@@ -44,7 +44,7 @@ export class AccelerometerService {
       return;
     }
 
-    // If the service doesn't exist, disable the accelerometer
+    // If the device doesn't exist, disable the accelerometer
     if (!("DeviceMotionEvent" in window)) {
       stage.console.log("DeviceMotion API not available... unable to use tilt to control entities");
       this.tiltSupported = false;

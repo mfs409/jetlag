@@ -2,7 +2,7 @@ import { Scene } from "./Entities/Scene";
 import { Sprite } from "./Services/ImageLibrary";
 import { stage } from "./Stage";
 import { Actor } from "./Entities/Actor";
-import { AccelerometerMode } from "./Services/Accelerometer";
+import { AccelerometerMode } from "./Devices/Accelerometer";
 
 /**
  * The different ActorState combinations for which we might have an animation

@@ -25,13 +25,10 @@ export enum KeyCodes {
 };
 
 /**
- * KeyboardService provides an interface for subscribing to keyboard events and
+ * KeyboardDevice provides an interface for subscribing to keyboard events and
  * running callbacks when those events happen.
- *
- * TODO: This may need to be updated according to
- * https://medium.com/@dovern42/handling-multiple-key-presses-at-once-in-vanilla-javascript-for-game-controllers-6dcacae931b7
  */
-export class KeyboardService {
+export class KeyboardDevice {
   /** 
    * handlers for when keys are down pressed.  These re-fire while the key is
    * held 
@@ -41,7 +38,7 @@ export class KeyboardService {
   /** handlers for when keys are released */
   private upHandlers: Map<string, () => void> = new Map();
 
-  /** Create the service by setting up listeners */
+  /** Create the device by setting up listeners */
   constructor() {
     document.addEventListener("keydown", (ev: KeyboardEvent) => { this.keyDownHandler(ev) }, true);
     document.addEventListener("keyup", (ev: KeyboardEvent) => { this.keyUpHandler(ev) });

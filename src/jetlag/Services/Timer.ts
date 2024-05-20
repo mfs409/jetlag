@@ -78,7 +78,7 @@ export class TimedEvent {
  * to destroy a timer and end the repetition of the events it entails, because
  * we can do so at the granularity of the Timer, not the individual events.
  */
-export class TimerSystem {
+export class TimerService {
   /** The set of events that are pending */
   private events: TimedEvent[] = [];
 

@@ -1,12 +1,12 @@
 import { JetLagGameConfig } from "../Config";
 
 /**
- * ConsoleService provides a clean and generic tool for printing debug messages.
- * The key benefit relative to using `console.log` directly is ConsoleService
+ * ConsoleDevice provides a clean and generic tool for printing debug messages.
+ * The key benefit relative to using `console.log` directly is ConsoleDevice
  * disables all output when `cfg.hitBoxes` is false, which is nice when
  * releasing a game.
  */
-export class ConsoleService {
+export class ConsoleDevice {
   /** Create an output console based on the game config object */
   constructor(private cfg: JetLagGameConfig) { }
 

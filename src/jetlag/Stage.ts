@@ -1,20 +1,20 @@
 import { Scene } from "./Entities/Scene";
-import { ParallaxSystem } from "./Systems/Parallax";
-import { GestureService } from "./Services/Gesture";
+import { ParallaxSystem } from "./Services/Parallax";
+import { GestureDevice } from "./Devices/Gesture";
 import { AudioLibraryService } from "./Services/AudioLibrary";
 import { MusicComponent } from "./Components/Music";
-import { ScoreSystem } from "./Systems/Score";
+import { ScoreService } from "./Services/Score";
 import { JetLagGameConfig } from "./Config";
-import { ConsoleService } from "./Services/Console";
-import { KeyboardService } from "./Services/Keyboard";
-import { RendererService } from "./Services/Renderer";
-import { AccelerometerMode, AccelerometerService } from "./Services/Accelerometer";
-import { StorageService } from "./Services/Storage";
-import { TiltSystem } from "./Systems/Tilt";
-import { AdvancedCollisionSystem, BasicCollisionSystem } from "./Systems/Collisions";
+import { ConsoleDevice } from "./Devices/Console";
+import { KeyboardDevice } from "./Devices/Keyboard";
+import { RendererDevice } from "./Devices/Renderer";
+import { AccelerometerMode, AccelerometerDevice } from "./Devices/Accelerometer";
+import { StorageDevice } from "./Devices/Storage";
+import { TiltService } from "./Services/Tilt";
+import { AdvancedCollisionService, BasicCollisionService } from "./Services/Collisions";
 import { ImageLibraryService } from "./Services/ImageLibrary";
 import { ImageSprite } from "./Components/Appearance";
-import { HtmlPlatformService, PlatformService } from "./Services/Platform";
+import { HtmlPlatformDevice, PlatformDevice } from "./Devices/Platform";
 
 /**
  * PPM4UF: Pixels per Meter for Unscaled Fonts.  This is an empirically derived
@@ -56,7 +56,7 @@ export class Stage {
   /** A heads-up display */
   public hud!: Scene;
   /** The tilt system for the stage */
-  readonly tilt: TiltSystem;
+  readonly tilt: TiltService;
   /** Any pause, win, or lose scene that supersedes the world and hud */
   public overlay?: Scene;
   /** Background color for the stage being drawn.  Defaults to white */
@@ -68,17 +68,17 @@ export class Stage {
   /** Everything related to music that is controlled on one level at a time */
   public levelMusic: MusicComponent | undefined;
   /** The Score, suitable for use throughout JetLag */
-  readonly score = new ScoreSystem();
+  readonly score = new ScoreService();
   /** A console device, for debug messages */
-  readonly console: ConsoleService;
+  readonly console: ConsoleDevice;
   /** touch controller, providing gesture inputs */
-  public gestures!: GestureService;
+  public gestures!: GestureDevice;
   /** keyboard controller, providing key event inputs */
-  readonly keyboard: KeyboardService;
+  readonly keyboard: KeyboardDevice;
   /** access to the the device's accelerometer */
-  readonly accelerometer: AccelerometerService;
+  readonly accelerometer: AccelerometerDevice;
   /** rendering support, for drawing to the screen */
-  readonly renderer: RendererService;
+  readonly renderer: RendererDevice;
   /** A library of sound and music files */
   readonly musicLibrary: AudioLibraryService;
   /** A library of images */
@@ -86,7 +86,7 @@ export class Stage {
   /** Background music that doesn't stop when the level changes */
   public gameMusic: MusicComponent | undefined;
   /** Persistent storage + volatile storage for a game session and a level */
-  readonly storage: StorageService;
+  readonly storage: StorageDevice;
   /**
    * Amount to scale fonts so everything fits on the screen.  This is relative
    * to the PPM4UF constant, defined above.
@@ -117,7 +117,7 @@ export class Stage {
    */
   public requestOverlay(builder: (overlay: Scene, screenshot?: ImageSprite) => void, requestScreenshot: boolean) {
     if (!requestScreenshot) {
-      this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionSystem());
+      this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionService());
       builder(this.overlay, undefined);
       return;
     }
@@ -138,7 +138,7 @@ export class Stage {
           z: -2
         });
         screenshot.overrideImage(this.renderer.mostRecentScreenShot);
-        this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionSystem());
+        this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionService());
         builder(this.overlay, screenshot);
         this.afterRender = undefined;
       }
@@ -244,9 +244,9 @@ export class Stage {
     this.backgroundColor = "#ffffff";
 
     // Just re-make the scenes and systems, instead of clearing the old ones
-    this.world = new Scene(this.pixelMeterRatio, new AdvancedCollisionSystem());
-    (this.world.physics as AdvancedCollisionSystem).setScene(this.world);
-    this.hud = new Scene(this.pixelMeterRatio, new BasicCollisionSystem());
+    this.world = new Scene(this.pixelMeterRatio, new AdvancedCollisionService());
+    (this.world.physics as AdvancedCollisionService).setScene(this.world);
+    this.hud = new Scene(this.pixelMeterRatio, new BasicCollisionService());
     this.background = new ParallaxSystem();
     this.foreground = new ParallaxSystem();
     this.tilt.reset();
@@ -264,8 +264,8 @@ export class Stage {
    *                  game
    * @param platform  Platform-specific features
    */
-  constructor(readonly config: JetLagGameConfig, private domId: string, private builder: (level: number) => void, readonly platform: PlatformService) {
-    this.console = new ConsoleService(config);
+  constructor(readonly config: JetLagGameConfig, private domId: string, private builder: (level: number) => void, readonly platform: PlatformDevice) {
+    this.console = new ConsoleDevice(config);
 
     // Check if the config needs to be adapted, then check for errors
     if (config.aspectRatio.width <= 0 || config.aspectRatio.height <= 0)
@@ -273,18 +273,18 @@ export class Stage {
     this.computeScreenDimensions();
 
     // Configure the services
-    this.storage = new StorageService();
+    this.storage = new StorageDevice();
     this.musicLibrary = new AudioLibraryService(config);
-    this.keyboard = new KeyboardService();
-    this.accelerometer = new AccelerometerService(config.accelerometerMode ?? AccelerometerMode.DISABLED);
-    this.renderer = new RendererService(this.screenWidth, this.screenHeight, domId, this.config.hitBoxes);
+    this.keyboard = new KeyboardDevice();
+    this.accelerometer = new AccelerometerDevice(config.accelerometerMode ?? AccelerometerMode.DISABLED);
+    this.renderer = new RendererDevice(this.screenWidth, this.screenHeight, domId, this.config.hitBoxes);
     this.imageLibrary = new ImageLibraryService(config);
 
     // make sure the volume is reset to its old value
     this.musicLibrary.resetMusicVolume(parseInt(this.storage.getPersistent("volume") ?? "1"));
 
     // Configure any systems that should be running
-    this.tilt = new TiltSystem;
+    this.tilt = new TiltService;
   }
 
   /**
@@ -294,7 +294,7 @@ export class Stage {
   public begin() {
     // Load the images asynchronously, then start rendering
     this.imageLibrary.loadAssets(() => {
-      this.gestures = new GestureService(this.domId, this);
+      this.gestures = new GestureDevice(this.domId, this);
       this.switchTo(this.builder, 1);
       this.renderer.startRenderLoop();
     });
@@ -337,20 +337,20 @@ export class Stage {
 /**
  * Start a game
  *
- * NB:  The `beforeBegin` method is only used when generating tutorials, and
- *      `platform` is only used when deploying to mobile or desktop.  If you
- *      need to use `platform`, then you can provide `()=>{}` as the beforeBegin
- *      function.
+ * NB:  The `beforeBegin` method is only used when generating demos for the
+ *      book, and `platform` is only used when deploying to mobile or desktop.
+ *      If you need to use `platform`, then you can provide `()=>{}` as the
+ *      beforeBegin function.
  *
  * @param domId       The name of the DIV into which the game should be placed
  * @param config      The game configuration object
  * @param builder     A function for building the first visible level of the
  *                    game
  * @param beforeBegin A function to run before the builder runs.  This is used
- *                    by the tutorial system, and should be ()=>{} otherwise.
+ *                    by the book build system, and should be ()=>{} otherwise.
  * @param platform    Platform-specific features.  Defaults to HTML5
  */
-export function initializeAndLaunch(domId: string, config: JetLagGameConfig, builder: (level: number) => void, beforeBegin: () => void = () => { }, platform: PlatformService = new HtmlPlatformService()) {
+export function initializeAndLaunch(domId: string, config: JetLagGameConfig, builder: (level: number) => void, beforeBegin: () => void = () => { }, platform: PlatformDevice = new HtmlPlatformDevice()) {
   stage = new Stage(config, domId, builder, platform);
   beforeBegin();
   stage.begin();

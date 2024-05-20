@@ -1,6 +1,6 @@
-import { TimerSystem } from "../Systems/Timer"
-import { AdvancedCollisionSystem, BasicCollisionSystem } from "../Systems/Collisions";
-import { CameraSystem } from "../Systems/Camera";
+import { TimerService } from "../Services/Timer"
+import { AdvancedCollisionService, BasicCollisionService } from "../Services/Collisions";
+import { CameraService } from "../Services/Camera";
 import { b2Vec2 } from "@box2d/core";
 
 /**
@@ -20,10 +20,10 @@ import { b2Vec2 } from "@box2d/core";
  */
 export class Scene {
   /** A camera, for making sure important actors are on screen */
-  readonly camera: CameraSystem;
+  readonly camera: CameraService;
 
   /** A timer, for creating time-based events */
-  readonly timer: TimerSystem = new TimerSystem();
+  readonly timer: TimerService = new TimerService();
 
   /** Events that get processed on the next render, then discarded */
   readonly oneTimeEvents: (() => void)[] = [];
@@ -44,8 +44,8 @@ export class Scene {
    * @param pixelMeterRatio The pixel-to-meter ratio, possibly adjusted for zoom
    * @param physics         The physics system for the scene
    */
-  constructor(pixelMeterRatio: number, public physics: AdvancedCollisionSystem | BasicCollisionSystem) {
-    this.camera = new CameraSystem(pixelMeterRatio);
+  constructor(pixelMeterRatio: number, public physics: AdvancedCollisionService | BasicCollisionService) {
+    this.camera = new CameraService(pixelMeterRatio);
   }
 
   /**

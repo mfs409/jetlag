@@ -2,14 +2,14 @@ import { stage } from "../Stage";
 import { AccelerometerMode } from "./Accelerometer";
 
 /**
- * PlatformService provides an abstract way of describing things that depend on
+ * PlatformDevice provides an abstract way of describing things that depend on
  * the platform:
  * - Device Vibration
  * - App Termination
  * - Device-Specific Event Handlers
  * - Persistent Storage
  */
-export interface PlatformService {
+export interface PlatformDevice {
   /** Quit the game and close its window */
   quitter(): void;
 
@@ -25,10 +25,10 @@ export interface PlatformService {
 }
 
 /**
- * HtmlPlatformService provides the HTML5 versions of the key parts of a
- * PlatformService.  It is the default implementation.
+ * HtmlPlatformDevice provides the HTML5 versions of the key parts of a
+ * PlatformDevice.  It is the default implementation.
  */
-export class HtmlPlatformService implements PlatformService {
+export class HtmlPlatformDevice implements PlatformDevice {
   /** Quit the game and close its window */
   quitter() { window.close(); }
 
@@ -45,7 +45,7 @@ export class HtmlPlatformService implements PlatformService {
   }
 
   /**
-   * Construct an HtmlPlatformService
+   * Construct an HtmlPlatformDevice
    *
    * @param accelerometerMode The desired mode for the accelerometer.  Defaults
    *                          to DISABLED

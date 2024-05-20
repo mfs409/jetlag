@@ -3,11 +3,11 @@ import { b2Vec2 } from "@box2d/core";
 import { TiltMovement } from "../Components/Movement";
 
 /**
- * TiltSystem stores the configuration for working with Tilt in a game.  This
+ * TiltService stores the configuration for working with Tilt in a game.  This
  * includes the actors affected by tilt, and the parameters for translating tilt
  * events into physics interactions for those actors.
  */
-export class TiltSystem {
+export class TiltService {
   /** All actors whose behavior should change due to tilt */
   private readonly tiltActors: TiltMovement[] = [];
 
@@ -20,7 +20,7 @@ export class TiltSystem {
   /** A multiplier to apply to tilt (accelerometer) readings */
   public tiltMultiplier: number = 1;
 
-  /** Reset the Tilt System */
+  /** Reset the Tilt Service */
   public reset() {
     this.tiltActors.length = 0;
     this.tiltMax.Set(0, 0);

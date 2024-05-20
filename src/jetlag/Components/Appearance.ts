@@ -1,6 +1,6 @@
 import { b2Vec2 } from "@box2d/core";
 import { Text, Sprite } from "../Services/ImageLibrary";
-import { CameraSystem } from "../Systems/Camera";
+import { CameraService } from "../Services/Camera";
 import { Actor } from "../Entities/Actor";
 import { AnimationSequence, AnimationState } from "../Config";
 import { StateEvent, IStateObserver, ActorState, DIRECTION } from "./StateManager";
@@ -100,7 +100,7 @@ export class TextSprite {
    *                    this image should be drawn
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor) {
       // Update the text before passing to the renderer!
       this.text.text.text = (typeof this.producer == "string") ? this.producer : this.producer();
@@ -120,7 +120,7 @@ export class TextSprite {
    * @param sampleText  Some text whose size we're computing, since the object's
    *                    real text might not be available yet
    */
-  dims(camera: CameraSystem, sampleText: string) {
+  dims(camera: CameraService, sampleText: string) {
     // NB:  When the game starts, text.text will usually be "", which gets us a
     //      valid height but not a valid width.  Swapping in sampleText gets us
     //      a better estimate.
@@ -190,7 +190,7 @@ export class ImageSprite {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor)
       stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.image, camera, this.z);
   }
@@ -204,7 +204,7 @@ export class ImageSprite {
    * @param _elapsedMs  The time since the last render
    * @param z           A z index (overrides the image's z)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraSystem, _elapsedMs: number, z: ZIndex) {
+  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex) {
     stage.renderer.addPictureToFrame(anchor, this, this.image, camera, z);
   }
 
@@ -624,7 +624,7 @@ export class AnimatedSprite implements IStateObserver {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor)
       stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.getCurrent(), camera, this.z);
   }
@@ -638,7 +638,7 @@ export class AnimatedSprite implements IStateObserver {
    * @param _elapsedMs  The time since the last render
    * @param z           A z index (overrides the image's z)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraSystem, _elapsedMs: number, z: ZIndex) {
+  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex) {
     stage.renderer.addPictureToFrame(anchor, this, this.getCurrent(), camera, z);
   }
 
@@ -717,7 +717,7 @@ export class VideoSprite {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor)
       stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.sprite, camera, this.z);
   }
@@ -757,7 +757,7 @@ export class VideoSprite {
    * @param _elapsedMs  The time since the last render
    * @param z           A z index (overrides the image's z)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraSystem, _elapsedMs: number, z: ZIndex) {
+  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex) {
     stage.renderer.addPictureToFrame(anchor, this, this.sprite, camera, z);
   }
 
@@ -824,7 +824,7 @@ export class FilledBox {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor)
       stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
   }
@@ -898,7 +898,7 @@ export class FilledRoundedBox {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor)
       stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
   }
@@ -969,7 +969,7 @@ export class FilledCircle {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor)
       stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
   }
@@ -1054,7 +1054,7 @@ export class FilledPolygon {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    */
-  render(camera: CameraSystem, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number) {
     if (this.actor)
       stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
   }

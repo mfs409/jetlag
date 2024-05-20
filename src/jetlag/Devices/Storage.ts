@@ -1,5 +1,5 @@
 /**
- * StorageService provides three key/value stores
+ * StorageDevice provides three key/value stores
  *
  * - Persistent: Things saved here will remain here, even after the player
  *               leaves the page.  This currently uses the HTML5 persistent
@@ -13,7 +13,7 @@
  * Note that Session and Level can story any data type.  Persistent can only
  * store strings, so you'll need JSON serialization for fancy stuff.
  */
-export class StorageService {
+export class StorageDevice {
   /** The "session" storage */
   private readonly sessionFacts: { [index: string]: any } = {};
 
