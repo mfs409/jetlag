@@ -4,7 +4,7 @@ In our very first game, back in the first chapter, it was possible for the hero
 to go off the screen.  The game is reproduced below, just in case you want to
 convince yourself that it's a problem:
 
-<iframe src="../getting_started/game_01.iframe.html"></iframe>
+<iframe src="../overview/game.iframe.html"></iframe>
 
 Let's start thinking about how to handle this problem.  To begin with, let's be
 a bit more exact about what we are seeing.  In the game, there is a hero and

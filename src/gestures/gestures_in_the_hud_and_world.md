@@ -47,9 +47,9 @@ actor.
 
 Next, let's make the actor who moves via a path.  The tricky issue here is that
 we need it to start with a path, because we can't change the `movement` on the
-fly.  So we give it a path with one point and zero velocity.  Then, in its
-`poke_responder()`, we reset its speed and angular velocity, then give it a new
-path.
+fly.  So we give it a path with two identical points and zero velocity.  Then,
+in its `poke_responder()`, we reset its speed and angular velocity, then give it
+a new path.
 
 ```typescript
 {{#include game_07.ts:89:105}}

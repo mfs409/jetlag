@@ -90,7 +90,7 @@ function builder(level: number) {
   const path_actor = new Actor({
     appearance: new ImageSprite({ width: 1, height: 1, img: "purple_ball.png" }),
     rigidBody: new CircleBody({ cx: 14, cy: 2, radius: .5 }),
-    movement: new PathMovement(new Path().to(14, 1), 0, false),
+    movement: new PathMovement(new Path().to(14, 2).to(14, 2), 0, false),
     gestures: {
       tap: () => { lastTapActor = path_actor; return true; }
     },
