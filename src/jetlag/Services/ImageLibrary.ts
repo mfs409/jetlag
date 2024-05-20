@@ -171,6 +171,20 @@ export class ImageLibraryService {
   }
 
   /**
+   * Get an image that has been loaded by the renderer, returning it as a raw
+   * Pixi Texture
+   *
+   * @param imgName The name of the image to load
+   *
+   * @returns A Texture built from the image
+   */
+  public getImageAsTexture(imgName: string) {
+    let texture = this.imgTextures.get(imgName);
+    if (!texture) throw "Unable to find graphics asset '" + imgName + "'";
+    return texture;
+  }
+
+  /**
    * Get a video that has been loaded by the renderer
    *
    * @param vidName The name of the video to load
