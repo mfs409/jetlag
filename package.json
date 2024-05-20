@@ -14,12 +14,12 @@
         "hammerjs": "^2.0.8",
         "howler": "^2.2.4",
         "pixi-filters": "^5.2.1",
-        "pixi.js": "^7.3.2"
+        "pixi.js": "^7.3.2",
+        "socket.io-client": "^4.7.5"
     },
     "devDependencies": {
         "@types/hammerjs": "^2.0.44",
         "@types/howler": "^2.2.11",
-        "@types/showdown": "^2.0.3",
         "http-server": "^14.1.1",
         "typedoc": "^0.25.3",
         "typescript": "^5.1.6"
