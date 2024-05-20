@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Flow Tests</title>
+  <script src="/socket.io.js"></script>
+</head>
+
+<body>
+  <h2>ReqLoginToken</h2>
+  UserId: <input type="text" id="userId" /> <br />
+  UserName: <input type="text" id="userName" /> <br />
+  <button onclick="doReqLoginToken()">Send!</button> <br />
+  <hr>
+  <h2>ReqCreate</h2>
+  <button onclick="doReqCreate()">Send!</button> <br />
+  <hr>
+  <h2>ReqJoin</h2>
+  RoomId: <input type="text" id="roomId" /> <br />
+  <button onclick="doReqJoin()">Send!</button> <br />
+  <hr>
+  <h2>ReqLogout</h2>
+  <button onclick="doReqLogout()">Send!</button> <br />
+  <hr>
+  <h2>Broadcast</h2>
+  Message: <input type="text" id="message" /> <br />
+  <button onclick="doBroadcast()">Send!</button> <br />
+  <hr>
+  <button onclick="clearResultLog()">Clear</button> <br />
+  <div id="ResultLog"></div>
+</body>
+<script>
+  // A websocket that connects to the server that provided this web page
+  var socket = io();
+
+  // On any response from the server, append the message to the ResultLog
+  let events = ["EvtUserJoined", "EvtUserLeft", "Broadcast", "ResErrHasUser", "ResErrNoUser", "ResErrHasRoom", "ResErrNoRoom", "ResErrFormat", "ResErrUserTaken", "ResLoggedIn", "ResLoggedOut", "ResSent", "ResCreated", "ResJoined"];
+  for (let e of events) socket.on(e, (msg) => {
+    let p = document.createElement("p");
+    p.innerHTML = `${tag}: ${msg}`;
+    document.getElementById("ResultLog").appendChild(p)
+  });
+
+  // The "do" functions send messages on the socket in response to the various
+  // button presses
+  function doReqLoginToken() {
+    let userId = document.getElementById("userId").value;
+    let userName = document.getElementById("userName").value;
+    socket.emit("ReqLoginToken", JSON.stringify({ token: `${userId},${userName}` }))
+  }
+  function doReqCreate() { socket.emit("ReqCreate", ""); }
+  function doReqJoin() { socket.emit("ReqJoin", JSON.stringify({ roomId: document.getElementById("roomId").value })); }
+  function doReqLogout() { socket.emit("ReqLogout", ""); }
+  function doBroadcast() { socket.emit("Broadcast", JSON.stringify({ message: document.getElementById("message").value })); }
+
+  // Clear the ResultLog
+  function clearResultLog() {
+    let div = document.getElementById("ResultLog");
+    while (div.firstChild)
+      div.removeChild(div.firstChild);
+  }
+</script>
+
+</html>

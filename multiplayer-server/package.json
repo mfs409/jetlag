@@ -1,0 +1,20 @@
+{
+  "name": "jetlag-nodejs-socket-server",
+  "version": "0.0.1",
+  "description": "A simple websocket server for JetLag games",
+  "owner": "Michael Spear",
+  "license": "MIT",
+  "scripts": {
+    "start": "node ./scripts/dev.mjs; node dist/index.js",
+    "build": "node ./scripts/build.mjs",
+    "clean": "rm -rf ./dist ./check",
+    "check": "tsc"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "esbuild-serve": "^1.0.1",
+    "typescript": "^5.4.5"
+  }
+}

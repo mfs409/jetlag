@@ -3,6 +3,7 @@ import { ParallaxSystem } from "./Services/Parallax";
 import { GestureDevice } from "./Devices/Gesture";
 import { AudioLibraryService } from "./Services/AudioLibrary";
 import { MusicComponent } from "./Components/Music";
+import { NetworkDevice } from "./Devices/Network";
 import { ScoreService } from "./Services/Score";
 import { JetLagGameConfig } from "./Config";
 import { ConsoleDevice } from "./Devices/Console";
@@ -87,6 +88,8 @@ export class Stage {
   public gameMusic: MusicComponent | undefined;
   /** Persistent storage + volatile storage for a game session and a level */
   readonly storage: StorageDevice;
+  /** Network interface */
+  readonly network: NetworkDevice = new NetworkDevice();
   /**
    * Amount to scale fonts so everything fits on the screen.  This is relative
    * to the PPM4UF constant, defined above.
