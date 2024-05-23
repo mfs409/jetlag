@@ -2,6 +2,7 @@ import { b2Vec2 } from "@box2d/core";
 import { stage } from "../Stage";
 import { CameraService } from "./Camera";
 import { AnimatedSprite, ImageSprite, ZIndex } from "../Components/Appearance";
+import { SpriteLocation } from "../Devices/Renderer";
 
 /**
  * A ParallaxLayer is a layer that seems to scroll and repeat.  Layering
@@ -54,12 +55,13 @@ class ParallaxLayer {
    * @param camera    The camera for the world that these layers accompany
    * @param elapsedMs The time since the last render
    * @param z         The z index at which to render the layer
+   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  public render(camera: CameraService, elapsedMs: number, z: ZIndex) {
+  public render(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
     for (let i of this.images)
       i.prerender(elapsedMs);
-    if (this.isAuto) this.renderAuto(camera, elapsedMs, z);
-    else this.renderRelative(camera, elapsedMs, z);
+    if (this.isAuto) this.renderAuto(camera, elapsedMs, z, location);
+    else this.renderRelative(camera, elapsedMs, z, location);
   }
 
   /**
@@ -68,12 +70,13 @@ class ParallaxLayer {
    * @param camera    The camera for the world that these layers accompany
    * @param elapsedMs The elapsed time since we last drew this layer
    * @param z         The z index at which to render the layer
+   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  private renderAuto(camera: CameraService, elapsedMs: number, z: ZIndex) {
+  private renderAuto(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
     // Determine the position of a reference tile of the image
     if (this.isHorizontal) this.last.x += this.speed * elapsedMs;
     else this.last.y += this.speed * elapsedMs;
-    this.normalizeAndRender(camera, elapsedMs, z);
+    this.normalizeAndRender(camera, elapsedMs, z, location);
   }
 
   /**
@@ -85,8 +88,9 @@ class ParallaxLayer {
    * @param camera    The camera for the world that these layers accompany
    * @param elapsedMs The elapsed time since we last drew this layer
    * @param z         The z index at which to render the layer
+   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  private renderRelative(camera: CameraService, elapsedMs: number, z: ZIndex) {
+  private renderRelative(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
     // Determine the change in camera
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
@@ -95,16 +99,17 @@ class ParallaxLayer {
     // Determine the relative change to the reference tile
     if (this.isHorizontal) this.last.x = this.last.x + dx * this.speed;
     else this.last.y = this.last.y + dy * this.speed;
-    this.normalizeAndRender(camera, elapsedMs, z);
+    this.normalizeAndRender(camera, elapsedMs, z, location);
   }
 
   /**
    * This is how we actually figure out where to draw the background
-   *
-   * @param camera  The camera for the world that these layers accompany
-   * @param z       The z index at which to render the layer
+   * 
+   * @param camera   The camera for the world that these layers accompany
+   * @param z        The z index at which to render the layer
+   * @param location Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  private normalizeAndRender(camera: CameraService, elapsedMs: number, z: ZIndex) {
+  private normalizeAndRender(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let camW = stage.screenWidth / stage.pixelMeterRatio;
@@ -125,7 +130,7 @@ class ParallaxLayer {
     // save camera for next render
     this.lastCam.x = x;
     this.lastCam.y = y;
-    this.renderVisibleTiles(camera, elapsedMs, z);
+    this.renderVisibleTiles(camera, elapsedMs, z, location);
   }
 
   /**
@@ -135,8 +140,9 @@ class ParallaxLayer {
    * @param camera    The camera for the world that these layers accompany
    * @param elapsedMs The elapsed time since we last drew this layer
    * @param z         The z index at which to render the layer
+   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  private renderVisibleTiles(camera: CameraService, elapsedMs: number, z: ZIndex) {
+  private renderVisibleTiles(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let camW = stage.screenWidth / stage.pixelMeterRatio;
@@ -147,7 +153,7 @@ class ParallaxLayer {
       while (plx < x + camW) {
         let cx = plx + this.images[i].width / 2;
         let cy = this.last.y + this.images[i].height / 2;
-        this.images[i].renderWithoutBody({ cx, cy }, camera, elapsedMs, z);
+        this.images[i].renderWithoutBody({ cx, cy }, camera, elapsedMs, z, location);
         plx += this.images[i].width;
         i++;
       }
@@ -158,7 +164,7 @@ class ParallaxLayer {
       while (ply < y + camH) {
         let cx = this.last.x + this.images[i].width / 2;
         let cy = ply + this.images[i].height / 2;;
-        this.images[i].renderWithoutBody({ cx, cy }, camera, elapsedMs, z);
+        this.images[i].renderWithoutBody({ cx, cy }, camera, elapsedMs, z, location);
         ply += this.images[i].height;
         i++;
       }
@@ -201,9 +207,10 @@ export class ParallaxSystem {
    * @param camera    The camera for the world that these layers accompany
    * @param elapsedMs The time since the last render
    * @param z         The z index at which to render the layer
+   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  public render(camera: CameraService, elapsedMs: number, z: ZIndex) {
+  public render(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
     for (let pl of this.layers)
-      pl.render(camera, elapsedMs, z);
+      pl.render(camera, elapsedMs, z, location);
   }
 }

@@ -8,7 +8,7 @@ import { ScoreService } from "./Services/Score";
 import { JetLagGameConfig } from "./Config";
 import { ConsoleDevice } from "./Devices/Console";
 import { KeyboardDevice } from "./Devices/Keyboard";
-import { RendererDevice } from "./Devices/Renderer";
+import { RendererDevice, SpriteLocation } from "./Devices/Renderer";
 import { AccelerometerMode, AccelerometerDevice } from "./Devices/Accelerometer";
 import { StorageDevice } from "./Devices/Storage";
 import { TiltService } from "./Services/Tilt";
@@ -90,10 +90,7 @@ export class Stage {
   readonly storage: StorageDevice;
   /** Network interface */
   readonly network: NetworkDevice = new NetworkDevice();
-  /**
-   * Amount to scale fonts so everything fits on the screen.  This is relative
-   * to the PPM4UF constant, defined above.
-   */
+  /** Scaling ratio for fonts, relative to PPM4UF */
   fontScaling = 1;
   /** The screen width (dummy value... gets computed early) */
   screenWidth = 0;
@@ -101,10 +98,7 @@ export class Stage {
   screenHeight = 0;
   /** The pixel-meter ratio (dummy value... gets computed early) */
   pixelMeterRatio = 0;
-  /**
-   * The scaling ratio for SVG coords.  This is relative to the PPM4SVG
-   * constant, defined above
-   */
+  /** The scaling ratio for SVG coords, relative to PPM4SVG */
   svgScaling = 1;
   /** Code to run at the end of the next render step (used for screenshots) */
   private afterRender?: () => void;
@@ -153,7 +147,26 @@ export class Stage {
   }
 
   /** Remove the current overlay scene, if any */
-  public clearOverlay() { this.overlay = undefined; }
+  public clearOverlay() {
+    this.overlay = undefined;
+    this.renderer.resetOverlay();
+  }
+
+  /**
+   * Render the overlay if it exists.  This code is called dozens of times per
+   * second to update the overlay, if it is being drawn.
+   *
+   * @param elapsedMs The time in milliseconds since the previous render
+   */
+  public renderOverlay(elapsedMs: number) {
+    if (!this.overlay) return;
+    this.overlay.physics!.world.Step(elapsedMs / 1000, { velocityIterations: 8, positionIterations: 3 });
+    this.overlay.timer.advance(elapsedMs);
+    this.overlay.runRendertimeEvents();
+    // NB:  The timer might cancel the overlay, so we can't assume it's still
+    //      valid...
+    this.overlay?.camera.render(elapsedMs, SpriteLocation.OVERLAY);
+  }
 
   /**
    * This code is called dozens of times per second to update the game's world's
@@ -162,16 +175,8 @@ export class Stage {
    * @param elapsedMs The time in milliseconds since the previous render
    */
   public renderWorld(elapsedMs: number) {
-    // If we've got an overlay, show it and do nothing more
-    if (this.overlay) {
-      this.overlay.physics!.world.Step(elapsedMs / 1000, { velocityIterations: 8, positionIterations: 3 });
-      this.overlay.timer.advance(elapsedMs);
-      this.overlay.runRendertimeEvents();
-      // NB:  The timer might cancel the overlay, so we can't assume it's still
-      //      valid...
-      this.overlay?.camera.render(elapsedMs);
-      return;
-    }
+    // If we've got an overlay, don't render the world
+    if (this.overlay) return;
 
     // Only set the color and play music if we don't have an overlay showing
     this.renderer.setFrameColor(this.backgroundColor as any);
@@ -198,14 +203,13 @@ export class Stage {
     // The world is now static for this time step... we can display it! Order is
     // background, world, foreground.  We force the Z values on the background
     // and foreground to achieve this behavior.
-    this.background.render(this.world.camera, elapsedMs, -2);
+    this.background.render(this.world.camera, elapsedMs, -2, SpriteLocation.WORLD);
     this.world.timer.advance(elapsedMs);
-    this.world.camera.render(elapsedMs);
-    this.renderer.applyFilter(false, false, false);
-    this.foreground.render(this.world.camera, elapsedMs, 2);
+    this.world.camera.render(elapsedMs, SpriteLocation.WORLD);
+    this.foreground.render(this.world.camera, elapsedMs, 2, SpriteLocation.WORLD);
 
-    if (this.afterRender)
-      this.afterRender();
+    // Run post-render tasks
+    if (this.afterRender) this.afterRender();
   }
 
   /**
@@ -223,7 +227,7 @@ export class Stage {
     this.hud.physics!.world.Step(elapsedMs / 1000, { velocityIterations: 8, positionIterations: 3 });
     this.hud.runRendertimeEvents();
     this.hud.timer.advance(elapsedMs);
-    this.hud.camera.render(elapsedMs);
+    this.hud.camera.render(elapsedMs, SpriteLocation.HUD);
   }
 
   /**
@@ -245,6 +249,9 @@ export class Stage {
 
     // reset other fields to default values
     this.backgroundColor = "#ffffff";
+
+    // Reset the renderer
+    this.renderer.reset();
 
     // Just re-make the scenes and systems, instead of clearing the old ones
     this.world = new Scene(this.pixelMeterRatio, new AdvancedCollisionService());

@@ -1,11 +1,125 @@
-import { Application, Container, Graphics, BlurFilter, NoiseFilter, SCALE_MODES, Sprite as PixiSprite } from "pixi.js";
-import { GodrayFilter, AsciiFilter, OldFilmFilter } from "pixi-filters";
+import { Application, Container, Graphics, Sprite as PixiSprite, Text as PixiText, Filter, SCALE_MODES } from "pixi.js";
 import { stage } from "../Stage";
 import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, FilledRoundedBox, ZIndex } from "../Components/Appearance";
 import { RigidBodyComponent, BoxBody, CircleBody, PolygonBody } from "../Components/RigidBody";
 import { CameraService } from "../Services/Camera";
 import { Sprite, Text } from "../Services/ImageLibrary";
 import { b2Vec2 } from "@box2d/core";
+import { FilterComponent } from "../Components/FilterComponent"
+
+/** The location of a sprite */
+export enum SpriteLocation { WORLD, HUD, OVERLAY };
+
+/**
+ * FilterableContainer holds a container of renderable Pixi objects and a
+ * collection of filters that might be applied to the whole container
+ */
+class FilterableContainer {
+  /** A container for holding Pixi Graphics/Sprites/Text/etc */
+  readonly container: Container = new Container();
+  /** A set of filters that may be applied to the container */
+  filters: FilterComponent[] = [];
+  /** Clear all the containers at the beginning of a render step */
+  public clearForRendering() {
+    this.container.removeChildren();
+    this.container.filters = [];
+  }
+  /**
+   * Attach any filters that prerender
+   *
+   * @param elapsedMs The time since the last call to attachFilters
+   */
+  public attachFilters(elapsedMs: number) {
+    let filters = [] as Filter[];
+    for (let f of this.filters)
+      if (f.preRender(elapsedMs))
+        for (let fl of f.getFilters())
+          filters.push(fl);
+    this.container.filters = filters;
+  }
+  /** Reset all state */
+  public reset() {
+    this.clearForRendering();
+    this.filters = [];
+  }
+}
+
+/**
+ * FilterableContainerSet has a set of containers for organizing renderables by
+ * their Z plane, along with an additional super-container and filters.
+ */
+class FilterableContainerSet {
+  /** Five container/filter pairs, for the five Z planes */
+  private zContainers: [FilterableContainer, FilterableContainer, FilterableContainer, FilterableContainer, FilterableContainer];
+
+  /** One more container/filter pair, that can hold the five Z containers */
+  private metaContainer: FilterableContainer;
+
+  /** Construct a FilterableContainerSet by initializing all the containers */
+  constructor() {
+    this.metaContainer = new FilterableContainer();
+    this.zContainers = [new FilterableContainer(), new FilterableContainer(), new FilterableContainer(), new FilterableContainer(), new FilterableContainer()];
+  }
+
+  /** Clear all the containers at the beginning of a render step */
+  public clearForRendering() {
+    for (let c of this.zContainers) c.clearForRendering()
+    this.metaContainer.clearForRendering();
+  }
+
+  /**
+   * Add this container set to the renderer, respecting the Z ordering
+   *
+   * @param pixiStage The renderer's main container
+   * @param elapsedMs The time since the last render
+   */
+  public addToStage(pixiStage: Container, elapsedMs: number) {
+    for (let c of this.zContainers) {
+      // Attach any z-scoped filters, then add the container
+      c.attachFilters(elapsedMs);
+      this.metaContainer.container.addChild(c.container);
+    }
+    // Attach any top-level filters, then add the container
+    this.metaContainer.attachFilters(elapsedMs);
+    pixiStage.addChild(this.metaContainer.container);
+  }
+
+  /**
+   * Add a graphic to this FilterableContainerSet, at the appropriate Z index
+   *
+   * @param asset The Pixi Graphic/Sprite to add to the container
+   * @param z     The Z index of the graphic to add
+   */
+  public addChild(graphic: Graphics | PixiSprite | PixiText, z: ZIndex) {
+    this.zContainers[z + 2].container.addChild(graphic);
+  }
+
+  /**
+   * Add a filter to one of the z indices.
+   *
+   * @param filter The filter to add
+   * @param z      The z index on which to add the filter
+   */
+  public addZFilter(filter: FilterComponent, z: ZIndex) {
+    this.zContainers[z + 2].filters.push(filter);
+  }
+
+  /**
+   * Add a filter to the whole container
+   *
+   * @param filter The filter to add
+   */
+  public addFilter(filter: FilterComponent) {
+    this.metaContainer.filters.push(filter);
+  }
+
+  /** Reset all state when the stage transitions to a new builder */
+  public reset() {
+    for (let c of this.zContainers)
+      c.reset();
+    this.metaContainer.reset();
+  }
+}
 
 /**
  * RenderDevice is a wrapper around the PIXI Application object.  It
@@ -24,10 +138,22 @@ export class RendererDevice {
   public pixi: Application;
 
   /**
-   * All of the sprites that will be rendered as part of the currently
-   * in-progress render, ordered by Z.
+   * All of the world sprites that will be rendered as part of the currently
+   * in-progress render
    */
-  private worldPlaneContainers: [Container, Container, Container, Container, Container];
+  private worldContainers: FilterableContainerSet;
+
+  /**
+   * All of the HUD sprites that will be rendered as part of the currently
+   * in-progress render
+   */
+  private hudContainers: FilterableContainerSet;
+
+  /**
+   * All of the overlay sprites that will be rendered as part of the currently
+   * in-progress render
+   */
+  private overlayContainers: FilterableContainerSet;
 
   /**
    * debugContainer holds outlines for sprites that will be rendered during
@@ -41,17 +167,24 @@ export class RendererDevice {
   /** The "time" in milliseconds, where 0 is when the game started */
   public get now() { return this.elapsed; }
 
-  /**
-   * When in debug mode, this lets us still disable hitboxes.  It's useful for
-   * tutorials, otherwise not.
-   */
-  public suppressHitBoxes = false;
-
   /** The most recently-taken screenshot */
   public mostRecentScreenShot?: PixiSprite;
 
   /** Is someone requesting that a new screenshot be taken? */
   public screenshotRequested = false;
+
+  /**
+   * Reset the renderer's container state when the stage transitions to a new
+   * builder
+   */
+  public reset() {
+    this.worldContainers.reset();
+    this.hudContainers.reset();
+    this.overlayContainers.reset();
+  }
+
+  /** Reset the renderer's overlay container state */
+  public resetOverlay() { this.overlayContainers.reset(); }
 
   /**
    * Initialize the renderer.
@@ -67,7 +200,9 @@ export class RendererDevice {
     document.getElementById(domId)!.appendChild(this.pixi.view as any);
 
     // Set up the containers we will use when rendering
-    this.worldPlaneContainers = [new Container(), new Container(), new Container(), new Container(), new Container()];
+    this.worldContainers = new FilterableContainerSet();
+    this.hudContainers = new FilterableContainerSet();
+    this.overlayContainers = new FilterableContainerSet();
     if (debugMode) this.debug = new Container();
   }
 
@@ -79,33 +214,33 @@ export class RendererDevice {
     this.pixi.ticker.add(() => {
       // Remove all state from the renderer
       this.pixi.stage.removeChildren();
-      for (let c of this.worldPlaneContainers) c.removeChildren();
+      this.worldContainers.clearForRendering();
+      this.hudContainers.clearForRendering();
+      this.overlayContainers.clearForRendering();
       this.debug?.removeChildren();
 
-      // Tell the game to advance by a step.  This will populate the main
-      // container
+      // Advance either the overlay or the world
       let x = this.pixi.ticker.elapsedMS;
       this.elapsed += x;
+      stage.renderOverlay(x);
+      this.overlayContainers.addToStage(this.pixi.stage, x);
       stage.renderWorld(x);
+      this.worldContainers.addToStage(this.pixi.stage, x);
 
-      // Put the main container into the renderer, so it will be drawn
-      for (let c of this.worldPlaneContainers)
-        this.pixi.stage.addChild(c);
-
-      // Add the debug container?
-      if (this.debug && !this.suppressHitBoxes) this.pixi.stage.addChild(this.debug);
-
-      // Grab a screenshot if we don't have one yet
+      // Grab a screenshot (pre HUD) if we don't have one yet
       if (this.screenshotRequested) {
         this.screenshotRequested = false;
         this.mostRecentScreenShot = new PixiSprite(this.pixi.renderer.generateTexture(this.pixi.stage, { scaleMode: SCALE_MODES.LINEAR, resolution: 1, region: this.pixi.renderer.screen }));
       }
 
-      // Now add the HUD to the renderer
+      // Advance the HUD and render it
       stage.renderHud(x);
+      this.hudContainers.addToStage(this.pixi.stage, x);
+
+      // Render the debug container?
+      if (this.debug) this.pixi.stage.addChild(this.debug);
     });
   }
-
 
   /**
    * Set the background color of the next frame to a HTML hex value (e.g.,
@@ -199,8 +334,9 @@ export class RendererDevice {
    * @param graphic     The graphic context
    * @param camera      The camera (and by extension, the world)
    * @param z           The Z index of the sprite
+   * @param location    Where is this being drawn (WORLD, OVERLAY, or HUD)?
    */
-  public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, body: RigidBodyComponent, graphic: Graphics, camera: CameraService, z: ZIndex) {
+  public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, body: RigidBodyComponent, graphic: Graphics, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     graphic.clear();
     // If the actor isn't on screen, skip it
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
@@ -252,7 +388,11 @@ export class RendererDevice {
     else {
       throw "Error: unrecognized FilledSprite?"
     }
-    this.worldPlaneContainers[z + 2].addChild(graphic);
+    switch (location) {
+      case SpriteLocation.WORLD: this.worldContainers.addChild(graphic, z); break;
+      case SpriteLocation.OVERLAY: this.overlayContainers.addChild(graphic, z); break;
+      case SpriteLocation.HUD: this.hudContainers.addChild(graphic, z); break;
+    }
 
     // Debug render?
     if (this.debug != undefined)
@@ -268,8 +408,9 @@ export class RendererDevice {
    * @param camera      The camera that determines which actors to show, and
    *                    where
    * @param z           The Z index of the sprite
+   * @param location    Where is this being drawn (WORLD, OVERLAY, or HUD)?
    */
-  public addBodyToFrame(appearance: AppearanceComponent, body: RigidBodyComponent, sprite: Sprite, camera: CameraService, z: ZIndex) {
+  public addBodyToFrame(appearance: AppearanceComponent, body: RigidBodyComponent, sprite: Sprite, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     // If the actor isn't on screen, skip it
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
 
@@ -283,7 +424,11 @@ export class RendererDevice {
     sprite.sprite.width = s * appearance.width;
     sprite.sprite.height = s * appearance.height;
     sprite.sprite.rotation = body.getRotation();
-    this.worldPlaneContainers[z + 2].addChild(sprite.sprite);
+    switch (location) {
+      case SpriteLocation.WORLD: this.worldContainers.addChild(sprite.sprite, z); break;
+      case SpriteLocation.OVERLAY: this.overlayContainers.addChild(sprite.sprite, z); break;
+      case SpriteLocation.HUD: this.hudContainers.addChild(sprite.sprite, z); break;
+    }
 
     // Debug render?
     if (this.debug != undefined)
@@ -322,8 +467,9 @@ export class RendererDevice {
    * @param camera      The camera that determines which actors to show, and
    *                    where
    * @param z           The Z index of the sprite
+   * @param location    Where is this being drawn (WORLD, OVERLAY, or HUD)?
    */
-  public addPictureToFrame(anchor: { cx: number, cy: number }, appearance: AppearanceComponent, sprite: Sprite, camera: CameraService, z: ZIndex) {
+  public addPictureToFrame(anchor: { cx: number, cy: number }, appearance: AppearanceComponent, sprite: Sprite, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     // If the picture isn't on screen, skip it
     let radius = Math.sqrt(Math.pow(appearance.width / 2, 2) + Math.pow(appearance.height / 2, 2))
     if (!camera.inBounds(anchor.cx, anchor.cy, radius)) return;
@@ -340,7 +486,11 @@ export class RendererDevice {
     sprite.sprite.width = w;
     sprite.sprite.height = h;
     sprite.sprite.rotation = 0;
-    this.worldPlaneContainers[z + 2].addChild(sprite.sprite);
+    switch (location) {
+      case SpriteLocation.WORLD: this.worldContainers.addChild(sprite.sprite, z); break;
+      case SpriteLocation.OVERLAY: this.overlayContainers.addChild(sprite.sprite, z); break;
+      case SpriteLocation.HUD: this.hudContainers.addChild(sprite.sprite, z); break;
+    }
 
     // Debug rendering: draw a box around the image
     if (this.debug)
@@ -350,13 +500,14 @@ export class RendererDevice {
   /**
    * Add text to the next frame
    *
-   * @param text    The text object to display
-   * @param body    The rigidBody of the actor
-   * @param camera  The camera that determines which text to show, and where
-   * @param center  Should we center the text at its x/y coordinate?
-   * @param z           The Z index of the sprite
+   * @param text     The text object to display
+   * @param body     The rigidBody of the actor
+   * @param camera   The camera that determines which text to show, and where
+   * @param center   Should we center the text at its x/y coordinate?
+   * @param z        The Z index of the sprite
+   * @param location Where is this being drawn (WORLD, OVERLAY, or HUD)?
    */
-  public addTextToFrame(text: Text, body: RigidBodyComponent, camera: CameraService, center: boolean, z: ZIndex) {
+  public addTextToFrame(text: Text, body: RigidBodyComponent, camera: CameraService, center: boolean, z: ZIndex, location: SpriteLocation) {
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
 
     // Compute screen coords of center
@@ -372,7 +523,11 @@ export class RendererDevice {
     text.text.position.x = x;
     text.text.position.y = y;
     text.text.rotation = body.getRotation();
-    this.worldPlaneContainers[z + 2].addChild(text.text);
+    switch (location) {
+      case SpriteLocation.WORLD: this.worldContainers.addChild(text.text, z); break;
+      case SpriteLocation.OVERLAY: this.overlayContainers.addChild(text.text, z); break;
+      case SpriteLocation.HUD: this.hudContainers.addChild(text.text, z); break;
+    }
 
     // Draw a debug box around the text?
     if (this.debug != undefined) {
@@ -394,54 +549,32 @@ export class RendererDevice {
    */
   public getFPS() { return this.pixi.ticker.FPS; }
 
-  /** TODO: in-progress support for an ASCII filter */
-  private ascii_filter = new AsciiFilter(8);
-
-  /** TODO: in-progress support for a blur filter */
-  private blur_filter = new BlurFilter(.5);
-
-  /** TODO: in-progress support for an old sepia TV filter.  Part 1: noise. */
-  private noise_filter = new NoiseFilter();
-
-  /** TODO: in-progress support for an old sepia TV filter.  Part 2: lens effect. */
-  private godray_filter = new GodrayFilter();
-
-  /** TODO: in-progress support for an old sepia TV filter.  Part 3: sepia. */
-  private old_film_filter = new OldFilmFilter();
+  /**
+   * Add a filter to one of the z indices.
+   *
+   * @param filter   The filter to add
+   * @param z        The z index on which to add the filter
+   * @param location Where to put the filter (WORLD, OVERLAY, or HUD)
+   */
+  public addZFilter(filter: FilterComponent, z: ZIndex, location: SpriteLocation) {
+    switch (location) {
+      case SpriteLocation.HUD: this.hudContainers.addZFilter(filter, z); break;
+      case SpriteLocation.OVERLAY: this.overlayContainers.addZFilter(filter, z); break;
+      case SpriteLocation.WORLD: this.worldContainers.addZFilter(filter, z); break;
+    }
+  }
 
   /**
-   * Apply one of our pre-made filters to the world.  All filter stuff is
-   * in-progress
+   * Add a filter to the whole container
    *
-   * TODO:  Finish adding filter support.  We probably want to do it one Z at a
-   *        time?
-   *
-   * TODO:  Right now, we're putting the filter on Z=4.  Is that what we really
-   *        want to be doing here?
-   *
-   * @param use_blur      Use the blur filter?
-   * @param use_ascii     Use the ASCII filter?
-   * @param use_sepia_tv  Use the "old TV" filter?
+   * @param filter   The filter to add
+   * @param location Where to put the filter (WORLD, OVERLAY, or HUD)
    */
-  public applyFilter(use_blur: boolean = false, use_ascii: boolean = false, use_sepia_tv: boolean = false) {
-    if (use_blur) {
-      this.worldPlaneContainers[4].filters = [this.blur_filter];
-    }
-    else if (use_ascii) {
-      this.worldPlaneContainers[4].filters = [this.ascii_filter as any];
-    }
-    else if (use_sepia_tv) {
-      this.noise_filter.seed = Math.random();
-      this.old_film_filter.sepia = .3;
-      this.old_film_filter.noise = .3;
-      this.old_film_filter.noiseSize = 1;
-      this.old_film_filter.scratch = .5;
-      this.old_film_filter.scratchDensity = .3;
-      this.old_film_filter.scratchWidth = 1;
-      this.old_film_filter.vignetting = .3;
-      this.old_film_filter.vignettingAlpha = 1;
-      this.old_film_filter.vignettingBlur = .3;
-      this.worldPlaneContainers[4].filters = [this.noise_filter, this.godray_filter as any, this.old_film_filter as any];
+  public addFilter(filter: FilterComponent, location: SpriteLocation) {
+    switch (location) {
+      case SpriteLocation.HUD: this.hudContainers.addFilter(filter); break;
+      case SpriteLocation.OVERLAY: this.overlayContainers.addFilter(filter); break;
+      case SpriteLocation.WORLD: this.worldContainers.addFilter(filter); break;
     }
   }
 }

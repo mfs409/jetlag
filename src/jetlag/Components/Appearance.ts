@@ -6,6 +6,7 @@ import { AnimationSequence, AnimationState } from "../Config";
 import { StateEvent, IStateObserver, ActorState, DIRECTION } from "./StateManager";
 import { stage } from "../Stage";
 import { Graphics, Sprite as PixiSprite, VideoResource } from "pixi.js";
+import { SpriteLocation } from "../Devices/Renderer";
 
 /**
  * ZIndex is a convenience type to enforce that there are five Z indices in
@@ -99,14 +100,15 @@ export class TextSprite {
    * @param camera      The camera that defines the bounds for the Scene where
    *                    this image should be drawn
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor) {
       // Update the text before passing to the renderer!
       this.text.text.text = (typeof this.producer == "string") ? this.producer : this.producer();
       this.width = this.text.text.width;
       this.height = this.text.text.height;
-      stage.renderer.addTextToFrame(this.text, this.actor.rigidBody, camera, this.center, this.z);
+      stage.renderer.addTextToFrame(this.text, this.actor.rigidBody, camera, this.center, this.z, location);
     }
   }
 
@@ -189,10 +191,11 @@ export class ImageSprite {
    *
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor)
-      stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.image, camera, this.z);
+      stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.image, camera, this.z, location);
   }
 
   /**
@@ -203,9 +206,10 @@ export class ImageSprite {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    * @param z           A z index (overrides the image's z)
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex) {
-    stage.renderer.addPictureToFrame(anchor, this, this.image, camera, z);
+  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+    stage.renderer.addPictureToFrame(anchor, this, this.image, camera, z, location);
   }
 
   /**
@@ -623,10 +627,11 @@ export class AnimatedSprite implements IStateObserver {
    *
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor)
-      stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.getCurrent(), camera, this.z);
+      stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.getCurrent(), camera, this.z, location);
   }
 
   /**
@@ -637,9 +642,10 @@ export class AnimatedSprite implements IStateObserver {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    * @param z           A z index (overrides the image's z)
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex) {
-    stage.renderer.addPictureToFrame(anchor, this, this.getCurrent(), camera, z);
+  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+    stage.renderer.addPictureToFrame(anchor, this, this.getCurrent(), camera, z, location);
   }
 
   /**
@@ -716,10 +722,11 @@ export class VideoSprite {
    *
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor)
-      stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.sprite, camera, this.z);
+      stage.renderer.addBodyToFrame(this, this.actor.rigidBody, this.sprite, camera, this.z, location);
   }
 
   /** Start playing this VideoSprite's video */
@@ -756,9 +763,10 @@ export class VideoSprite {
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
    * @param z           A z index (overrides the image's z)
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex) {
-    stage.renderer.addPictureToFrame(anchor, this, this.sprite, camera, z);
+  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+    stage.renderer.addPictureToFrame(anchor, this, this.sprite, camera, z, location);
   }
 
   /** Perform any custom updates to the video before displaying it */
@@ -823,10 +831,11 @@ export class FilledBox {
    *
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor)
-      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
+      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z, location);
   }
 
   /** Perform any custom updates to the box before displaying it */
@@ -897,10 +906,11 @@ export class FilledRoundedBox {
    *
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor)
-      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
+      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z, location);
   }
 
   /** Perform any custom updates to the box before displaying it */
@@ -968,10 +978,11 @@ export class FilledCircle {
    *
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor)
-      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
+      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z, location);
   }
 
   /** Perform any custom updates to the circle before displaying it */
@@ -1053,10 +1064,11 @@ export class FilledPolygon {
    *
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
+   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  render(camera: CameraService, _elapsedMs: number) {
+  render(camera: CameraService, _elapsedMs: number, location: SpriteLocation) {
     if (this.actor)
-      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z);
+      stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z, location);
   }
 
   /** Perform any custom updates to the polygon before displaying it */

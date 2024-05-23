@@ -1,6 +1,7 @@
 import { b2Vec2 } from "@box2d/core";
 import { Actor } from "../Entities/Actor";
 import { stage } from "../Stage";
+import { SpriteLocation } from "../Devices/Renderer";
 
 /**
  * The Camera is used to determine /how much/ of a world to render, and /which
@@ -240,11 +241,11 @@ export class CameraService {
   }
 
   /** Render the actors associated with this camera */
-  render(elapsedMs: number) {
+  render(elapsedMs: number, location: SpriteLocation) {
     // Draw everything
     for (let renderable of this.actors)
       if (renderable.prerender(elapsedMs))
         for (let a of renderable.appearance)
-          a.render(this, elapsedMs);
+          a.render(this, elapsedMs, location);
   }
 }
