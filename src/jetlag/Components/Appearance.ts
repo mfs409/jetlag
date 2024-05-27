@@ -148,6 +148,7 @@ export class TextSprite {
   resize(scale: number) {
     this.size *= scale;
     (this.text.text.style.fontSize as number) *= scale;
+    this.text.text.style.strokeThickness *= scale;
     this.text.text.width *= scale;
     this.text.text.height *= scale;
     this.width = this.text.text.width;

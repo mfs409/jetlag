@@ -365,7 +365,7 @@ export class RendererDevice {
     let x = s * (body.getCenter().x + appearance.offset.dx - camera.getLeft());
     let y = s * (body.getCenter().y + appearance.offset.dy - camera.getTop());
     if (appearance.lineWidth && appearance.lineColor)
-      graphic.lineStyle(appearance.lineWidth, appearance.lineColor);
+      graphic.lineStyle(appearance.lineWidth * stage.pixelMeterRatio, appearance.lineColor);
     if (appearance.fillColor)
       graphic.beginFill(appearance.fillColor);
     if (appearance instanceof FilledBox) {

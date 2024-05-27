@@ -135,7 +135,7 @@ export class Actor {
   public resize(scale: number) {
     if (scale <= 0)
       throw "Error: resize requires a positive, non-zero value";
-    // set new height and width of the Render context
+    // set new height and width of the AppearanceComponents
     for (let a of this.appearance)
       a.resize(scale);
     this.rigidBody.resize(scale);

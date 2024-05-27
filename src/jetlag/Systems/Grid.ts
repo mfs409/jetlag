@@ -27,14 +27,14 @@ export class GridSystem {
     for (let x = top_left.x + .5; x <= bottom_right.x + 1; x += 2) {
       new Actor({
         rigidBody: new BoxBody({ cx: x, cy: top_left.y + height / 2, width: 1, height }, { scene }),
-        appearance: new FilledBox({ width: 1, height, lineWidth: 2, lineColor: "#000000", fillColor: "#00000000", z })
+        appearance: new FilledBox({ width: 1, height, lineWidth: .02, lineColor: "#000000", fillColor: "#00000000", z })
       });
     }
 
     for (let y = top_left.y + .5; y <= bottom_right.y + 1; y += 2) {
       new Actor({
         rigidBody: new BoxBody({ cx: top_left.x + width / 2, cy: y, width, height: 1 }, { scene }),
-        appearance: new FilledBox({ width: width, height: 1, lineWidth: 2, lineColor: "#000000", fillColor: "#00000000", z })
+        appearance: new FilledBox({ width: width, height: 1, lineWidth: .02, lineColor: "#000000", fillColor: "#00000000", z })
       });
     }
   }
