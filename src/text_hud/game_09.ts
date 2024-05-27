@@ -17,7 +17,7 @@ class Config implements JetLagGameConfig {
  */
 function builder(_level: number) {
   new Actor({
-    appearance: [new FilledRoundedBox({ width: 1.5, height: .75, radius: .1, fillColor: "#3258a8", lineColor: "#000000", lineWidth: 3 }),
+    appearance: [new FilledRoundedBox({ width: 1.5, height: .75, radius: .1, fillColor: "#3258a8", lineColor: "#000000", lineWidth: .03 }),
     new TextSprite({ center: true, face: "Arial", color: "#FFFFFF", size: 20 }, "Hello")],
     rigidBody: new CircleBody({ cx: 2, cy: 2, radius: .01 }),
     movement: new PathMovement(new Path().to(2, 2).to(14, 2).to(14, 7).to(2, 7).to(2, 2), 1, true)

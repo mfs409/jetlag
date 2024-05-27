@@ -69,14 +69,14 @@ function builder(_level: number) {
   // Make an obstacle that is a rectangle
   new Actor({
     rigidBody: new BoxBody({ cx: 3, cy: 4, width: 1, height: 1 }),
-    appearance: new FilledBox({ width: 1, height: 1, fillColor: "#ff0000", lineWidth: 4, lineColor: "#00ff00" }),
+    appearance: new FilledBox({ width: 1, height: 1, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
     role: new Obstacle(),
   });
 
   // Make an obstacle that is a polygon
   new Actor({
     rigidBody: new PolygonBody({ cx: 10, cy: 5, vertices: [0, -.5, .5, 0, 0, .5, -1, 0] }),
-    appearance: new FilledPolygon({ vertices: [0, -.5, .5, 0, 0, .5, -1, 0], fillColor: "#ff0000", lineWidth: 4, lineColor: "#00ff00" }),
+    appearance: new FilledPolygon({ vertices: [0, -.5, .5, 0, 0, .5, -1, 0], fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
     role: new Obstacle(),
   });
 

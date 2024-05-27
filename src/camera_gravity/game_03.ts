@@ -53,7 +53,7 @@ function builder(level: number) {
   // Make a hero, let the camera follow it, and let tapping cause the hero to
   // jump
   let h = new Actor({
-    appearance: new FilledCircle({ radius: .75, fillColor: "#0000ff", lineWidth: 3, lineColor: "#000044" }),
+    appearance: new FilledCircle({ radius: .75, fillColor: "#0000ff", lineWidth: .03, lineColor: "#000044" }),
     rigidBody: new CircleBody({ cx: 3, cy: 3, radius: .75 }),
     role: new Hero(),
     movement: new ManualMovement(),
@@ -75,7 +75,7 @@ function builder(level: number) {
 
   // Make a destination for winning the game
   new Actor({
-    appearance: new FilledCircle({ radius: .5, fillColor: "#00ff00", lineWidth: 3, lineColor: "#004400" }),
+    appearance: new FilledCircle({ radius: .5, fillColor: "#00ff00", lineWidth: .03, lineColor: "#004400" }),
     rigidBody: new CircleBody({ cx: 31, cy: 6, radius: .5 }),
     role: new Destination(),
     movement: new ManualMovement(),
@@ -89,7 +89,7 @@ function builder(level: number) {
 
   // Draw a box, and write a timer on it.  Both go on the HUD
   new Actor({
-    appearance: new FilledBox({ width: .75, height: .75, fillColor: "#eeeeee", lineWidth: 3, lineColor: "#000000" }),
+    appearance: new FilledBox({ width: .75, height: .75, fillColor: "#eeeeee", lineWidth: .03, lineColor: "#000000" }),
     rigidBody: new BoxBody({ cx: 8, cy: .75, width: .75, height: .75 }, { scene: stage.hud }),
   });
   new Actor({

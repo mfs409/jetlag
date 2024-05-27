@@ -23,7 +23,7 @@ function builder(level: number) {
 
   // Make a hero
   let h = new Actor({
-    appearance: new FilledPolygon({ vertices: [0, -.5, .25, .5, -.25, .5], fillColor: "#0000ff", lineWidth: 3, lineColor: "#000044", z: 1 }),
+    appearance: new FilledPolygon({ vertices: [0, -.5, .25, .5, -.25, .5], fillColor: "#0000ff", lineWidth: .03, lineColor: "#000044", z: 1 }),
     rigidBody: new PolygonBody({ cx: 8, cy: 4.5, vertices: [0, -.5, .25, .5, -.25, .5] }, { collisionsEnabled: false }),
     role: new Hero(),
     movement: new ManualMovement(),

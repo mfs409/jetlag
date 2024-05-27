@@ -19,7 +19,7 @@ function builder(_level: number) {
   // A circle.  It is filled red.  It has a green outline.  The body has a
   // bigger radius
   new Actor({
-    appearance: new FilledCircle({ radius: .5, fillColor: "#ff0000", lineWidth: 4, lineColor: "#00ff00" }),
+    appearance: new FilledCircle({ radius: .5, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
     rigidBody: new CircleBody({ cx: 5, cy: 2, radius: 1 }),
   });
 
@@ -34,14 +34,14 @@ function builder(_level: number) {
   // "transparent", even though it looks like it should be red.
   new Actor({
     rigidBody: new PolygonBody({ cx: 10, cy: 5, vertices: [0, -.5, .5, 0, 0, .5, -1, 0] }),
-    appearance: new FilledPolygon({ vertices: [0, -.5, .5, 0, 0, .5, -1, 0], fillColor: "#ff000000", lineWidth: 4, lineColor: "#00ff00" }),
+    appearance: new FilledPolygon({ vertices: [0, -.5, .5, 0, 0, .5, -1, 0], fillColor: "#ff000000", lineWidth: .04, lineColor: "#00ff00" }),
   });
 
   // A rounded rectangle is like a regular rectangle, but it gets a radius (in
   // meters) to control the curve of the corners.
   new Actor({
     rigidBody: new BoxBody({ cx: 3, cy: 7, width: 3, height: 2 }),
-    appearance: new FilledRoundedBox({ width: 3, height: 2, fillColor: "#00ffff", lineWidth: 2, lineColor: "#000000", radius: .25 })
+    appearance: new FilledRoundedBox({ width: 3, height: 2, fillColor: "#00ffff", lineWidth: .02, lineColor: "#000000", radius: .25 })
   });
 }
 
