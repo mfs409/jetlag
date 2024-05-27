@@ -39,7 +39,7 @@ export class TextSprite {
   /** The Actor to which this TextSprite is attached */
   public actor?: Actor;
   /** The low-level text object that we pass to the Renderer */
-  private readonly text: Text;
+  readonly text: Text;
   /** Width of the text (computed) */
   width = 0;
   /** Height of the text (computed) */
@@ -58,6 +58,8 @@ export class TextSprite {
   strokeWidth?: number;
   /** Stroke color */
   strokeColor?: string;
+  /** An offset between the TextSprite's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
 
   /**
    * Build some text that can be rendered
@@ -72,10 +74,12 @@ export class TextSprite {
    * @param opts.z            An optional z index in the range [-2,2]
    * @param opts.strokeWidth  The width of the text outline (optional)
    * @param opts.strokeColor  The color of the text outline (optional)
+   * @param opts.offset       An offset between the component's center and its
+   *                          RigidBody's center (optional)
    * @param producer          A function that creates the text to display, or a
    *                          String
    */
-  constructor(opts: { center: boolean, face: string, color: string, size: number, z?: ZIndex, strokeWidth?: number, strokeColor?: string }, public producer: string | (() => string)) {
+  constructor(opts: { center: boolean, face: string, color: string, size: number, z?: ZIndex, strokeWidth?: number, strokeColor?: string, offset?: { dx: number, dy: number } }, public producer: string | (() => string)) {
     this.center = opts.center;
     this.face = opts.face;
     this.color = opts.color;
@@ -92,6 +96,7 @@ export class TextSprite {
     this.text = Text.makeText(sample_text, cfg);
     this.width = this.text.text.width;
     this.height = this.text.text.height;
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
   }
 
   /**
@@ -108,7 +113,7 @@ export class TextSprite {
       this.text.text.text = (typeof this.producer == "string") ? this.producer : this.producer();
       this.width = this.text.text.width;
       this.height = this.text.text.height;
-      stage.renderer.addTextToFrame(this.text, this.actor.rigidBody, camera, this.center, this.z, location);
+      stage.renderer.addTextToFrame(this, this.actor.rigidBody, camera, this.center, this.z, location);
     }
   }
 
@@ -169,6 +174,8 @@ export class ImageSprite {
   z: ZIndex;
   /** The name of the image file */
   img: string;
+  /** An offset between the ImageSprite's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
 
   /**
    * Build an image that can be rendered
@@ -177,13 +184,16 @@ export class ImageSprite {
    * @param opts.height The height of the image, in meters
    * @param opts.img    The name of the file to use as the image
    * @param opts.z      An optional z index in the range [-2,2]
+   * @param opts.offset An offset between the component's center and its
+   *                    RigidBody's center (optional)
    */
-  constructor(opts: { width: number, height: number, img: string, z?: ZIndex }) {
+  constructor(opts: { width: number, height: number, img: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
     this.width = opts.width;
     this.height = opts.height;
     this.z = opts.z ? opts.z : 0;
     this.img = opts.img;
     this.image = stage.imageLibrary.getSprite(this.img);
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
   }
 
   /**
@@ -208,8 +218,8 @@ export class ImageSprite {
    * @param z           A z index (overrides the image's z)
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex, location: SpriteLocation) {
-    stage.renderer.addPictureToFrame(anchor, this, this.image, camera, z, location);
+  renderAsParallax(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, foreground: boolean) {
+    stage.renderer.addParallaxToFrame(anchor, this, this.image, camera, foreground);
   }
 
   /**
@@ -297,6 +307,9 @@ export class AnimatedSprite implements IStateObserver {
    */
   stateSelector: (oldState: ActorState, newState: ActorState) => AnimationState = AnimatedSprite.overheadAnimationTransitions;
 
+  /** An offset between the AnimatedSprite's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
+
   /**
    * Skip to the `index`th cell of the animation, and move forward within it by
    * `elapsed` milliseconds.  Does nothing (and prints no error) if the index is
@@ -325,8 +338,10 @@ export class AnimatedSprite implements IStateObserver {
    * @param opts.z          An optional z index in the range [-2,2]
    * @param opts.remap      A map that indicates when an animation for one state
    *                        should be re-used for another state.
+   * @param opts.offset     An offset between the component's center and its
+   *                        RigidBody's center (optional)
    */
-  constructor(opts: { width: number, height: number, animations: Map<AnimationState, AnimationSequence>, z?: ZIndex, remap?: Map<AnimationState, AnimationState> }) {
+  constructor(opts: { width: number, height: number, animations: Map<AnimationState, AnimationSequence>, z?: ZIndex, remap?: Map<AnimationState, AnimationState>, offset?: { dx: number, dy: number } }) {
     this.width = opts.width;
     this.height = opts.height;
     this.z = opts.z ? opts.z : 0;
@@ -348,6 +363,7 @@ export class AnimatedSprite implements IStateObserver {
         this.animations.set(k, this.animations.get(opts.remap.get(k)!)!)
 
     this.current_ani = this.animations.get(AnimationState.IDLE_E)!;
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
   }
 
   /** Restart the current animation */
@@ -641,11 +657,11 @@ export class AnimatedSprite implements IStateObserver {
    * @param anchor      The center x/y at which to draw the image
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
-   * @param z           A z index (overrides the image's z)
-   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param foreground  Should this go in the foreground (true) or background
+   *                    (false)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex, location: SpriteLocation) {
-    stage.renderer.addPictureToFrame(anchor, this, this.getCurrent(), camera, z, location);
+  renderAsParallax(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, foreground: boolean) {
+    stage.renderer.addParallaxToFrame(anchor, this, this.getCurrent(), camera, foreground);
   }
 
   /**
@@ -700,6 +716,8 @@ export class VideoSprite {
   z: ZIndex;
   /** The name of the video file */
   src: string;
+  /** An offset between the VideoSprite's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
 
   /**
    * Build a VideoSprite
@@ -708,13 +726,16 @@ export class VideoSprite {
    * @param opts.height The height of the image, in meters
    * @param opts.vid    The name of the video file to use
    * @param opts.z      An optional z index in the range [-2,2]
+   * @param opts.offset An offset between the component's center and its
+   *                    RigidBody's center (optional)
    */
-  constructor(opts: { width: number, height: number, vid: string, z?: ZIndex }) {
+  constructor(opts: { width: number, height: number, vid: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
     this.width = opts.width;
     this.height = opts.height;
     this.z = opts.z ? opts.z : 0;
     this.src = opts.vid;
     this.sprite = stage.imageLibrary.getVideo(this.src);
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
   }
 
   /**
@@ -762,11 +783,11 @@ export class VideoSprite {
    * @param anchor      The center x/y at which to draw the image
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
-   * @param z           A z index (overrides the image's z)
-   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param foreground  Should this go in the foreground (true) or background
+   *                    (false)
    */
-  renderWithoutBody(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, z: ZIndex, location: SpriteLocation) {
-    stage.renderer.addPictureToFrame(anchor, this, this.sprite, camera, z, location);
+  renderAsParallax(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, foreground: boolean) {
+    stage.renderer.addParallaxToFrame(anchor, this, this.sprite, camera, foreground);
   }
 
   /** Perform any custom updates to the video before displaying it */
@@ -805,6 +826,8 @@ export class FilledBox {
   lineColor?: string;
   /** Fill color */
   fillColor: string;
+  /** An offset between the FilledBox's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
 
   /**
    * Build a FilledBox
@@ -815,14 +838,17 @@ export class FilledBox {
    * @param opts.lineColor  Optional color for the border
    * @param opts.fillColor  Color to fill the box
    * @param opts.z          An optional z index in the range [-2,2]
+   * @param opts.offset     An offset between the component's center and its
+   *                        RigidBody's center (optional)
    */
-  public constructor(opts: { width: number, height: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex }) {
+  public constructor(opts: { width: number, height: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
     this.width = opts.width;
     this.height = opts.height;
     this.z = opts.z ? opts.z : 0;
     this.lineWidth = opts.lineWidth;
     this.lineColor = opts.lineColor;
     this.fillColor = opts.fillColor;
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
     validateFilledConfig(this, "FilledBox");
   }
 
@@ -878,6 +904,8 @@ export class FilledRoundedBox {
   lineColor?: string;
   /** Fill color */
   fillColor: string;
+  /** An offset between the FilledRoundedBox's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
 
   /**
    * Build a FilledRoundedBox
@@ -889,8 +917,10 @@ export class FilledRoundedBox {
    * @param opts.lineColor  Optional color for the border
    * @param opts.fillColor  Color to fill the box
    * @param opts.z          An optional z index in the range [-2,2]
+   * @param opts.offset     An offset between the component's center and its
+   *                        RigidBody's center (optional)
    */
-  public constructor(opts: { width: number, height: number, radius: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex }) {
+  public constructor(opts: { width: number, height: number, radius: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
     this.width = opts.width;
     this.height = opts.height;
     this.z = opts.z ? opts.z : 0;
@@ -898,6 +928,7 @@ export class FilledRoundedBox {
     this.lineWidth = opts.lineWidth;
     this.lineColor = opts.lineColor;
     this.fillColor = opts.fillColor;
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
     validateFilledConfig(this, "FilledRoundedBox");
   }
 
@@ -953,6 +984,8 @@ export class FilledCircle {
   lineColor?: string;
   /** Fill color */
   fillColor?: string;
+  /** An offset between the FilledCircle's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
 
   /**
    * Build a FilledCircle
@@ -962,14 +995,17 @@ export class FilledCircle {
    * @param opts.lineColor  Color for the border
    * @param opts.fillColor  Color to fill the circle
    * @param opts.z          An optional z index in the range [-2,2]
+   * @param opts.offset     An offset between the component's center and its
+   *                        RigidBody's center (optional)
    */
-  public constructor(opts: { radius: number, lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex }) {
+  public constructor(opts: { radius: number, lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
     this.radius = opts.radius;
     this.width = this.height = 2 * this.radius;
     this.z = opts.z ? opts.z : 0;
     this.lineWidth = opts.lineWidth;
     this.lineColor = opts.lineColor;
     this.fillColor = opts.fillColor;
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
     validateFilledConfig(this, "FilledCircle");
   }
 
@@ -1025,6 +1061,8 @@ export class FilledPolygon {
   lineColor?: string;
   /** Fill color */
   fillColor?: string;
+  /** An offset between the FilledPolygon's center and the RigidBody's center */
+  offset: { dx: number, dy: number };
 
   /**
    * Build a FilledPolygon
@@ -1036,8 +1074,10 @@ export class FilledPolygon {
    * @param opts.lineColor  Color for the border
    * @param opts.fillColor  Color to fill the box
    * @param opts.z          An optional z index in the range [-2,2]
+   * @param opts.offset     An offset between the component's center and its
+   *                        RigidBody's center (optional)
    */
-  constructor(opts: { vertices: number[], lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex }) {
+  constructor(opts: { vertices: number[], lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
     for (let i = 0; i < opts.vertices.length; i += 2)
       this.vertices.push({ x: opts.vertices[i], y: opts.vertices[i + 1] });
     let minX = this.vertices[0].x;
@@ -1056,6 +1096,7 @@ export class FilledPolygon {
     this.lineWidth = opts.lineWidth;
     this.lineColor = opts.lineColor;
     this.fillColor = opts.fillColor;
+    this.offset = opts.offset ?? { dx: 0, dy: 0 };
     validateFilledConfig(this, "FilledPolygon");
   }
 

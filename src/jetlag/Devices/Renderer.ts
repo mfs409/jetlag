@@ -1,9 +1,9 @@
 import { Application, Container, Graphics, Sprite as PixiSprite, Text as PixiText, Filter, SCALE_MODES } from "pixi.js";
 import { stage } from "../Stage";
-import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, FilledRoundedBox, ZIndex } from "../Components/Appearance";
+import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, FilledRoundedBox, TextSprite, ZIndex } from "../Components/Appearance";
 import { RigidBodyComponent, BoxBody, CircleBody, PolygonBody } from "../Components/RigidBody";
 import { CameraService } from "../Services/Camera";
-import { Sprite, Text } from "../Services/ImageLibrary";
+import { Sprite } from "../Services/ImageLibrary";
 import { b2Vec2 } from "@box2d/core";
 import { FilterComponent } from "../Components/FilterComponent"
 
@@ -143,6 +143,12 @@ export class RendererDevice {
    */
   private worldContainers: FilterableContainerSet;
 
+  /** A container for all of the foreground parallax images */
+  private foregroundContainer: FilterableContainer;
+
+  /** A container for all of the background parallax images */
+  private backgroundContainer: FilterableContainer;
+
   /**
    * All of the HUD sprites that will be rendered as part of the currently
    * in-progress render
@@ -179,6 +185,8 @@ export class RendererDevice {
    */
   public reset() {
     this.worldContainers.reset();
+    this.foregroundContainer.reset();
+    this.backgroundContainer.reset();
     this.hudContainers.reset();
     this.overlayContainers.reset();
   }
@@ -200,7 +208,9 @@ export class RendererDevice {
     document.getElementById(domId)!.appendChild(this.pixi.view as any);
 
     // Set up the containers we will use when rendering
+    this.backgroundContainer = new FilterableContainer();
     this.worldContainers = new FilterableContainerSet();
+    this.foregroundContainer = new FilterableContainer();
     this.hudContainers = new FilterableContainerSet();
     this.overlayContainers = new FilterableContainerSet();
     if (debugMode) this.debug = new Container();
@@ -215,6 +225,8 @@ export class RendererDevice {
       // Remove all state from the renderer
       this.pixi.stage.removeChildren();
       this.worldContainers.clearForRendering();
+      this.foregroundContainer.clearForRendering();
+      this.backgroundContainer.clearForRendering();
       this.hudContainers.clearForRendering();
       this.overlayContainers.clearForRendering();
       this.debug?.removeChildren();
@@ -225,7 +237,12 @@ export class RendererDevice {
       stage.renderOverlay(x);
       this.overlayContainers.addToStage(this.pixi.stage, x);
       stage.renderWorld(x);
+      // NB: We manually add the foreground and background containers to the stage
+      this.backgroundContainer.attachFilters(x);
+      this.pixi.stage.addChild(this.backgroundContainer.container);
       this.worldContainers.addToStage(this.pixi.stage, x);
+      this.foregroundContainer.attachFilters(x);
+      this.pixi.stage.addChild(this.foregroundContainer.container);
 
       // Grab a screenshot (pre HUD) if we don't have one yet
       if (this.screenshotRequested) {
@@ -339,11 +356,14 @@ export class RendererDevice {
   public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, body: RigidBodyComponent, graphic: Graphics, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     graphic.clear();
     // If the actor isn't on screen, skip it
+    //
+    // WARNING: This does not take into account offsets, or that the hit box can
+    //          be smaller than the appearance
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
     // Common fields and common appearance configuration:
     let s = camera.getScale();
-    let x = s * (body.getCenter().x - camera.getLeft());
-    let y = s * (body.getCenter().y - camera.getTop());
+    let x = s * (body.getCenter().x + appearance.offset.dx - camera.getLeft());
+    let y = s * (body.getCenter().y + appearance.offset.dy - camera.getTop());
     if (appearance.lineWidth && appearance.lineColor)
       graphic.lineStyle(appearance.lineWidth, appearance.lineColor);
     if (appearance.fillColor)
@@ -412,12 +432,15 @@ export class RendererDevice {
    */
   public addBodyToFrame(appearance: AppearanceComponent, body: RigidBodyComponent, sprite: Sprite, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     // If the actor isn't on screen, skip it
+    //
+    // WARNING: This does not take into account offsets, or that the hit box can
+    //          be smaller than the appearance
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
 
     // Compute the dimensions of the actor, in pixels
     let s = camera.getScale();
-    let x = s * (body.getCenter().x - camera.getLeft());
-    let y = s * (body.getCenter().y - camera.getTop());
+    let x = s * (body.getCenter().x + appearance.offset.dx - camera.getLeft());
+    let y = s * (body.getCenter().y + appearance.offset.dy - camera.getTop());
 
     // Add the sprite
     sprite.setAnchoredPosition(0.5, 0.5, x, y); // (.5, .5) == anchor at center
@@ -458,18 +481,18 @@ export class RendererDevice {
   }
 
   /**
-   * Add a Picture to the next frame.  Note that pictures are never rotated,
-   * because we only use this for Parallax pictures (which have no rigid body,
-   * and hence no rotation).
+   * Add a Picture to the next frame.  Note that pictures are never rotated or
+   * offset, because we only use this for Parallax pictures (which have no rigid
+   * body, and hence no rotation).
    *
    * @param appearance  The AppearanceComponent for the actor
    * @param sprite      The sprite, from `appearance`
    * @param camera      The camera that determines which actors to show, and
    *                    where
-   * @param z           The Z index of the sprite
-   * @param location    Where is this being drawn (WORLD, OVERLAY, or HUD)?
+   * @param foreground  Should this go in the foreground (true) or background
+   *                    (false)?
    */
-  public addPictureToFrame(anchor: { cx: number, cy: number }, appearance: AppearanceComponent, sprite: Sprite, camera: CameraService, z: ZIndex, location: SpriteLocation) {
+  public addParallaxToFrame(anchor: { cx: number, cy: number }, appearance: AppearanceComponent, sprite: Sprite, camera: CameraService, foreground: boolean) {
     // If the picture isn't on screen, skip it
     let radius = Math.sqrt(Math.pow(appearance.width / 2, 2) + Math.pow(appearance.height / 2, 2))
     if (!camera.inBounds(anchor.cx, anchor.cy, radius)) return;
@@ -486,11 +509,10 @@ export class RendererDevice {
     sprite.sprite.width = w;
     sprite.sprite.height = h;
     sprite.sprite.rotation = 0;
-    switch (location) {
-      case SpriteLocation.WORLD: this.worldContainers.addChild(sprite.sprite, z); break;
-      case SpriteLocation.OVERLAY: this.overlayContainers.addChild(sprite.sprite, z); break;
-      case SpriteLocation.HUD: this.hudContainers.addChild(sprite.sprite, z); break;
-    }
+    if (foreground)
+      this.foregroundContainer.container.addChild(sprite.sprite);
+    else
+      this.backgroundContainer.container.addChild(sprite.sprite);
 
     // Debug rendering: draw a box around the image
     if (this.debug)
@@ -507,35 +529,39 @@ export class RendererDevice {
    * @param z        The Z index of the sprite
    * @param location Where is this being drawn (WORLD, OVERLAY, or HUD)?
    */
-  public addTextToFrame(text: Text, body: RigidBodyComponent, camera: CameraService, center: boolean, z: ZIndex, location: SpriteLocation) {
+  public addTextToFrame(text: TextSprite, body: RigidBodyComponent, camera: CameraService, center: boolean, z: ZIndex, location: SpriteLocation) {
+    // If the actor isn't on screen, skip it
+    //
+    // WARNING: This does not take into account offsets, or that the hit box can
+    //          be smaller than the appearance
     if (!camera.inBounds(body.getCenter().x, body.getCenter().y, body.radius)) return;
 
     // Compute screen coords of center
     let s = camera.getScale();
-    let x = s * (body.getCenter().x - camera.getLeft());
-    let y = s * (body.getCenter().y - camera.getTop());
+    let x = s * (body.getCenter().x + text.offset.dx - camera.getLeft());
+    let y = s * (body.getCenter().y + text.offset.dy - camera.getTop());
 
     // NB:  Changing the text's anchor handles top-left vs center
-    text.text.anchor.set(.5, .5);
+    text.text.text.anchor.set(.5, .5);
     if (!center)
-      text.text.anchor.set(0, 0);
+      text.text.text.anchor.set(0, 0);
 
-    text.text.position.x = x;
-    text.text.position.y = y;
-    text.text.rotation = body.getRotation();
+    text.text.text.position.x = x;
+    text.text.text.position.y = y;
+    text.text.text.rotation = body.getRotation();
     switch (location) {
-      case SpriteLocation.WORLD: this.worldContainers.addChild(text.text, z); break;
-      case SpriteLocation.OVERLAY: this.overlayContainers.addChild(text.text, z); break;
-      case SpriteLocation.HUD: this.hudContainers.addChild(text.text, z); break;
+      case SpriteLocation.WORLD: this.worldContainers.addChild(text.text.text, z); break;
+      case SpriteLocation.OVERLAY: this.overlayContainers.addChild(text.text.text, z); break;
+      case SpriteLocation.HUD: this.hudContainers.addChild(text.text.text, z); break;
     }
 
     // Draw a debug box around the text?
     if (this.debug != undefined) {
       // bounds tells us the bounding box in world coords.  For rotated text,
       // it'll be too big, so we use local bounds to get the bounding box dims.
-      let bounds = text.text.getBounds();
-      let lBounds = text.text.getLocalBounds();
-      this.drawDebugBox(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, lBounds.width, lBounds.height, text.text.rotation, text.debug, 0xFF00FF);
+      let bounds = text.text.text.getBounds();
+      let lBounds = text.text.text.getLocalBounds();
+      this.drawDebugBox(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2, lBounds.width, lBounds.height, text.text.text.rotation, text.text.debug, 0xFF00FF);
     }
 
     // Debug render?

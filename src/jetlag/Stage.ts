@@ -200,13 +200,11 @@ export class Stage {
     // Determine the center of the camera's focus
     this.world.camera.adjustCamera();
 
-    // The world is now static for this time step... we can display it! Order is
-    // background, world, foreground.  We force the Z values on the background
-    // and foreground to achieve this behavior.
-    this.background.render(this.world.camera, elapsedMs, -2, SpriteLocation.WORLD);
+    // The world is now static for this time step... we can display it!
     this.world.timer.advance(elapsedMs);
+    this.background.render(this.world.camera, elapsedMs, false);
     this.world.camera.render(elapsedMs, SpriteLocation.WORLD);
-    this.foreground.render(this.world.camera, elapsedMs, 2, SpriteLocation.WORLD);
+    this.foreground.render(this.world.camera, elapsedMs, true);
 
     // Run post-render tasks
     if (this.afterRender) this.afterRender();

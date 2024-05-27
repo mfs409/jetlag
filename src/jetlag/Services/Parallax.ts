@@ -1,8 +1,7 @@
 import { b2Vec2 } from "@box2d/core";
 import { stage } from "../Stage";
 import { CameraService } from "./Camera";
-import { AnimatedSprite, ImageSprite, ZIndex } from "../Components/Appearance";
-import { SpriteLocation } from "../Devices/Renderer";
+import { AnimatedSprite, ImageSprite } from "../Components/Appearance";
 
 /**
  * A ParallaxLayer is a layer that seems to scroll and repeat.  Layering
@@ -52,31 +51,31 @@ class ParallaxLayer {
   /**
    * Render a layer
    *
-   * @param camera    The camera for the world that these layers accompany
-   * @param elapsedMs The time since the last render
-   * @param z         The z index at which to render the layer
-   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param camera     The camera for the world that these layers accompany
+   * @param elapsedMs  The time since the last render
+   * @param foreground Does this go in the foreground (true) or background
+   *                   (false)?
    */
-  public render(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+  public render(camera: CameraService, elapsedMs: number, foreground: boolean) {
     for (let i of this.images)
       i.prerender(elapsedMs);
-    if (this.isAuto) this.renderAuto(camera, elapsedMs, z, location);
-    else this.renderRelative(camera, elapsedMs, z, location);
+    if (this.isAuto) this.renderAuto(camera, elapsedMs, foreground);
+    else this.renderRelative(camera, elapsedMs, foreground);
   }
 
   /**
    * Draw a layer that moves in a fixed velocity in the X dimension
    *
-   * @param camera    The camera for the world that these layers accompany
-   * @param elapsedMs The elapsed time since we last drew this layer
-   * @param z         The z index at which to render the layer
-   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param camera     The camera for the world that these layers accompany
+   * @param elapsedMs  The elapsed time since we last drew this layer
+   * @param foreground Does this go in the foreground (true) or background
+   *                   (false)?
    */
-  private renderAuto(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+  private renderAuto(camera: CameraService, elapsedMs: number, foreground: boolean) {
     // Determine the position of a reference tile of the image
     if (this.isHorizontal) this.last.x += this.speed * elapsedMs;
     else this.last.y += this.speed * elapsedMs;
-    this.normalizeAndRender(camera, elapsedMs, z, location);
+    this.normalizeAndRender(camera, elapsedMs, foreground);
   }
 
   /**
@@ -85,12 +84,12 @@ class ParallaxLayer {
    * NB: the efficiency of this code derives from the assumption that the
    *     camera does not move suddenly
    *
-   * @param camera    The camera for the world that these layers accompany
-   * @param elapsedMs The elapsed time since we last drew this layer
-   * @param z         The z index at which to render the layer
-   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param camera     The camera for the world that these layers accompany
+   * @param elapsedMs  The elapsed time since we last drew this layer
+   * @param foreground Does this go in the foreground (true) or background
+   *                   (false)?
    */
-  private renderRelative(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+  private renderRelative(camera: CameraService, elapsedMs: number, foreground: boolean) {
     // Determine the change in camera
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
@@ -99,17 +98,17 @@ class ParallaxLayer {
     // Determine the relative change to the reference tile
     if (this.isHorizontal) this.last.x = this.last.x + dx * this.speed;
     else this.last.y = this.last.y + dy * this.speed;
-    this.normalizeAndRender(camera, elapsedMs, z, location);
+    this.normalizeAndRender(camera, elapsedMs, foreground);
   }
 
   /**
    * This is how we actually figure out where to draw the background
    * 
-   * @param camera   The camera for the world that these layers accompany
-   * @param z        The z index at which to render the layer
-   * @param location Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param camera     The camera for the world that these layers accompany
+   * @param foreground Does this go in the foreground (true) or background
+   *                   (false)?
    */
-  private normalizeAndRender(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+  private normalizeAndRender(camera: CameraService, elapsedMs: number, foreground: boolean) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let camW = stage.screenWidth / stage.pixelMeterRatio;
@@ -130,19 +129,19 @@ class ParallaxLayer {
     // save camera for next render
     this.lastCam.x = x;
     this.lastCam.y = y;
-    this.renderVisibleTiles(camera, elapsedMs, z, location);
+    this.renderVisibleTiles(camera, elapsedMs, foreground);
   }
 
   /**
-   * Given the x,y coordinates of a reference tile, render the tiles of a
-   * layer that are visible
+   * Given the x,y coordinates of a reference tile, render the tiles of a layer
+   * that are visible
    *
-   * @param camera    The camera for the world that these layers accompany
-   * @param elapsedMs The elapsed time since we last drew this layer
-   * @param z         The z index at which to render the layer
-   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param camera     The camera for the world that these layers accompany
+   * @param elapsedMs  The elapsed time since we last drew this layer
+   * @param foreground Does this go in the foreground (true) or background
+   *                   (false)?
    */
-  private renderVisibleTiles(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+  private renderVisibleTiles(camera: CameraService, elapsedMs: number, foreground: boolean) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let camW = stage.screenWidth / stage.pixelMeterRatio;
@@ -153,7 +152,7 @@ class ParallaxLayer {
       while (plx < x + camW) {
         let cx = plx + this.images[i].width / 2;
         let cy = this.last.y + this.images[i].height / 2;
-        this.images[i].renderWithoutBody({ cx, cy }, camera, elapsedMs, z, location);
+        this.images[i].renderAsParallax({ cx, cy }, camera, elapsedMs, foreground);
         plx += this.images[i].width;
         i++;
       }
@@ -164,7 +163,7 @@ class ParallaxLayer {
       while (ply < y + camH) {
         let cx = this.last.x + this.images[i].width / 2;
         let cy = ply + this.images[i].height / 2;;
-        this.images[i].renderWithoutBody({ cx, cy }, camera, elapsedMs, z, location);
+        this.images[i].renderAsParallax({ cx, cy }, camera, elapsedMs, foreground);
         ply += this.images[i].height;
         i++;
       }
@@ -204,13 +203,13 @@ export class ParallaxSystem {
   /**
    * Render all of the layers of this parallax scene
    *
-   * @param camera    The camera for the world that these layers accompany
-   * @param elapsedMs The time since the last render
-   * @param z         The z index at which to render the layer
-   * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param camera     The camera for the world that these layers accompany
+   * @param elapsedMs  The time since the last render
+   * @param foreground Does this go in the foreground (true) or background
+   *                   (false)?
    */
-  public render(camera: CameraService, elapsedMs: number, z: ZIndex, location: SpriteLocation) {
+  public render(camera: CameraService, elapsedMs: number, foreground: boolean) {
     for (let pl of this.layers)
-      pl.render(camera, elapsedMs, z, location);
+      pl.render(camera, elapsedMs, foreground);
   }
 }
