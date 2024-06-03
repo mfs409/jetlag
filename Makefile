@@ -8,7 +8,7 @@ OUT_IIFE = $(OUT_ROOT)/jetlag.js
 
 # Chapters that have games that need to be built
 CHAPTERS = animations audio camera_gravity collisions discrete_movement  \
-           empty endless_runner_game gestures graphic_assets             \
+           empty endless_runner_game filters gestures graphic_assets     \
            image_generation joints maze_game movement multiplayer        \
            overhead_fight_farm_game overview platformer_game projectiles \
            rigid_bodies roles score simulation_conway stage_transitions  \

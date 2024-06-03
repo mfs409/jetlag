@@ -1,0 +1,95 @@
+{"frames": {
+
+"arms.png":
+{
+	"frame": {"x":0,"y":0,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"body.png":
+{
+	"frame": {"x":0,"y":187,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"eyes.png":
+{
+	"frame": {"x":0,"y":374,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"feet.png":
+{
+	"frame": {"x":0,"y":561,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"hair_01.png":
+{
+	"frame": {"x":0,"y":748,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"hair_02.png":
+{
+	"frame": {"x":0,"y":935,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"hair_03.png":
+{
+	"frame": {"x":0,"y":1122,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"head.png":
+{
+	"frame": {"x":0,"y":1309,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"mouth.png":
+{
+	"frame": {"x":0,"y":1496,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+},
+"nose.png":
+{
+	"frame": {"x":0,"y":1683,"w":123,"h":187},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":123,"h":187},
+	"sourceSize": {"w":123,"h":187}
+}},
+"animations": {
+	"hair": ["hair_01.png","hair_02.png","hair_03.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.1",
+	"image": "dude.png",
+	"format": "RGBA8888",
+	"size": {"w":123,"h":1870},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:7741931723b8f45b068fa24ae438ac52:c597f8d9be320c4d57e378ab0a4aaf9b:91b0136f103a2ad004f02a846859646f$"
+}
+}

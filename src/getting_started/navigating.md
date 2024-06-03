@@ -1,12 +1,16 @@
-## About the Code
+## Navigating the Repository
 
-Next, let's open up the code in VSCode.  When you work in VSCode, it is useful
-to think about *folders*, not just *files*.  In our case, that means you will
-want to use VSCode to open the *folder* that is the root of your checkout.  You
-can either do this by opening VSCode and then going to `File/Open Folder`, or
-from the terminal, by going into the folder you want to view and then typing
-`code .` (don't forget the period!).  Either way, you should then see something
-like this:
+If you chose the "easy" path, you should see something like this:
+
+![Opening your code in StackBlitz](./stackblitz_01.png)
+
+If you chose the "hard" path, you will need to open up the code in VSCode.  When
+you work in VSCode, it is useful to think about *folders*, not just *files*.  In
+our case, that means you will want to use VSCode to open the *folder* that is
+the root of your checkout.  You can either do this by opening VSCode and then
+going to `File/Open Folder`, or from the terminal, by going into the folder you
+want to view and then typing `code .` (don't forget the period!).  Either way,
+you should then see something like this:
 
 ![Opening your code in VSCode](./vscode_01.png)
 
@@ -15,12 +19,13 @@ If the left side panel is collapsed, click the topmost icon in the left
 icon bar.
 ```
 
-On the left, you'll see a few files and folders:
+The interfaces are pretty much the same.  In either case, on the left you'll see
+a few files and folders:
 
 - `assets` - This is where you should put any images, sounds, or other files
   that support your game.
-- `dev-serve` - You can ignore this.  It's where `node` puts stuff while you're
-  testing your code.
+- `dev-serve` - You can ignore this.  It's where `node` puts temporary files
+  while you're testing your code.  Running `npm run clean` will remove it.
 - `multiplayer-server` - This folder has code that you may need if you want to
   make a multiplayer game.
 - `node_modules` - You can ignore this.  It's where `npm` puts the things it

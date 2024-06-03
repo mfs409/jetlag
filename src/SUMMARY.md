@@ -3,17 +3,15 @@
 # Introduction and Background
 
 - [Introduction](./intro/intro.md)
-    - [Basic Programming]()
+    - [Basic Programming](./intro/basic_programming.md)
+    - [Wrapping Up](./intro/wrap_up.md)
 
-- [Getting Started](./getting_started_native/getting_started.md)
-    - [Required Software](./getting_started_native/required_software.md)
-    - [Extra Software Configuration](./getting_started_native/extra_software_configuration.md)
-    - [Getting the JetLag Code](./getting_started_native/getting_the_jetlag_code.md)
-    - [Running for the First Time](./getting_started_native/running_for_the_first_time.md)
-    - [About the Code](./getting_started_native/about_the_code.md)
+- [Getting Started](./getting_started/getting_started.md)
+    - [Step 1: Getting the JetLag Code](./getting_started/getting_the_jetlag_code.md)
+    - [Step 2 (easy path): Setting Up StackBlitz](./getting_started/stackblitz.md)
+    - [Step 2 (hard path): Setting Up Your Computer](./getting_started/native.md)
+    - [Navigating the Repository](./getting_started/navigating.md)
     
-- [Getting Started (Browser-Based Development Only)]()
-
 - [An Overview Of JetLag](./overview/overview.md)
     - [Software Foundations](./overview/software_foundations.md)
     - [The Parts of the Default Game](./overview/parts_of_the_default_game.md)
@@ -90,6 +88,7 @@
     - [Reporting Game Information](./text_hud/reporting_game_information.md)
     - [Using Custom Fonts](./text_hud/using_custom_fonts.md)
     - [Stacking Appearances](./text_hud/stacking.md)
+    - [Offsetting Graphics](./text_hud/offsetting_graphics.md)
     - [Wrapping Up](./text_hud/wrapping_up.md)
 
 - [Animations](./animations/animations.md)
@@ -155,7 +154,7 @@
     - [Gestures In The HUD And World](./gestures/gestures_in_the_hud_and_world.md)
     - [Long Presses](./gestures/long_presses.md)
     - [Coordinating With Hover](./gestures/coordinating_with_hover.md)
-    - [MouseOver Events]()
+    - [MouseOver Events](./gestures/mouseover.md)
     - [Wrapping Up](./gestures/wrapping_up.md)
 
 - [Projectiles And Actor Pools](./projectiles/projectiles.md)
@@ -198,6 +197,7 @@
     - [A Simple Revolute Joint](./joints/a_simple_revolute_joint.md)
     - [Weld Joints](./joints/weld_joints.md)
     - [Using Revolute Joints To Drive Vehicles](./joints/using_revolute_joints_to_drive_vehicles.md)
+    - [Advanced Joint Concepts: Ragdolls](./joints/ragdolls.md)
     - [Wrapping Up](./joints/wrapping_up.md)
 
 - [Drawing Actors From SVG Files](./svg/svg.md)
@@ -212,6 +212,24 @@
     - [Our First Cut Scene](./video/our_first_cut_scene.md)
     - [Cut Scenes In Overlays, And Controlling Video Playback](./video/cut_scenes_in_overlays,_and_controlling_video_playback.md)
     - [Wrapping Up](./video/wrapping_up.md)
+
+- [Discrete Movement](./discrete_movement/discrete_movement.md)
+
+- [Working With Filters](./filters/filters.md)
+    - [From Pixi.js Filters To JetLag Filters](./filters/from_pixi_to_jetlag.md)
+    - [A Few Simple Filter Components](./filters/simple_filters.md)
+    - [Filters That Change](./filters/filters_that_change.md)
+    - [Complex Filters](./filters/complex_filters.md)
+    - [Using Filters In Your Game](./filters/using_filters.md)
+    - [A Flashlight Filter](./filters/flashlight_filter.md)
+    - [Wrapping Up](./filters/wrapping_up.md)
+
+- [Image Generation](./image_generation/image_generation.md)
+    - [Background](./image_generation/background.md)
+    - [The Hard Part: Assets](./image_generation/assets.md)
+    - [Combining Textures Into A Sprite](./image_generation/combining.md)
+    - [Adding More Textures, And Applying Filters](./image_generation/filters.md)
+    - [Wrapping Up](./image_generation/wrapping_up.md)
 
 # Demos
 
@@ -246,12 +264,9 @@
 
 # Advanced Topics
 
-- [Discrete Movement]()
+- [Multiplayer Games]()
 - [Packaging For Desktop]()
 - [Packaging For Mobile]()
-- [Multiplayer Games]()
-- [Image Generation]()
-- [Working With Filters]()
 
 ---
 

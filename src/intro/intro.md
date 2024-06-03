@@ -29,5 +29,3 @@ We'll even try to teach you some of the core computer science topics.  It
 certainly won't be enough to prepare you for a first-semester college course in
 Computer Science, but you'll be very well prepared to learn more, learn on your
 own, and do well in future projects.
-
-Let's get started!

@@ -6,7 +6,7 @@ import { Actor, AnimatedSprite, AnimationSequence, AnimationState, BoxBody, Circ
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for landscape mode, and 9/16 for portrait mode
-  aspectRatio = { width: 16, height: 9};
+  aspectRatio = { width: 16, height: 9 };
   hitBoxes = true;
   resources = {
     prefix: "./assets/",
@@ -47,12 +47,7 @@ function builder(level: number) {
   let d_ani = AnimationSequence.makeSimple({ timePerFrame: 100, repeat: false, images: ["pirate_walk_d_0.png", "pirate_walk_d_3.png", "pirate_walk_d_6.png"] });
   animations.set(AnimationState.IDLE_E, d_ani)
   let h = new Actor({
-    // appearance: new ImageSprite({ width: 0.8, height: 0.8, z: 1, img: "green_ball.png" }),
     appearance: new AnimatedSprite({ width: 0.8, height: 0.8, z: 1, animations }),
-    // rigidBody: new BoxBody({ cx: .5, cy: .5, width: 1, height: 1, }),
-    // rigidBody: new BoxBody({ cx: .5, cy: .5, width: .3, height: .3, }),
-    // rigidBody: new CircleBody({ cx: .5, cy: .5, radius: .5, }), // 
-    // rigidBody: new CircleBody({ cx: .5, cy: .5, radius: .4, }),
     rigidBody: new CircleBody({ cx: .5, cy: .5, radius: .3, }),
     role: new Hero(),
     movement: new ManualMovement(),
@@ -64,7 +59,7 @@ function builder(level: number) {
     for (let c of stage.world.physics.actorsAt({ x: cx + dx, y: cy + dy, })) {
       if (c.role instanceof Obstacle)
         return;
-      a.role.onCollide(c); // OMG this works!
+      a.role.onCollide(c);
     }
     if (dx == -1)
       (a.appearance[0] as AnimatedSprite).animations.set(AnimationState.IDLE_E, l_ani);
@@ -78,10 +73,7 @@ function builder(level: number) {
     a.rigidBody.setCenter(cx + dx, cy + dy);
   }
 
-  // Oh no, goodies and destinations don't work
-  // Kinda enemies do
-  // boundingbox is broken too
-
+  // Oh no,the collisions are all broken
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => tryMove(h, 0, -1));
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => tryMove(h, 0, 1));
   stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => tryMove(h, -1, 0));
