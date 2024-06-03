@@ -30,8 +30,16 @@ export class SoundEffectComponent {
    * Construct a SoundEffectComponent from the file names of the sounds to play
    * on events.
    *
-   * @param config  An object with the names of the sounds for events for which
-   *                a sound should play
+   * @param config           An object with the names of the sounds for events
+   *                         for which a sound should play
+   * @param config.disappear The sound to play when the actor disappears
+   * @param config.toss      The sound to play when the actor tosses a
+   *                         projectile 
+   * @param config.arrive    The sound to play upon arrival at a destination
+   * @param config.defeat    The sound to play when the actor is defeated
+   * @param config.jump      The sound to play when the actor jumps
+   * @param config.collide   The sound to play when there is a collision with
+   *                         this actor
    */
   constructor(config: { disappear?: string, toss?: string, arrive?: string, defeat?: string, jump?: string, collide?: string }) {
     if (config.disappear) this.disappear = stage.musicLibrary.getSound(config.disappear);

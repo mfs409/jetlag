@@ -77,5 +77,7 @@ export { BasicCollisionService } from './jetlag/Services/Collisions';
 export { AdvancedCollisionService } from './jetlag/Services/Collisions';
 export { TimedEvent } from './jetlag/Services/Timer';
 export { TimerService } from './jetlag/Services/Timer';
-export { b2Vec2 } from "@box2d/core";
+export { b2Vec2, b2RevoluteJointDef } from "@box2d/core";
 export { FilterComponent } from "./jetlag/Components/FilterComponent";
+export { AlphaFilter, BlurFilter, NoiseFilter, Container, Sprite as PixiSprite } from "pixi.js";
+export { AsciiFilter, ColorReplaceFilter, GodrayFilter, OldFilmFilter, ColorOverlayFilter, GrayscaleFilter, EmbossFilter, HslAdjustmentFilter } from "pixi-filters";

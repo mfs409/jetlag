@@ -7,8 +7,8 @@ import { ProjectileMovement } from "./Movement";
 import { TimedEvent } from "../Services/Timer";
 
 /**
- * These are the different reasons why two entities might pass through each
- * other, even when the collide with everything else
+ * The different reasons why two entities might pass through each other, even
+ * when the collide with everything else
  */
 export enum CollisionExemptions {
   CRAWL_HERO = 0,

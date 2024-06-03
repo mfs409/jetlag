@@ -34,8 +34,8 @@ export class AccelerometerDevice {
   /**
    * Create the device
    *
-   * @param mode      portrait vs. landscape information, so we can interpret
-   *                  x/y/z correctly
+   * @param mode  portrait vs. landscape information, so we can interpret x/y/z
+   *              correctly
    */
   constructor(mode: AccelerometerMode) {
     // If there's a request to disable, don't use the accelerometer

@@ -8,12 +8,7 @@ import { Filter } from "pixi.js";
  *   3. Programmers can leverage custom logic for updating their filters
  */
 export interface FilterComponent {
-  /**
-   * Return the Pixi.Filter object(s) for this FilterComponent
-   *
-   * Note that this is abstract.  A FilterComponent implementation must provide
-   * this.
-   */
+  /** Return the Pixi.Filter object(s) for this FilterComponent */
   getFilters(): Filter[];
 
   /**
@@ -22,7 +17,7 @@ export interface FilterComponent {
    *
    * @param elapsedMs The time since the last call to preRender()
    *
-   * @returns A boolean indicating whether this filter should be used during
+   * @returns A boolean indicating whether this filter should be applied during
    *          this render step or not.
    */
   preRender(elapsedMs: number): boolean;

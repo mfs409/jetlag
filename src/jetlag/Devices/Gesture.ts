@@ -1,3 +1,4 @@
+import { Actor } from "../Entities/Actor";
 import { Scene } from "../Entities/Scene";
 import { Stage } from "../Stage";
 import Hammer from "hammerjs";
@@ -14,6 +15,9 @@ export class GestureDevice {
 
   /** Should gestures go to the HUD first, or to the WORLD first? */
   public gestureHudFirst = true;
+
+  /** All the actors who had a mouseHover in the last tick */
+  private mouseHoverActors = new Set<Actor>();
 
   /**
    * Create the device by providing the name of an HTML element (typically
@@ -138,7 +142,10 @@ export class GestureDevice {
   }
 
   /** Reset the gesture system to its default state */
-  public reset() { this.gestureHudFirst = true; }
+  public reset() {
+    this.gestureHudFirst = true;
+    this.mouseHoverActors.clear();
+  }
 
   /**
    * Handle a tap action
@@ -161,11 +168,19 @@ export class GestureDevice {
    * @param coords  The coordinates (within the scene) of the gesture
    */
   private mouseHover(scene: Scene, coords: { x: number, y: number }) {
+    let found = new Set<Actor>();
     for (let actor of scene.physics!.actorsAt(coords))
       if (actor.gestures?.mouseHover)
         if (actor.gestures.mouseHover(actor, coords))
-          return true;
-    return false;
+          found.add(actor);
+    for (let a of this.mouseHoverActors) {
+      if (!found.has(a)) {
+        if (a.gestures?.mouseUnHover)
+          a.gestures.mouseUnHover(a);
+      }
+    }
+    this.mouseHoverActors = found;
+    return found.size > 0;
   }
 
   /**

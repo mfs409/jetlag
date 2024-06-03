@@ -85,12 +85,22 @@ export class StateManagerComponent {
   /** The set of observers of this.current */
   private observers: IStateObserver[] = [];
 
-  /** Allow an observer to request notification */
+  /**
+   * Allow an observer to request notification
+   *
+   * @param so The state observer to register
+   */
   registerObserver(so: IStateObserver) {
     this.observers.push(so);
   }
 
-  /** Receive a state-change request and if it is for a new state, pass it to observers */
+  /**
+   * Receive a state-change request and if it is for a new state, pass it to
+   * observers
+   *
+   * @param actor The actor whose state is changing
+   * @param event The state change event
+   */
   changeState(actor: Actor, event: StateEvent) {
     let changed = false;
     let old = this.current.clone();

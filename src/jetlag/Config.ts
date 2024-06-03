@@ -3,14 +3,13 @@ import { Sprite } from "./Services/ImageLibrary";
 import { stage } from "./Stage";
 import { Actor } from "./Entities/Actor";
 import { AccelerometerMode } from "./Devices/Accelerometer";
+import { PixiSprite } from "../jetlag";
 
 /**
  * The different ActorState combinations for which we might have an animation
  *
  * NB:  JetLag supports a broad set of possible states.  In many games, most of
  *      these won't be useful.
- *
- * TODO:  Consider adding a CLIMB state?
  */
 export const enum AnimationState {
   // Stationary
@@ -81,8 +80,11 @@ export class AnimationSequence {
    *
    * @return         The Animation, so that we can chain calls to "to()"
    */
-  public to(imgName: string, duration: number): AnimationSequence {
-    this.steps.push({ cell: stage.imageLibrary.getSprite(imgName), duration });
+  public to(imgName: string | PixiSprite, duration: number): AnimationSequence {
+    if (typeof imgName === "string")
+      this.steps.push({ cell: stage.imageLibrary.getSprite(imgName), duration });
+    else
+      this.steps.push({ cell: new Sprite("", imgName), duration });
     return this;
   }
 
@@ -98,7 +100,7 @@ export class AnimationSequence {
    *
    * @return The animation
    */
-  static makeSimple(cfg: { timePerFrame: number, repeat: boolean, images: string[] }) {
+  static makeSimple(cfg: { timePerFrame: number, repeat: boolean, images: (string | PixiSprite)[] }) {
     let a = new AnimationSequence(cfg.repeat);
     cfg.images.forEach((i) => a.to(i, cfg.timePerFrame));
     return a;
@@ -126,6 +128,8 @@ export class GestureHandlers {
   public swipe?: (actor: Actor, point1: { x: number, y: number }, point2: { x: number, y: number }, time: number) => boolean;
   /** code to run when the mouse hovers over the actor */
   public mouseHover?: (actor: Actor, worldCoords: { x: number, y: number }) => boolean;
+  /** code to run when the mouse stops hovering over the actor */
+  public mouseUnHover?: (actor: Actor) => boolean;
 }
 
 /**

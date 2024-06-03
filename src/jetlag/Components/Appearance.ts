@@ -183,17 +183,24 @@ export class ImageSprite {
    *
    * @param opts.width  The width of the image, in meters
    * @param opts.height The height of the image, in meters
-   * @param opts.img    The name of the file to use as the image
+   * @param opts.img    The name of the file to use as the image, or a
+   *                    PixiSprite
    * @param opts.z      An optional z index in the range [-2,2]
    * @param opts.offset An offset between the component's center and its
    *                    RigidBody's center (optional)
    */
-  constructor(opts: { width: number, height: number, img: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  constructor(opts: { width: number, height: number, img: string | PixiSprite, z?: ZIndex, offset?: { dx: number, dy: number } }) {
     this.width = opts.width;
     this.height = opts.height;
     this.z = opts.z ? opts.z : 0;
-    this.img = opts.img;
-    this.image = stage.imageLibrary.getSprite(this.img);
+    if (typeof opts.img == "string") {
+      this.img = opts.img;
+      this.image = stage.imageLibrary.getSprite(this.img);
+    }
+    else {
+      this.img = "";
+      this.image = new Sprite("", opts.img);
+    }
     this.offset = opts.offset ?? { dx: 0, dy: 0 };
   }
 
@@ -216,8 +223,7 @@ export class ImageSprite {
    * @param anchor      The center x/y at which to draw the image
    * @param camera      The camera for the current stage
    * @param _elapsedMs  The time since the last render
-   * @param z           A z index (overrides the image's z)
-   * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+   * @param foreground  Does this belong in the foreground (true) or background?
    */
   renderAsParallax(anchor: { cx: number, cy: number }, camera: CameraService, _elapsedMs: number, foreground: boolean) {
     stage.renderer.addParallaxToFrame(anchor, this, this.image, camera, foreground);
@@ -240,7 +246,7 @@ export class ImageSprite {
    * called by Actor.resize().
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
-   *              means "grow", fraction means "shrink".
+   *              means "grow", 0 < scale < 1 means "shrink".
    */
   resize(scale: number) {
     this.width *= scale;
@@ -254,9 +260,7 @@ export class ImageSprite {
    *
    * @param pixi_sprite The sprite to use
    */
-  overrideImage(pixi_sprite: PixiSprite) {
-    this.image.sprite = pixi_sprite;
-  }
+  overrideImage(pixi_sprite: PixiSprite) { this.image.sprite = pixi_sprite; }
 }
 
 /**

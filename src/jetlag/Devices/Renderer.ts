@@ -8,7 +8,7 @@ import { b2Vec2 } from "@box2d/core";
 import { FilterComponent } from "../Components/FilterComponent"
 
 /** The location of a sprite */
-export enum SpriteLocation { WORLD, HUD, OVERLAY };
+export enum SpriteLocation { WORLD, HUD, OVERLAY, BACKGROUND, FOREGROUND };
 
 /**
  * FilterableContainer holds a container of renderable Pixi objects and a
@@ -122,16 +122,20 @@ class FilterableContainerSet {
 }
 
 /**
- * RenderDevice is a wrapper around the PIXI Application object.  It
- * initializes the render loop, which fires at a regular interval to tell the
- * game to advance the simulation by some number of milliseconds.  Doing this
- * many times per second is what makes our game work :)
+ * RenderDevice is a wrapper around the PIXI Application object.  It initializes
+ * the render loop, which fires at a regular interval to tell the game to
+ * advance the simulation by some number of milliseconds.  Doing this many times
+ * per second is what makes our game work :)
  *
  * <!--
  * As of December 2023, PIXI.js v 7.3.2's '.d.ts' file isn't always exactly
  * correct.  There are a few `as any` casts in this file for dealing with the
  * issues.  Re-check these casts as PIXI.js updates.
  *  -->
+ *
+ * TODO: Pixi prefers when sprites are not removed and re-added to containers on
+ *       each tick.  It also has features like "interaction" that can be
+ *       disabled.  There's a fair bit of optimization opportunity.
  */
 export class RendererDevice {
   /** The pixi application object is responsible for drawing onto a canvas */
@@ -179,6 +183,9 @@ export class RendererDevice {
   /** Is someone requesting that a new screenshot be taken? */
   public screenshotRequested = false;
 
+  /** FilterComponents to attach to the whole renderer */
+  private filters: FilterComponent[] = [];
+
   /**
    * Reset the renderer's container state when the stage transitions to a new
    * builder
@@ -189,6 +196,7 @@ export class RendererDevice {
     this.backgroundContainer.reset();
     this.hudContainers.reset();
     this.overlayContainers.reset();
+    this.filters = [];
   }
 
   /** Reset the renderer's overlay container state */
@@ -230,6 +238,7 @@ export class RendererDevice {
       this.hudContainers.clearForRendering();
       this.overlayContainers.clearForRendering();
       this.debug?.removeChildren();
+      this.pixi.stage.filters = [];
 
       // Advance either the overlay or the world
       let x = this.pixi.ticker.elapsedMS;
@@ -256,6 +265,13 @@ export class RendererDevice {
 
       // Render the debug container?
       if (this.debug) this.pixi.stage.addChild(this.debug);
+
+      // Top-level filters?
+      for (let c of this.filters) {
+        if (c.preRender(x))
+          for (let f of c.getFilters())
+            this.pixi.stage.filters.push(f);
+      }
     });
   }
 
@@ -582,7 +598,7 @@ export class RendererDevice {
    * @param z        The z index on which to add the filter
    * @param location Where to put the filter (WORLD, OVERLAY, or HUD)
    */
-  public addZFilter(filter: FilterComponent, z: ZIndex, location: SpriteLocation) {
+  public addZFilter(filter: FilterComponent, z: ZIndex, location: SpriteLocation.HUD | SpriteLocation.OVERLAY | SpriteLocation.WORLD) {
     switch (location) {
       case SpriteLocation.HUD: this.hudContainers.addZFilter(filter, z); break;
       case SpriteLocation.OVERLAY: this.overlayContainers.addZFilter(filter, z); break;
@@ -594,13 +610,20 @@ export class RendererDevice {
    * Add a filter to the whole container
    *
    * @param filter   The filter to add
-   * @param location Where to put the filter (WORLD, OVERLAY, or HUD)
+   * @param location Where to put the filter (WORLD, OVERLAY, HUD, BACKGROUND,
+   *                 or FOREGROUND)
    */
   public addFilter(filter: FilterComponent, location: SpriteLocation) {
     switch (location) {
       case SpriteLocation.HUD: this.hudContainers.addFilter(filter); break;
       case SpriteLocation.OVERLAY: this.overlayContainers.addFilter(filter); break;
       case SpriteLocation.WORLD: this.worldContainers.addFilter(filter); break;
+      case SpriteLocation.BACKGROUND: this.backgroundContainer.filters.push(filter); break;
+      case SpriteLocation.FOREGROUND: this.foregroundContainer.filters.push(filter); break;
     }
+  }
+
+  public addFilterToMain(filter: FilterComponent) {
+    this.filters.push(filter);
   }
 }

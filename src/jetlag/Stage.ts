@@ -131,10 +131,9 @@ export class Stage {
         let screenshot = new ImageSprite({
           width: this.screenWidth / this.pixelMeterRatio,
           height: this.screenHeight / this.pixelMeterRatio,
-          img: "",
+          img: this.renderer.mostRecentScreenShot,
           z: -2
         });
-        screenshot.overrideImage(this.renderer.mostRecentScreenShot);
         this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionService());
         builder(this.overlay, screenshot);
         this.afterRender = undefined;
@@ -349,6 +348,8 @@ export class Stage {
  *      book, and `platform` is only used when deploying to mobile or desktop.
  *      If you need to use `platform`, then you can provide `()=>{}` as the
  *      beforeBegin function.
+ *
+ * TODO: Pixi.js v8 strongly recommends using async/await.
  *
  * @param domId       The name of the DIV into which the game should be placed
  * @param config      The game configuration object

@@ -100,7 +100,9 @@ export class ImageLibraryService {
     // TODO:  Video fetching has an asynchronous aspect to it.  We are currently
     //        calling `load()` and ignoring the timing of the callback.  For
     //        lots of large video assets, this could mean that a cut scene would
-    //        be requested before it was available.
+    //        be requested before it was available.  Pixi.js v8 makes this
+    //        easier, but as of 25 May 2024 filters in v8.1.4 are posing a challenge
+    //        to updating JetLag's Pixi.js dependency.  Revisit in v8.2?
     if (this.config.resources.videoNames) {
       for (let vidName of this.config.resources.videoNames) {
         const res = new VideoResource(this.config.resources.prefix + "/" + vidName, { autoPlay: false });
@@ -148,11 +150,7 @@ export class ImageLibraryService {
   }
 
   /**
-   * Get an image that has been loaded by the renderer, or a blank image if the
-   * provided filename is the empty string.
-   *
-   * TODO:  Screenshots currently necessitate the use of `""` as the imgName.
-   *        Can we refactor so that's no longer an issue?
+   * Get an image that has been loaded by the renderer
    *
    * @param imgName The name of the image to load
    *
@@ -160,11 +158,7 @@ export class ImageLibraryService {
    */
   public getSprite(imgName: string) {
     let texture = this.imgTextures.get(imgName);
-    if (!texture) {
-      if (imgName !== "")
-        throw "Unable to find graphics asset '" + imgName + "'";
-      return new Sprite("", new PixiSprite());
-    }
+    if (!texture) throw "Unable to find graphics asset '" + imgName + "'";
     // NB:  If we wanted to use Pixi to modify the texture, then we'd need to
     //      clone it first.
     return new Sprite(imgName, new PixiSprite(texture));
