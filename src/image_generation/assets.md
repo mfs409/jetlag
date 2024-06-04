@@ -26,7 +26,7 @@ These are simple two-color images: white and transparent.  From here, I chopped
 up the character into its parts, and then I combined them into a spritesheet:
 
 - [dude.json](../assets/dude.json)
-- [dude.png](../assets/png.json)
+- [dude.png](../assets/dude.png)
 
 In the spritesheet, I colored the pupils of the eyes red.  The color I chose
 isn't important.  What matters is that there are different colors, so that I can
