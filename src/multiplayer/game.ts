@@ -1,4 +1,5 @@
-import { Actor, BoxBody, CircleBody, FilledBox, Hero, ImageSprite, JetLagGameConfig, KeyCodes, Obstacle, TextSprite, TiltMovement, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, BoxBody, CircleBody, Hero, ImageSprite, JetLagGameConfig, TextSprite, TiltMovement, initializeAndLaunch, stage } from "../jetlag";
+import { boundingBox, enableTilt } from "./common";
 
 /** Screen dimensions and other game configuration */
 class Config implements JetLagGameConfig {
@@ -238,53 +239,3 @@ function builder(_level: number) {
 // call the function that starts running the game in the `game-player` div tag
 // of `index.html`
 initializeAndLaunch("game-player", new Config(), builder);
-
-/**
- * Enable Tilt, and set up arrow keys to simulate it
- *
- * @param xMax  The maximum X force
- * @param yMax  The maximum Y force
- */
-function enableTilt(xMax: number, yMax: number) {
-  stage.tilt.tiltMax.Set(xMax, yMax);
-  if (!stage.accelerometer.tiltSupported) {
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 0));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => (stage.accelerometer.accel.y = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => (stage.accelerometer.accel.y = 5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (stage.accelerometer.accel.x = -5));
-    stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (stage.accelerometer.accel.x = 5));
-  }
-}
-
-/**
- * Draw a bounding box that surrounds a default 16x9 world
- *
- * @returns The walls in an object {t, b, l, r}
- */
-function boundingBox() {
-  // Draw a box around the world
-  let t = new Actor({
-    appearance: new FilledBox({ width: 16, height: .1, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 8, cy: -.05, width: 16, height: .1 }),
-    role: new Obstacle(),
-  });
-  let b = new Actor({
-    appearance: new FilledBox({ width: 16, height: .1, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 8, cy: 9.05, width: 16, height: .1 }),
-    role: new Obstacle(),
-  });
-  let l = new Actor({
-    appearance: new FilledBox({ width: .1, height: 9, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: -.05, cy: 4.5, width: .1, height: 9 }),
-    role: new Obstacle(),
-  });
-  let r = new Actor({
-    appearance: new FilledBox({ width: .1, height: 9, fillColor: "#ff0000" }),
-    rigidBody: new BoxBody({ cx: 16.05, cy: 4.5, width: .1, height: 9 }),
-    role: new Obstacle(),
-  });
-  return { t, b, l, r };
-}

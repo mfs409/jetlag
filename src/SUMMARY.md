@@ -231,6 +231,12 @@
     - [Adding More Textures, And Applying Filters](./image_generation/filters.md)
     - [Wrapping Up](./image_generation/wrapping_up.md)
 
+- [Multiplayer Games](./multiplayer/multiplayer.md)
+    - [Review: State Machines](./multiplayer/review.md)
+    - [Authentication Flows](./multiplayer/authentication.md)
+    - [Using The Server](./multiplayer/using_the_server.md)
+    - [Wrappig Up](./multiplayer/wrapping_up.md)
+
 # Demos
 
 - [Introduction To Simulation With Conway's Game Of Life](./simulation_conway/simulation_conway.md)
@@ -262,9 +268,8 @@
     - [The Code](./endless_runner_game/the_code.md)
     - [Wrapping Up](./endless_runner_game/wrapping_up.md)
 
-# Advanced Topics
+# Future Topics
 
-- [Multiplayer Games]()
 - [Packaging For Desktop]()
 - [Packaging For Mobile]()
 
