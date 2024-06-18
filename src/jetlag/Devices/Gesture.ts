@@ -37,9 +37,9 @@ export class GestureDevice {
     } as any;
 
     let mouseFunc = (ev: MouseEvent) => {
-      let overlay_coords = stage.overlay?.camera.screenToMeters(ev.clientX, ev.clientY);
-      let world_coords = stage.world.camera.screenToMeters(ev.clientX, ev.clientY);
-      let hud_coords = stage.hud.camera.screenToMeters(ev.clientX, ev.clientY);
+      let overlay_coords = stage.overlay?.camera.screenToMeters(ev.offsetX, ev.offsetY);
+      let world_coords = stage.world.camera.screenToMeters(ev.offsetX, ev.offsetY);
+      let hud_coords = stage.hud.camera.screenToMeters(ev.offsetX, ev.offsetY);
       // If we have an overlay scene right now, let it handle the tap
       if (stage.overlay) {
         this.mouseHover(stage.overlay, overlay_coords!);
