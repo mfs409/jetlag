@@ -72,3 +72,5 @@ us to give you credit!
 - Egide Ntwari
 - Nana Nyanor
 - Sebastian Chavarro
+- Anh Nguyen
+- Yassine Rafih
