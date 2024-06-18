@@ -210,7 +210,7 @@
     - [Getting Started](./video/getting_started.md)
     - [An Important Caveat](./video/an_important_caveat.md)
     - [Our First Cut Scene](./video/our_first_cut_scene.md)
-    - [Cut Scenes In Overlays, And Controlling Video Playback](./video/cut_scenes_in_overlays,_and_controlling_video_playback.md)
+    - [Cut Scenes In Overlays, And Controlling Video Playback](./video/cut_scenes_in_overlays_and_controlling_video_playback.md)
     - [Wrapping Up](./video/wrapping_up.md)
 
 - [Discrete Movement](./discrete_movement/discrete_movement.md)
