@@ -1,7 +1,7 @@
 import { Socket, io } from "socket.io-client";
 
 /** The state of the network, which ties to if we have a user and a room */
-enum NetworkState { Start, User, UserRoom }
+export enum NetworkState { Start, User, UserRoom }
 
 /**
  * NetworkDevice interfaces with a server (see the "multiplayer-server" folder)
