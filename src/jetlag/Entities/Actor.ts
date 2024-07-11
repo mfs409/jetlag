@@ -12,8 +12,12 @@ import { GestureHandlers } from "../Config";
  * an actor.
  */
 export class Actor {
-  /** Is this Actor visible and able to interact with the world? */
-  public set enabled(val: boolean) { this._active = val; this.rigidBody?.body.SetEnabled(val); }
+  /** 
+    * Is this Actor visible and able to interact with the world? 
+    * Waits until next frame as disabling cannot happen in the
+    * middle of a render
+  */
+  public set enabled(val: boolean) {this.scene.oneTimeEvents.push(() => {this._active = val; this.rigidBody?.body.SetEnabled(val);})}
   public get enabled() { return this._active; }
   private _active = true;
 
@@ -110,19 +114,22 @@ export class Actor {
 
   /** Make an Actor disappear */
   public remove() {
-    // set it invisible immediately, so that future calls know to ignore this
-    // Actor.  This also disables the rigidBody.
+    // set it invisible the next render frame, so that future calls
+    // know to ignore this Actor.  This also disables the rigidBody.
     //
     // NB: We disable instead of actually removing from the physics world
-    this.enabled = false;
-
-    // play a sound when we remove this Actor?
-    this.sounds?.disappear?.play();
-
-    // Send a message to subscribers, e.g., in case one of them wants to run a
-    // Disappear animation
-    this.state.changeState(this, StateEvent.DISAPPEAR);
-    if (this.onDisappear) this.onDisappear(this);
+    this.scene.oneTimeEvents.push(() => {
+      this._active = false; 
+      this.rigidBody?.body.SetEnabled(false);
+  
+      // play a sound when we remove this Actor?
+      this.sounds?.disappear?.play();
+  
+      // Send a message to subscribers, e.g., in case one of them wants to run a
+      // Disappear animation
+      this.state.changeState(this, StateEvent.DISAPPEAR);
+      if (this.onDisappear) this.onDisappear(this);
+    })
   }
 
   /**
