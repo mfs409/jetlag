@@ -64,11 +64,21 @@ export class AnimationSequence {
   /** Make a clone of this animation */
   public clone() {
     let a = new AnimationSequence(this.loop);
-    for (let s of this.steps)
-      a.steps.push({
-        cell: stage.imageLibrary.getSprite(s.cell.imgName),
-        duration: s.duration
-      });
+    for (let s of this.steps) {
+      console.log(s);
+      if (s.cell.imgName !== "") {
+        a.steps.push({
+          cell: stage.imageLibrary.getSprite(s.cell.imgName),
+          duration: s.duration
+        });
+      }
+      else {
+        a.steps.push({
+          cell: new Sprite("", s.cell.sprite),
+          duration: s.duration
+        })
+      }
+    }
     return a;
   }
 
