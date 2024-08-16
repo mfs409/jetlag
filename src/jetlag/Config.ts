@@ -65,7 +65,6 @@ export class AnimationSequence {
   public clone() {
     let a = new AnimationSequence(this.loop);
     for (let s of this.steps) {
-      console.log(s);
       if (s.cell.imgName !== "") {
         a.steps.push({
           cell: stage.imageLibrary.getSprite(s.cell.imgName),
