@@ -257,9 +257,9 @@ initializeAndLaunch("game-player", new Config(), builder);
 function drawBoundingBox(x0: number, y0: number, x1: number, y1: number, thickness: number) {
   // Bottom box:
   let width = Math.abs(x0 - x1);
-  let cfg = { box: true, cx: x0 + width / 2, cy: y1 + thickness / 2, width: width + 2 * thickness, height: thickness, img: "" };
+  let cfg = { box: true, cx: x0 + width / 2, cy: y1 + thickness / 2, width: width + 2 * thickness, height: thickness, fillColor: "#000000FF" };
   let floor = new Actor({
-    appearance: new ImageSprite(cfg),
+    appearance: new FilledBox(cfg),
     rigidBody: new BoxBody(cfg),
     role: new Obstacle(),
   });
@@ -267,9 +267,9 @@ function drawBoundingBox(x0: number, y0: number, x1: number, y1: number, thickne
 
   // Right box:
   let height = Math.abs(y0 - y1);
-  cfg = { box: true, cx: x1 + thickness / 2, cy: y0 + height / 2, height: height + 2 * thickness, width: thickness, img: "" };
+  cfg = { box: true, cx: x1 + thickness / 2, cy: y0 + height / 2, height: height + 2 * thickness, width: thickness, fillColor: "#000000FF" };
   new Actor({
-    appearance: new ImageSprite(cfg),
+    appearance: new FilledBox(cfg),
     rigidBody: new BoxBody(cfg),
     role: new Obstacle({ jumpReEnableSides: [] }),
   });
@@ -277,7 +277,7 @@ function drawBoundingBox(x0: number, y0: number, x1: number, y1: number, thickne
   // The left only differs by translating the X
   cfg.cx -= (thickness + Math.abs(x0 - x1));
   new Actor({
-    appearance: new ImageSprite(cfg),
+    appearance: new FilledBox(cfg),
     rigidBody: new BoxBody(cfg),
     role: new Obstacle({ jumpReEnableSides: [] }),
   });

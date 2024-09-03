@@ -45,4 +45,7 @@ are the same, we can just write it once:
 {{#include game_06.ts:40:59}}
 ```
 
-(Note: if you absolutely must have an "invisible" image at some point, you can use `""` as the `img` value.  This is the one situation in which JetLag won't complain that an image name cannot be found.)
+(Note: if you absolutely must have an "invisible" image at some point, you
+should use a FilledBox or FilledCircle with the color `"#000000FF"`.  The "FF"
+at the end makes the box transparent.  If you need to change the image later,
+you can just put a second image on top of it.)

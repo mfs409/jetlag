@@ -76,8 +76,8 @@ function makeActor(local: boolean, userId: string, img: string) {
     return actor;
   }
   else {
-    // A local actor will not have a role or a movement controller.  The network
-    // will handle it for us.
+    // A remote actor will not have a role or a movement controller.  The
+    // network will handle it for us.
     return new Actor({
       appearance: new ImageSprite({ width: .75, height: .75, img: "green_ball.png" }),
       rigidBody: new CircleBody({ cx: -1, cy: -1, radius: .375 }, { kinematic: true })
