@@ -50,7 +50,7 @@ function builder(_level: number) {
 
   // Make a "hero" who moves via keyboard control and appears as a circle
   let hero = new Actor({
-    appearance: new FilledCircle({ radius: .5, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
+    appearance: new FilledCircle({ radius: .5, fillColor: "#0008ff", lineWidth: .04, lineColor: "#00ff00" }),
     rigidBody: new CircleBody({ cx: 5, cy: 2, radius: .5 }),
     role: new Hero(),
     movement: new ManualMovement(),
@@ -62,7 +62,11 @@ function builder(_level: number) {
     appearance: new FilledBox({ width: 1, height: 1, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
     role: new Obstacle({
       heroCollision: (_o: Actor, h: Actor) => {
-        energyValue+=10
+        if(energyValue < 100)
+        energyValue+=20
+        if(energyValue>100){
+          energyValue=100
+        }
       }
     }),
     
@@ -90,11 +94,20 @@ function builder(_level: number) {
   });
   
 
-  // Make an obstacle that is a polygon
-  new Actor({
-    rigidBody: new PolygonBody({ cx: 10, cy: 5, vertices: [0, -.5, .5, 0, 0, .5, -1, 0] }),
-    appearance: new FilledPolygon({ vertices: [0, -.5, .5, 0, 0, .5, -1, 0], fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
-    role: new Obstacle(),
+  // Make hospital
+  let hospital = new Actor({
+    rigidBody: new BoxBody({ cx: 9, cy: 2, width: 1, height: 1 }),
+    appearance: new FilledBox({ width: 1, height: 1, fillColor: " #0f810e ", lineWidth: .04, lineColor: "#00ff00" }),
+    role: new Obstacle({
+      heroCollision: (_o: Actor, h: Actor) => {
+        healthValue+=5
+        energyValue-=10
+        if(healthValue>100){
+          healthValue=100
+        }
+      }
+    }),
+    
   });
 
   // Pressing a key will change the hero's velocity
