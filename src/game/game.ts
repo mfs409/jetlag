@@ -1,4 +1,4 @@
-import { Actor, BoxBody, CircleBody, FilledBox, FilledCircle, FilledPolygon, GridSystem, Hero, JetLagGameConfig, KeyCodes, ManualMovement, Obstacle, PolygonBody, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, BoxBody, CircleBody, FilledBox, FilledCircle, FilledPolygon, GridSystem, Hero, JetLagGameConfig, KeyCodes, ManualMovement, Obstacle, PolygonBody, TextSprite, TimedEvent, initializeAndLaunch, stage } from "../jetlag";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
@@ -22,10 +22,31 @@ class Config implements JetLagGameConfig {
  * @param level Which level of the game should be displayed
  */
 function builder(_level: number) {
+
+  //Variables
+  let energyValue = 100;
+  let healthValue = 100;
+
   // Draw a grid on the screen, to help us think about the positions of actors.
   // Remember that when `hitBoxes` is true, clicking the screen will show
   // coordinates in the developer console.
-  GridSystem.makeGrid(stage.world, { x: 0, y: 0 }, { x: 16, y: 9 });
+  //GridSystem.makeGrid(stage.world, { x: 0, y: 0 }, { x: 16, y: 9 });
+
+
+  //Example text HUD screen at top left to show hunger and stuff
+  //Energy
+  new Actor({
+    rigidBody: new CircleBody({ cx: 1.5, cy: 0.5, radius: .01 }),
+    appearance: new TextSprite({ center: true, face: "Arial", size: 50, color: "#000000" },  () => "Energy: "+energyValue)
+  });
+  //Health
+  new Actor({
+    rigidBody: new CircleBody({ cx: 1.5, cy: 1.5, radius: .01 }),
+    appearance: new TextSprite({ center: true, face: "Arial", size: 50, color: "#000000" },  () => "Health: "+healthValue)
+  });
+
+
+
 
   // Make a "hero" who moves via keyboard control and appears as a circle
   let hero = new Actor({
@@ -34,13 +55,40 @@ function builder(_level: number) {
     role: new Hero(),
     movement: new ManualMovement(),
   });
-
+  
   // Make an obstacle that is a rectangle
-  new Actor({
+  let box = new Actor({
     rigidBody: new BoxBody({ cx: 3, cy: 4, width: 1, height: 1 }),
     appearance: new FilledBox({ width: 1, height: 1, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
-    role: new Obstacle(),
+    role: new Obstacle({
+      heroCollision: (_o: Actor, h: Actor) => {
+        energyValue+=10
+      }
+    }),
+    
   });
+
+  //Timer
+  stage.world.timer.addEvent(new TimedEvent(1, true, () => {
+    if(energyValue>=5){
+    energyValue-=5}
+
+    if(energyValue==0){
+      healthValue-=5
+    }
+  }));
+
+  let box2 = new Actor({
+    rigidBody: new BoxBody({ cx: 8, cy: 7, width: 1, height: 1 }),
+    appearance: new FilledBox({ width: 1, height: 1, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
+    role: new Obstacle({
+      heroCollision: (_o: Actor, h: Actor) => {
+        energyValue=0
+      }
+    }),
+    
+  });
+  
 
   // Make an obstacle that is a polygon
   new Actor({
