@@ -10,8 +10,8 @@ that big image into all of its parts.  Let's try it out.  Remove
 `green_ball.png` from your `imageNames`.  Then download these two files into
 your `assets`` folder:
 
-- [sprites.png](graphic_assets/sprites.png)
-- [sprites.json](graphic_assets/sprites.json)
+- [sprites.png](../assets/sprites.png)
+- [sprites.json](../assets/sprites.json)
 
 Be sure to open both files to see what they look like.  The .png file has a
 bunch of images packed together.  The .json file tells Pixi.js (and hence

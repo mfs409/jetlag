@@ -2,9 +2,9 @@
 
 You will need to copy these files to your `assets` folder:
 
-- [mid.png](endless_runner_game/mid.png)
-- [back.png](endless_runner_game/back.png)
-- [sprites.png](endless_runner_game/sprites.png)
-- [alien.png](endless_runner_game/alien.png)
-- [sprites.json](endless_runner_game/sprites.json)
-- [alien.json](endless_runner_game/alien.json)
+- [mid.png](../assets/mid.png)
+- [back.png](../assets/back.png)
+- [sprites.png](../assets/sprites.png)
+- [alien.png](../assets/alien.png)
+- [sprites.json](../assets/sprites.json)
+- [alien.json](../assets/alien.json)

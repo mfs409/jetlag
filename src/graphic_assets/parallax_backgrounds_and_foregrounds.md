@@ -9,8 +9,8 @@ These backgrounds and foregrounds give the appearance of depth, by scrolling at
 different speeds.  Begin by downloading these two files and adding them to your
 game's `imageNames`:
 
-- [back.png](graphic_assets/back.png)
-- [mid.png](graphic_assets/mid.png)
+- [back.png](../assets/back.png)
+- [mid.png](../assets/mid.png)
 
 In our example, we'll only use background layers.  Foreground layers work in
 exactly the same way.  Also, we'll only use `ImageSprite`, but once you complete

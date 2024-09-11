@@ -39,9 +39,9 @@ Here's a copy of the file: [game.ts](../empty/game.ts).
 We're going to start by setting up our graphics.  You will need to download
 these three files and put them in your `assets` folder:
 
-- [noise.png](camera_gravity/noise.png)
-- [green_ball.png](camera_gravity/green_ball.png)
-- [mustard_ball.png](camera_gravity/mustard_ball.png)
+- [noise.png](../assets/noise.png)
+- [green_ball.png](../assets/green_ball.png)
+- [mustard_ball.png](../assets/mustard_ball.png)
 
 Next, add these lines to your `Config`:
 

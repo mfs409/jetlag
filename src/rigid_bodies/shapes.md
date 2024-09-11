@@ -8,8 +8,8 @@ all of these options.
 
 To get started, be sure to download these images to your `assets` folder:
 
-- [blue_ball.png](rigidbody/blue_ball.png)
-- [green_ball.png](rigidbody/green_ball.png)
+- [blue_ball.png](../assets/blue_ball.png)
+- [green_ball.png](../assets/green_ball.png)
 
 To appreciate this game, it will be important for the `Config` object to set
 `hitBoxes` to `true`, because it lets us see the outline of the rigidBody...

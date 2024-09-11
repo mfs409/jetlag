@@ -8,10 +8,10 @@ space bar to jump.
 
 This game requires the following assets:
 
-- [green_ball.png](camera_gravity/green_ball.png)
-- [mustard_ball.png](camera_gravity/mustard_ball.png)
-- [night_0.png](camera_gravity/night_0.png)
-- [night_1.png](camera_gravity/night_1.png)
+- [green_ball.png](../assets/green_ball.png)
+- [mustard_ball.png](../assets/mustard_ball.png)
+- [night_0.png](../assets/night_0.png)
+- [night_1.png](../assets/night_1.png)
 
 After you've downloaded them to your `assets` folder, re-set your `game.ts` file
 to look like [this](../empty/game.ts). Then add this line in your `Config`

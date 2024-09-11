@@ -13,8 +13,8 @@ We're going to build the following game to start understanding what these differ
 Before we begin, you'll need to download two image files and put them in your
 `assets` folder:
 
-- [green_ball.png](rigidbody/green_ball.png)
-- [purple_ball.png](rigidbody/purple_ball.png)
+- [green_ball.png](../assets/green_ball.png)
+- [purple_ball.png](../assets/purple_ball.png)
 
 Once that's set, set up an empty game ([game.ts](../empty/game.ts)) and then update your `Config` object by
 adding these lines:
