@@ -1,4 +1,4 @@
-import { Actor, ActorPoolSystem, BoxBody, CircleBody, FilledBox, FilledCircle, FilledPolygon, Goodie, GridSystem, Hero, JetLagGameConfig, KeyCodes, ManualMovement, Obstacle, PolygonBody, Sensor, Sides, TextSprite, TimedEvent, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, ActorPoolSystem, BoxBody, CircleBody, FilledBox, FilledCircle, FilledPolygon, Goodie, GridSystem, Hero, ImageSprite, JetLagGameConfig, KeyCodes, ManualMovement, Obstacle, PolygonBody, Sensor, Sides, TextSprite, TimedEvent, initializeAndLaunch, stage } from "../jetlag";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
@@ -10,7 +10,15 @@ class Config implements JetLagGameConfig {
   // Make this `false` when you're done debugging your game and are ready to
   // share it with the world.
   hitBoxes = true;
+
+  resources ={
+    prefix: "assets/",
+    imageNames: ["lehigh_logo.png"]
+  };
+
+  
 }
+
 
 class SomethingThatLasts {
    energyValue = 100;
@@ -32,6 +40,8 @@ function builder(level: number) {
     stage.storage.setSession("sessionInfo", new SomethingThatLasts());
     sessionInfo = stage.storage.getSession("sessionInfo") as SomethingThatLasts;
   }
+  //Toggle Grid System
+  GridSystem.makeGrid(stage.world, { x: 0, y: 0 }, { x: 16, y: 9 });
 
   //Variables
   // Draw a grid on the screen, to help us think about the positions of actors.
@@ -42,30 +52,46 @@ function builder(level: number) {
   //Example text HUD screen at top left to show hunger and stuff
   //Energy
   new Actor({
-    rigidBody: new CircleBody({ cx: 1.5, cy: 0.5, radius: .01 }),
-    appearance: new TextSprite({ center: true, face: "Arial", size: 50, color: "#000000" },  () => "Energy: "+sessionInfo.energyValue)
+    rigidBody: new CircleBody({ cx: 0, cy: 0, radius: .01 }),
+    appearance: new TextSprite({ center: false, face: "Arial", size: 50, color: "#000000" },  () => "Energy: "+sessionInfo.energyValue)
   });
   //Health
   new Actor({
-    rigidBody: new CircleBody({ cx: 1.5, cy: 1.5, radius: .01 }),
-    appearance: new TextSprite({ center: true, face: "Arial", size: 50, color: "#000000" },  () => "Health: "+sessionInfo.healthValue)
+    rigidBody: new CircleBody({ cx: 0, cy: 1, radius: .01 }),
+    appearance: new TextSprite({ center: false, face: "Arial", size: 50, color: "#000000" },  () => "Health: "+sessionInfo.healthValue)
   });
+
+
 
   //MAIN AREA SYSTEM
   if(level == 1){
+  
+  //Test Lehigh Logo
+  new Actor({
+    rigidBody: new CircleBody({ cx: 0, cy: 0, radius: .01 }),
+    appearance: new ImageSprite({width: 1, height: 1, img: "lehigh_logo.png"})
+  });
+
   //Portal to Rathbone
   new Actor({
-    appearance: new FilledBox({width: 1, height: 1, fillColor: "#000000" }),
-    rigidBody: new BoxBody({ cx: 1, cy: 8, width: 1, height: 1}),
+    appearance: new FilledBox({width: 2, height: 2, fillColor: "#000000" }),
+    rigidBody: new BoxBody({  cx: 1, cy: 8, width: 2, height: 2}),
     role: new Sensor({ heroCollision: () => stage.switchTo(builder, 2) })
-  });}
+  });
+
+  //Rathbone Text
+  new Actor({
+    rigidBody: new CircleBody({ cx: 1, cy: 8, radius: .01 }),
+    appearance: new TextSprite({ center: true, face: "Arial", size: 20, color: "#FFFFFF" }, "Rathbone")
+  });
+}
 
 
 
   // Make a "hero" who moves via keyboard control and appears as a circle
   let hero = new Actor({
-    appearance: new FilledCircle({ radius: .5, fillColor: "#0008ff", lineWidth: .04, lineColor: "#00ff00" }),
-    rigidBody: new CircleBody({ cx: 5, cy: 2, radius: .5 }),
+    appearance: new FilledBox({width: 1, height: 1, fillColor: "#0008ff", lineWidth: .04, lineColor: "#00ff00" }),
+    rigidBody: new BoxBody({ cx: 5, cy: 5, height: 1, width: 1}),
     role: new Hero(),
     movement: new ManualMovement(),
   });
@@ -106,11 +132,17 @@ function builder(level: number) {
     createGoodie();
     //PORTAL BACK TO MAIN AREA
     new Actor({
-      appearance: new FilledBox({width: 1, height: 1, fillColor: "#000000" }),
-      rigidBody: new BoxBody({ cx: 1, cy: 8, width: 1, height: 1}),
+      appearance: new FilledBox({width: 2, height: 2, fillColor: "#000000" }),
+      rigidBody: new BoxBody({ cx: 1, cy: 8, width: 2, height: 2}),
       role: new Sensor({ heroCollision: () => stage.switchTo(builder, 1) })
     });
+    //PORTAL TEXT
+    new Actor({
+      rigidBody: new CircleBody({ cx: 1, cy: 8, radius: .01 }),
+      appearance: new TextSprite({ center: true, face: "Arial", size: 20, color: "#FFFFFF" }, "Main Area")
+    });
   }
+  
   
 
   // Pressing a key will change the hero's velocity
