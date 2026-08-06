@@ -1,7 +1,7 @@
 import { b2Body, b2BodyType, b2CircleShape, b2DistanceJoint, b2DistanceJointDef, b2Fixture, b2LinearStiffness, b2PolygonShape, b2RevoluteJoint, b2RevoluteJointDef, b2Transform, b2Vec2, b2WeldJointDef } from "@box2d/core";
 import { stage } from "../Stage";
 import { DebugSprite } from "../Services/ImageLibrary";
-import { Actor } from "../Entities/Actor";
+import { Actor, actorFromBody } from "../Entities/Actor";
 import { DIRECTION, StateEvent } from "./StateManager";
 import { Scene } from "../Entities/Scene";
 
@@ -58,6 +58,12 @@ export interface PhysicsCfg {
 abstract class RigidBodyBase {
   /** A debug context for drawing the "hit box" */
   public debug: DebugSprite | undefined;
+
+  /** A debug context for drawing the proximity-sensor zone's outline, if it has one */
+  public proximityDebug: DebugSprite | undefined;
+
+  /** A debug context for drawing the punch hitbox's outline, if it has one */
+  public punchDebug: DebugSprite | undefined;
 
   /** A definition for when we attach a revolute joint to this entity */
   revJointDef?: b2RevoluteJointDef;
@@ -317,7 +323,7 @@ abstract class RigidBodyBase {
    */
   public breakStickyJoints() {
     if (this._stickyDistJoint) {
-      const stickyActor = this._stickyDistJoint.GetBodyA().GetUserData() as Actor | undefined;
+      const stickyActor = actorFromBody(this._stickyDistJoint.GetBodyA());
       const stickyBody = stickyActor?.rigidBody;
       if (stickyBody) {
         const delay = Math.max(RigidBodyBase.MIN_STICKY_DELAY_MS, stickyBody.stickyDelayMs ?? 0);
@@ -406,6 +412,7 @@ abstract class RigidBodyBase {
     if (this._proximityFixture) {
       this.body.DestroyFixture(this._proximityFixture);
       this._proximityFixture = undefined;
+      this.proximityDebug = undefined;
     }
     if (radius !== undefined) {
       let shape = new b2CircleShape();
@@ -414,6 +421,7 @@ abstract class RigidBodyBase {
       // CreateFixture does not wake the body, and Box2D skips contact
       // updates (even for sensors) when both bodies in a pair are asleep.
       this.body.SetAwake(true);
+      if (stage.config.hitBoxes) this.proximityDebug = new DebugSprite();
     }
   }
 
@@ -445,6 +453,7 @@ abstract class RigidBodyBase {
     // Box2D skips contact updates (even for sensors) when both bodies in a pair
     // are asleep.
     this.body.SetAwake(true);
+    if (stage.config.hitBoxes) this.punchDebug = new DebugSprite();
   }
 
   /** Remove this entity's punch hitbox if it has one */
@@ -452,6 +461,7 @@ abstract class RigidBodyBase {
     if (this._punchFixture) {
       this.body.DestroyFixture(this._punchFixture);
       this._punchFixture = undefined;
+      this.punchDebug = undefined;
     }
   }
 
@@ -529,9 +539,9 @@ abstract class RigidBodyBase {
     if (physicsCfg.collisionsEnabled !== undefined)
       this.collisionsEnabled = physicsCfg.collisionsEnabled;
 
-    // Update sticky properties?  `stickyDelayMs` just records the
-    // configured duration -- `breakStickyJoints()` is what turns it into an
-    // actual `stickyUntilMs` deadline, at the moment something unsticks.
+    // Update sticky properties?  `stickyDelayMs` just records the configured
+    // duration.  `breakStickyJoints()` is what turns it into an actual
+    // `stickyUntilMs` deadline, at the moment something unsticks.
     if (physicsCfg.stickyDelay !== undefined)
       this.stickyDelayMs = physicsCfg.stickyDelay;
     if (physicsCfg.stickySides !== undefined) {

@@ -4,7 +4,7 @@ import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, FilledRoun
 import { RigidBodyComponent, BoxBody, CircleBody, PolygonBody } from "../Components/RigidBody";
 import { CameraService } from "../Services/Camera";
 import { Sprite } from "../Services/ImageLibrary";
-import { b2Vec2 } from "@box2d/core";
+import { b2CircleShape, b2Vec2 } from "@box2d/core";
 import { FilterComponent } from "../Components/FilterComponent"
 
 /** The location of a sprite */
@@ -605,6 +605,23 @@ export class RendererDevice {
       this.drawDebugCircle(x, y, body.radius * s, r, body.debug.shape, body.debug.line, 0x0000ff);
     else if (body instanceof PolygonBody)
       this.drawDebugPoly(x, y, r, s, body.vertArray, body.debug.shape);
+
+    // Proximity and punch fixtures are extra sensor-only fixtures on the
+    // same body, drawn as their own circles (in distinct colors) since
+    // they're not the main shape that the code above already covers.
+    if (body.proximityFixture && body.proximityDebug) {
+      const radius = (body.proximityFixture.GetShape() as b2CircleShape).m_radius;
+      const cx = s * (body.getCenter().x - camera.getLeft());
+      const cy = s * (body.getCenter().y - camera.getTop());
+      this.drawDebugCircle(cx, cy, radius * s, r, body.proximityDebug.shape, body.proximityDebug.line, 0xffff00);
+    }
+    if (body.punchFixture && body.punchDebug) {
+      const shape = body.punchFixture.GetShape() as b2CircleShape;
+      const worldCenter = body.body.GetWorldPoint(shape.m_p, new b2Vec2());
+      const cx = s * (worldCenter.x - camera.getLeft());
+      const cy = s * (worldCenter.y - camera.getTop());
+      this.drawDebugCircle(cx, cy, shape.m_radius * s, r, body.punchDebug.shape, body.punchDebug.line, 0xff8800);
+    }
   }
 
   /**

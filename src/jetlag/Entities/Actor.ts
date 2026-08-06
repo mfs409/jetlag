@@ -6,6 +6,21 @@ import { PassiveBehavior, Behavior, setProperty } from "../Components/Behavior";
 import { Scene } from "./Scene";
 import { MovementComponent, PassThroughMovement, TiltMovement } from "../Components/Movement";
 import { stage } from "../Stage";
+import { b2Body } from "@box2d/core";
+
+/**
+ * `@box2d/core`'s `b2Body.SetUserData()` is a *merge* operation
+ * (`Object.assign(this.m_userData, data)`), not a replace, so we need some
+ * extra machinery to get the actor into and out of it.
+ */
+declare module "@box2d/core" {
+  interface b2BodyUserDataMap { actor: Actor; }
+}
+
+/** Get the `Actor` associated with a Box2D body, if any (see the `SetUserData` NB above) */
+export function actorFromBody(body: b2Body): Actor | undefined {
+  return body.GetUserData().actor;
+}
 
 /**
  * A monotonically increasing counter, so every Actor gets a unique, orderable
@@ -152,7 +167,7 @@ export class Actor {
     this.appearance.forEach(a => a.actor = this);
 
     this.rigidBody = config.rigidBody;
-    this.rigidBody.body.SetUserData(this);
+    this.rigidBody.body.SetUserData({ actor: this });
 
     this._movement = config.movement ?? new PassThroughMovement();
     this._movement.rigidBody = this.rigidBody;

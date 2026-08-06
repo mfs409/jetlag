@@ -207,9 +207,9 @@ export class ImageLibraryService {
    *
    * @param imgName The name of the image to load
    *
-   * @warning This returns the shared, cached Texture.  If you want to modify
-   *          it, clone it first, or every other sprite using this image will
-   *          see the change too.
+   * NB:  This returns the shared, cached Texture.  If you want to modify it,
+   *      clone it first, or every other sprite using this image will see the
+   *      change too.
    *
    * @returns A Texture built from the image
    */

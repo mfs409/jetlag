@@ -11,7 +11,7 @@ import { SpriteLocation } from "../Devices/Renderer";
  * The valid Z indices in JetLag, in ascending order.  Please do not hard-code Z
  * values other than 0.
  */
-const Z_INDICES = [-4, -3, -2, -1, 0, 1, 2, 3, 4] as const;
+export const Z_INDICES = [-4, -3, -2, -1, 0, 1, 2, 3, 4] as const;
 
 /** ZIndex is a convenience type to enforce that a value is a valid Z index */
 export type ZIndex = typeof Z_INDICES[number];

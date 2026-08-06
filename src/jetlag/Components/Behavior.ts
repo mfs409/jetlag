@@ -47,15 +47,25 @@ export enum CollisionExemptions {
  * direction allows things like "defeat by jumping" to work when falling onto an
  * actor, but not when jumping up into it.
  *
+ * The raw center-to-center offset is normalized by each axis's combined
+ * half-extents before comparing them. Without this, a platform that's much
+ * wider than it is tall (a typical one-way platform) would misclassify an
+ * off-center landing as "E"/"W" instead of "N", since the raw horizontal
+ * offset so easily exceeds the raw vertical one.
+ *
  * @param self  The actor whose side is being classified
  * @param other The actor touching `self`, whose position determines the zone
  */
 export function relativeZone(self: Actor, other: Actor): DIRECTION {
   const sc = self.rigidBody.getCenter(), oc = other.rigidBody.getCenter();
   const dx = oc.x - sc.x, dy = oc.y - sc.y;
-  if (Math.abs(dx) > Math.abs(dy)) return dx >= 0 ? DIRECTION.E : DIRECTION.W;
+  const halfWidth = (self.rigidBody.w + other.rigidBody.w) / 2;
+  const halfHeight = (self.rigidBody.h + other.rigidBody.h) / 2;
+  const nx = halfWidth > 0 ? dx / halfWidth : dx;
+  const ny = halfHeight > 0 ? dy / halfHeight : dy;
+  if (Math.abs(nx) > Math.abs(ny)) return nx >= 0 ? DIRECTION.E : DIRECTION.W;
   // NB: remember that Y increases downward
-  return dy >= 0 ? DIRECTION.S : DIRECTION.N;
+  return ny >= 0 ? DIRECTION.S : DIRECTION.N;
 }
 
 /**
@@ -1088,12 +1098,10 @@ export class ThrowableBehavior extends Behavior {
     let b = this.actor;
     if (!b) return;
     if (b.appearance[0] instanceof AnimatedSprite) (b.appearance[0] as AnimatedSprite).restartCurrentAnimation();
-    b.enabled = true;
-
+    b.rigidBody.body.SetEnabled(true);
     this.rangeFrom.x = cfg.actor.rigidBody.getCenter().x + cfg.offset.dx;
     this.rangeFrom.y = cfg.actor.rigidBody.getCenter().y + cfg.offset.dy;
     tossFixedDir(b, this.rangeFrom.x, this.rangeFrom.y, cfg.velocity.x, cfg.velocity.y);
-
     b.sounds?.play("toss");
     cfg.actor.state.changeState(b, StateEvent.TOSS_Y);
   }
@@ -1116,12 +1124,10 @@ export class ThrowableBehavior extends Behavior {
     let b = this.actor;
     if (!b) return;
     if (b.appearance[0] instanceof AnimatedSprite) (b.appearance[0] as AnimatedSprite).restartCurrentAnimation();
-    b.enabled = true;
-
+    b.rigidBody.body.SetEnabled(true);
     this.rangeFrom.x = cfg.from.x + cfg.offset.dx;
     this.rangeFrom.y = cfg.from.y + cfg.offset.dy;
     tossAt(b, this.rangeFrom.x, this.rangeFrom.y, cfg.from.x, cfg.from.y, cfg.to.x, cfg.to.y, cfg.offset.dx, cfg.offset.dy, cfg.multiplier ?? 1, cfg.fixedVectorVelocity, cfg.rotateVectorToss);
-
     b.sounds?.play("toss");
     cfg.actor.state.changeState(b, StateEvent.TOSS_Y);
   }

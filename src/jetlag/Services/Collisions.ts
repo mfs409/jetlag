@@ -1,5 +1,5 @@
 import { b2AABB, b2Contact, b2ContactImpulse, b2DistanceJoint, b2DistanceJointDef, b2Fixture, b2Manifold, b2Vec2, b2World, b2WorldManifold } from "@box2d/core";
-import { Actor } from "../Entities/Actor";
+import { Actor, actorFromBody } from "../Entities/Actor";
 import { Scene } from "../Entities/Scene";
 import { DIRECTION } from "../Components/StateManager";
 import { CollisionExemptions, dispatchCollision, dispatchProximityEnd, dispatchProximityStart, dispatchPunchContact, relativeZone } from "../Components/Behavior";
@@ -33,8 +33,8 @@ class PointToActorCallback {
    */
   private checkIfActive(fixture: b2Fixture) {
     // Make sure the fixture's Entity is active
-    let b = fixture.GetBody().GetUserData() as Actor;
-    if (!b.enabled) return true;
+    let b = actorFromBody(fixture.GetBody());
+    if (!b || !b.enabled) return true;
     // A proximity or punch fixture is not the actor's real shape -- neither
     // should count as "the actor is at this point" for taps/gestures.
     // Skipping them here also avoids pushing the same actor twice, since a
@@ -108,9 +108,9 @@ class ContactListener {
   public BeginContact(contact: b2Contact) {
     // Get the bodies, make sure both are actors
     const fixA = contact.GetFixtureA(), fixB = contact.GetFixtureB();
-    let a = fixA.GetBody().GetUserData();
-    let b = fixB.GetBody().GetUserData();
-    if (!(a instanceof Actor) || !(b instanceof Actor)) return;
+    let a = actorFromBody(fixA.GetBody());
+    let b = actorFromBody(fixB.GetBody());
+    if (!a || !b) return;
 
     // A proximity fixture never participates in normal collision dispatch
     // (or the begin/end contact handler system below) -- it's a purely
@@ -170,9 +170,9 @@ class ContactListener {
   public EndContact(contact: b2Contact) {
     // Get the bodies, make sure both are actors
     const fixA = contact.GetFixtureA(), fixB = contact.GetFixtureB();
-    let a = fixA.GetBody().GetUserData();
-    let b = fixB.GetBody().GetUserData();
-    if (!(a instanceof Actor) || !(b instanceof Actor)) return;
+    let a = actorFromBody(fixA.GetBody());
+    let b = actorFromBody(fixB.GetBody());
+    if (!a || !b) return;
 
     // See BeginContact's comment: proximity fixtures are handled entirely
     // separately from the endContactHandlers system below.
@@ -218,9 +218,9 @@ class ContactListener {
    */
   public PreSolve(contact: b2Contact, _oldManifold: b2Manifold) {
     // get the bodies, make sure both are actors
-    let a = contact.GetFixtureA().GetBody().GetUserData();
-    let b = contact.GetFixtureB().GetBody().GetUserData();
-    if (!(a instanceof Actor) || !(b instanceof Actor) || !a.rigidBody || !b.rigidBody) return;
+    let a = actorFromBody(contact.GetFixtureA().GetBody());
+    let b = actorFromBody(contact.GetFixtureB().GetBody());
+    if (!a || !b || !a.rigidBody || !b.rigidBody) return;
     let ab = a.rigidBody, bb = b.rigidBody;
 
     // is either one-sided?
