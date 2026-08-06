@@ -9,30 +9,25 @@ export class ActorPoolSystem {
   /** A collection of all the available actors */
   private pool = [] as Actor[];
 
-  /** For limiting the number of actors that can be returned */
-  private remaining?: number;
-
-  /** Return the number of actors remaining */
-  public getRemaining() { return this.remaining ?? 0; }
-
-  /**
-   * Set a limit on the total number of actors that can be used
-   *
-   * @param number How many actors are available
-   */
-  public setLimit(number: number) { this.remaining = number; }
+  /** The number of actors remaining */
+  public get remaining() { return this._limit ?? 0; }
+  /** The number of actors remaining */
+  public set limit(v: number) { this._limit = v; }
+  /** The number of actors remaining */
+  private _limit?: number;
 
   /**
-   * Return an actor from the pool, if there is one available
+   * Return an actor from the pool, if there is one available.  The actor is
+   * likely to be disabled.
    *
    * Note that this can return `undefined`.  If you don't want that behavior,
    * consider adding more actors to the pool.
    */
-  public get(): Actor | undefined {
+  public get() {
     // have we reached our limit?
-    if (this.remaining == 0) return;
+    if (this._limit == 0) return;
     // do we need to decrease our limit?
-    if (this.remaining != undefined) this.remaining--;
+    if (this._limit != undefined) this._limit--;
     return this.pool.pop();
   }
 

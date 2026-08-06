@@ -1,6 +1,6 @@
 /**
- * The keys that we currently support.  We represent each with its `ev.code`
- * value.
+ * The keys that JetLag currently supports.  Each is represented by its
+ * `ev.code` value.
  */
 export enum KeyCodes {
   KEY_ESCAPE = 'Escape', KEY_HOME = 'Home', KEY_END = 'End',
@@ -14,14 +14,18 @@ export enum KeyCodes {
   KEY_Y = 'KeyY', KEY_U = 'KeyU', KEY_I = 'KeyI', KEY_O = 'KeyO', KEY_P = 'KeyP',
   KEY_BRACKETLEFT = 'BracketLeft', KEY_BRACKETRIGHT = 'BracketRight',
   KEY_BACKSLASH = 'Backslash',
-  KEY_A = 'KeyA', KEY_S = 'KeyS', KEY_D = 'KeyD', KEY_F = 'KeyF', KEY_G = 'KeyG',
-  KEY_H = 'KeyH', KEY_J = 'KeyJ', KEY_K = 'KeyK', KEY_L = 'KeyL',
-  KEY_SEMICOLON = 'Semicolon',
+  KEY_CAPSLOCK = 'CapsLock', KEY_A = 'KeyA', KEY_S = 'KeyS', KEY_D = 'KeyD',
+  KEY_F = 'KeyF', KEY_G = 'KeyG', KEY_H = 'KeyH', KEY_J = 'KeyJ', KEY_K = 'KeyK',
+  KEY_L = 'KeyL', KEY_SEMICOLON = 'Semicolon',
   KEY_QUOTE = 'Quote', KEY_ENTER = 'Enter',
+  KEY_SHIFT = 'ShiftLeft', KEY_SHIFT_RIGHT = 'ShiftRight',
   KEY_Z = 'KeyZ', KEY_X = 'KeyX', KEY_C = 'KeyC', KEY_V = 'KeyV', KEY_B = 'KeyB',
   KEY_N = 'KeyN', KEY_M = 'KeyM', KEY_COMMA = 'Comma', KEY_PERIOD = 'Period',
-  KEY_SLASH = 'Slash', KEY_SPACE = 'Space', KEY_PAGEUP = 'PageUp', KEY_PAGEDOWN = 'PageDown',
-  KEY_LEFT = 'ArrowLeft', KEY_UP = 'ArrowUp', KEY_DOWN = 'ArrowDown', KEY_RIGHT = 'ArrowRight',
+  KEY_SLASH = 'Slash',
+  KEY_CONTROL = 'ControlLeft', KEY_ALT = 'AltLeft', KEY_SPACE = 'Space',
+  KEY_PAGEUP = 'PageUp', KEY_PAGEDOWN = 'PageDown',
+  KEY_LEFT = 'ArrowLeft', KEY_UP = 'ArrowUp', KEY_DOWN = 'ArrowDown',
+  KEY_RIGHT = 'ArrowRight',
 };
 
 /**
@@ -30,7 +34,7 @@ export enum KeyCodes {
  */
 export class KeyboardDevice {
   /** 
-   * handlers for when keys are down pressed.  These re-fire while the key is
+   * Handlers for when keys are down pressed.  These re-fire while the key is
    * held 
    */
   private downHandlers: Map<string, () => void> = new Map();
@@ -45,20 +49,28 @@ export class KeyboardDevice {
   }
 
   /**
-   * Set a handler to respond to some keydown event
+   * Set a handler to respond to keydown event(s)
    *
-   * @param key     The key to listen for
+   * @param key     The key (or keys) to listen for
    * @param handler The code to run
    */
-  public setKeyDownHandler(key: KeyCodes, handler: () => void) { this.downHandlers.set(key.valueOf(), handler); }
+  public setKeyDownHandler(key: KeyCodes | KeyCodes[], handler: () => void) {
+    for (let k of Array.isArray(key) ? key : [key]) {
+      this.downHandlers.set(k.valueOf(), handler);
+    }
+  }
 
   /**
-   * Set a handler to respond to some keyup event
+   * Set a handler to respond to keyup event(s)
    *
-   * @param key     The key to listen for
+   * @param key     The key (or keys) to listen for
    * @param handler The code to run
    */
-  public setKeyUpHandler(key: KeyCodes, handler: () => void) { this.upHandlers.set(key.valueOf(), handler); }
+  public setKeyUpHandler(key: KeyCodes | KeyCodes[], handler: () => void) {
+    for (let k of Array.isArray(key) ? key : [key]) {
+      this.upHandlers.set(k.valueOf(), handler);
+    }
+  }
 
   /** Reset the keyboard (e.g., between levels) */
   public clearHandlers() {
@@ -74,8 +86,8 @@ export class KeyboardDevice {
   private keyDownHandler(ev: KeyboardEvent) {
     let handler = this.downHandlers.get(ev.code);
     if (handler) {
-      // NB:  `ev.preventDefault()` is necessary, or things like TAB will do their
-      //      default UI interaction (e.g., focus the address bar)
+      // NB:  `ev.preventDefault()` is necessary, or things like TAB will do
+      //      their default UI interaction (e.g., focus the address bar)
       ev.preventDefault();
       handler();
     }
@@ -89,8 +101,8 @@ export class KeyboardDevice {
   private keyUpHandler(ev: KeyboardEvent) {
     let handler = this.upHandlers.get(ev.code);
     if (handler) {
-      // NB:  `ev.preventDefault()` is necessary, or things like TAB will do their
-      //      default UI interaction (e.g., focus the address bar)
+      // NB:  `ev.preventDefault()` is necessary, or things like TAB will do
+      //      their default UI interaction (e.g., focus the address bar)
       ev.preventDefault();
       handler();
     }

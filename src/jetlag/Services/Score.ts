@@ -3,77 +3,92 @@ import { Scene } from "../Entities/Scene";
 import { stage } from "../Stage";
 
 /**
- * These are the ways a level can be won automatically: by enough heroes
- * reaching a destination, by collecting enough goodies, by defeating enough
- * enemies, or by surviving long enough.  Of course, you can always just call
- * winLevel() or loseLevel() directly, too, but JetLag checks these
- * conditions automatically.
+ * Counter is a flexible, string-keyed registry of numeric values that can be
+ * used for anything a game needs to track.
  */
-enum VictoryType { DESTINATION, GOODIE_COUNT, ENEMY_COUNT, SURVIVE }
+export class Counter {
+  /** The counters, by name */
+  private values = new Map<string, number>();
+
+  /**
+   * Read a counter's current value
+   *
+   * @param key The counter to read
+   *
+   * @returns The counter's value, or 0 if it has never been set
+   */
+  public get(key: string): number { return this.values.get(key) ?? 0; }
+
+  /**
+   * Overwrite a counter's value
+   *
+   * @param key   The counter to set
+   * @param value The new value
+   */
+  public set(key: string, value: number) { this.values.set(key, value); }
+
+  /**
+   * Add to (or, with a negative amount, subtract from) a counter's value
+   *
+   * @param key    The counter to update
+   * @param amount How much to add (negative to subtract)
+   */
+  public add(key: string, amount: number): void {
+    this.set(key, this.get(key) + amount);
+  }
+
+  /** Clear every counter (e.g., between levels) */
+  public reset(): void { this.values.clear(); }
+}
 
 /**
- * Score tracks the progress of a player through a level of the game.  It runs
- * code on clock events, goodie collections, enemy defeats, hero defeats, and
- * destination arrivals, to decide when to automatically win or lose a level.
+ * ScoreService tracks a level's progress via a `Counter` registry, and decides
+ * when to win or lose the level via predicate functions that are registered
+ * with `addWinCondition`/`addLoseCondition`.
+ *
+ * JetLag doesn't hardcode what "winning" means.  Once per clock tick,
+ * ScoreService checks every registered predicate (win conditions first, then
+ * lose conditions) and acts on the first one that returns true.  A predicate is
+ * usually just a check against `stage.score.counters`, e.g.
+ * `stage.score.addWinCondition(() => stage.score.counters.get("coins") >= 10)`.
+ *
+ * `stage.score.counters` entries fall into three different categories:
+ * - The one counter ScoreService itself owns: `ScoreService.STOPWATCH`.
+ * - Well-known counters that a Behavior updates automatically.  These are
+ *   documented as public static strings on the Behavior that owns them,
+ *   e.g. `HazardBehavior.ENEMIES_CREATED`/`ENEMIES_DEFEATED`, not here.
+ * - Arbitrary counter keys that a game author chooses when configuring a
+ *   Behavior (e.g. `CollectableBehavior.onCollect`, `GoalBehavior.onArrival`
+ *   are themselves the counter key) -- these aren't "well-known" at all,
+ *   since nothing about them is fixed.
  */
 export class ScoreService {
+  /** The counter that tracks elapsed time in the current level, in seconds */
+  static readonly STOPWATCH = "stopwatch";
+
   /** How to build the next level if the current level is lost */
-  public onLose = { level: 0, builder: (_level: number) => { } };
+  public onLose = () => { };
 
   /** How to build the next level if the current level is won */
-  public onWin = { level: 0, builder: (_level: number) => { } };
+  public onWin = () => { };
 
-  /** Describes how a level is won.  We default to DESTINATION. */
-  private victoryType = VictoryType.DESTINATION;
+  /**
+   * This level's counters (goodies, enemies, the stopwatch, or anything your
+   * own game code defines) 
+   */
+  public readonly counters = new Counter();
 
-  /** Statistics for winning when victoryType == DESTINATION */
-  private destinationWinStats = {
-    /** The number of heroes who must reach the destination */
-    required: 0,
-    /** The number of heroes who have reached the destination */
-    arrived: 0,
-  };
+  /**
+   * Predicates checked once per clock tick; the level is won the first time any
+   * of these returns true
+   */
+  public winConditions: (() => boolean)[] = [];
 
-  /** Statistics for winning when victoryType == ENEMY_COUNT */
-  private enemyWinStats = {
-    /** The number of enemies that must be defeated.  Undefined == all */
-    required: 0 as number | undefined,
-    /** The number of enemies created so far */
-    created: 0,
-    /** The number of enemies defeated so far */
-    defeated: 0,
-  }
-
-  /** Statistics for winning when victoryType == GOODIE_COUNT */
-  private goodieWinStats = {
-    /** The minimum number of each type of goodie that must be collected */
-    required: [0, 0, 0, 0],
-    /** How many of each goodie have been collected so far */
-    collected: [0, 0, 0, 0],
-  }
-
-  /** Statistics for winning when victoryType == SURVIVE */
-  private surviveWinStats = {
-    /** The amount of time remaining */
-    remaining: undefined as number | undefined,
-  };
-
-  /** Statistics for losing when all heroes are defeated */
-  private heroLoseStats = {
-    /** The number of heroes created */
-    created: 0,
-    /** The number of heroes defeated */
-    defeated: 0,
-  }
-
-  /** Statistics for losing when time runs out */
-  private timerLoseStats = {
-    /** The remaining time */
-    remaining: undefined as number | undefined,
-  }
-
-  /** A stopwatch, in case it's useful to have */
-  public stopWatch = 0;
+  /**
+   * Predicates checked once per clock tick (after win conditions); the level is
+   * lost the first time any of these returns true
+   */
+  public loseConditions: (() => boolean)[] = [];
 
   /** Code for building an overlay to announce that current level is won */
   public winSceneBuilder?: (overlay: Scene, screenshot?: ImageSprite) => void;
@@ -81,236 +96,77 @@ export class ScoreService {
   /** Code for building an overlay to announce that current level is lost */
   public loseSceneBuilder?: (overlay: Scene, screenshot?: ImageSprite) => void;
 
+  /**
+   * Has this level already been won or lost?  This field prevents re-computing,
+   * to avoid a bug when a win/lose overlay requests a screenshot.
+   */
+  private decided = false;
+
+  /**
+   * Register a predicate that wins the level the first time it returns true
+   *
+   * @param condition The predicate to check every clock tick
+   */
+  public addWinCondition(condition: () => boolean) {
+    this.winConditions.push(condition);
+  }
+
+  /**
+   * Register a predicate that loses the level the first time it returns true
+   *
+   * @param condition The predicate to check every clock tick
+   */
+  public addLoseCondition(condition: () => boolean) {
+    this.loseConditions.push(condition);
+  }
+
   /** Reset all the scores at the beginning of a new level */
   public reset() {
-    this.victoryType = VictoryType.DESTINATION;
-    this.destinationWinStats = { arrived: 0, required: 0 };
-    this.enemyWinStats = { required: 0, created: 0, defeated: 0 };
-    this.goodieWinStats = { required: [0, 0, 0, 0], collected: [0, 0, 0, 0] };
-    this.surviveWinStats = { remaining: undefined };
-    this.heroLoseStats = { created: 0, defeated: 0 };
-    this.timerLoseStats = { remaining: undefined };
-    this.stopWatch = 0;
+    this.counters.reset();
+    this.winConditions = [];
+    this.loseConditions = [];
+    this.decided = false;
   }
 
   /**
-   * When a hero arrives at a destination, decide whether it means it is time
-   * for the game to be won.
-   */
-  public onDestinationArrive() {
-    this.destinationWinStats.arrived++;
-    if (this.victoryType != VictoryType.DESTINATION) return;
-    if (this.destinationWinStats.arrived >= this.destinationWinStats.required)
-      this.winLevel();
-  }
-
-  /** Record that a goodie was collected, and possibly end the level */
-  public onGoodieCollected() {
-    // possibly win the level, but only if we win on goodie count and all
-    // four counts are high enough
-    if (this.victoryType != VictoryType.GOODIE_COUNT) return;
-    for (let i = 0; i < 4; ++i)
-      if (this.goodieWinStats.required[i] > this.goodieWinStats.collected[i]) return;
-    this.winLevel();
-  }
-
-  /**
-   * On every clock tick, update the countdowns and stopwatch. It may lead to
-   * the level being won or lost.
+   * On every clock tick, advance the stopwatch, then check whether any
+   * win or lose predicate now holds.  Win conditions are checked first, so
+   * if a single event would satisfy both, winning takes precedence.  Once
+   * the level has been won or lost, predicates stop being checked (see
+   * `decided`).
    *
    * @param elapsedMs The milliseconds that have passed
    */
   public onClockTick(elapsedMs: number) {
-    this.stopWatch += elapsedMs / 1000;
-
-    if (this.timerLoseStats.remaining != undefined) {
-      this.timerLoseStats.remaining -= elapsedMs / 1000;
-      if (this.timerLoseStats.remaining < 0) {
-        this.timerLoseStats.remaining = undefined;
-        this.loseLevel();
-      }
-    }
-    if (this.surviveWinStats.remaining) {
-      this.surviveWinStats.remaining -= elapsedMs / 1000;
-      if (this.victoryType != VictoryType.SURVIVE) return;
-      if (this.surviveWinStats.remaining < 0) {
-        this.surviveWinStats.remaining = undefined;
-        this.winLevel();
-      }
-    }
+    this.counters.add(ScoreService.STOPWATCH, elapsedMs / 1000);
+    if (this.decided) return;
+    if (this.winConditions.some(condition => condition())) { this.winLevel(); return; }
+    if (this.loseConditions.some(condition => condition())) { this.loseLevel(); return; }
   }
 
   /**
-   * Indicate that a hero has been defeated.  This may cause the level to be
-   * lost.
-   */
-  public onDefeatHero() {
-    this.heroLoseStats.defeated++;
-    if (this.heroLoseStats.defeated >= this.heroLoseStats.created)
-      this.loseLevel();
-  }
-
-  /**
-   * Indicate that an enemy was defeated.  This may cause the level to be won
-   */
-  public onEnemyDefeated() {
-    this.enemyWinStats.defeated++;
-    if (this.victoryType != VictoryType.ENEMY_COUNT) return;
-    // defeat all enemies?
-    if (this.enemyWinStats.required == undefined && this.enemyWinStats.defeated == this.enemyWinStats.created)
-      this.winLevel();
-    // a specific number of enemies?
-    else if (this.enemyWinStats.required != undefined && this.enemyWinStats.defeated >= this.enemyWinStats.required)
-      this.winLevel();
-  }
-
-  /** Return the number of enemies defeated */
-  public getEnemiesDefeated() { return this.enemyWinStats.defeated; }
-
-  /** Return the number of enemies created */
-  public getEnemiesCreated() { return this.enemyWinStats.created; }
-
-  /**
-   * Indicate that the level should be won by some number of heroes reaching the
-   * destination
-   *
-   * @param count The number of heroes that must reach the destination
-   */
-  public setVictoryDestination(count: number) {
-    this.victoryType = VictoryType.DESTINATION;
-    this.destinationWinStats.required = count;
-  }
-
-  /**
-   * Indicate that the level is won by defeating a certain number of enemies or
-   * by defeating all of the enemies, if not given an argument.
-   *
-   * @param count The number of enemies that must be defeated to win the
-   *                level.  Leave blank if the answer is "all"
-   */
-  public setVictoryEnemyCount(count?: number) {
-    this.victoryType = VictoryType.ENEMY_COUNT;
-    this.enemyWinStats.required = count;
-  }
-
-  /**
-   * Indicate that the level is won by collecting enough goodies.  To win, all
-   * four goodie counts must be equal or greater than the values given to this
-   * function.
-   *
-   * @param v0 Number of type-0 goodies that must be collected to win the level
-   * @param v1 Number of type-1 goodies that must be collected to win the level
-   * @param v2 Number of type-2 goodies that must be collected to win the level
-   * @param v3 Number of type-3 goodies that must be collected to win the level
-   */
-  public setVictoryGoodies(v0: number, v1: number, v2: number, v3: number) {
-    this.victoryType = VictoryType.GOODIE_COUNT;
-    this.goodieWinStats.required = [v0, v1, v2, v3];
-  }
-
-  /**
-   * Indicate that the level is won by surviving for long enough
-   *
-   * @param duration  How long the hero must survive, in seconds
-   */
-  public setVictorySurvive(duration: number) {
-    this.victoryType = VictoryType.SURVIVE;
-    this.surviveWinStats.remaining = duration;
-  }
-
-  /**
-   * Update a goodie count by adding a number to it
-   *
-   * @param which   Which goodie counter (0, 1, 2, or 3)
-   * @param amount  How much should be added to it (can be negative!)
-   */
-  public addToGoodieCount(which: 0 | 1 | 2 | 3, amount: number) {
-    this.goodieWinStats.collected[which] += amount;
-  }
-
-  /**
-   * Update a goodie count by overwriting its value
-   *
-   * @param which   Which goodie counter (0, 1, 2, or 3)
-   * @param amount  The new value
-   */
-  public setGoodieCount(which: 0 | 1 | 2 | 3, amount: number) {
-    this.goodieWinStats.collected[which] = amount;
-  }
-
-  /**
-   * Return a goodie counter's value
-   *
-   * @param which Which goodie counter (0, 1, 2, or 3)
-   */
-  public getGoodieCount(which: 0 | 1 | 2 | 3) {
-    return this.goodieWinStats.collected[which];
-  }
-
-  /** Return the time left on the lose countdown */
-  public getLoseCountdownRemaining() { return this.timerLoseStats.remaining; }
-
-  /**
-   * Change the amount of time left on the lose countdown
-   *
-   * @param amount  The new time remaining
-   */
-  public setLoseCountdownRemaining(amount: number) {
-    this.timerLoseStats.remaining = amount;
-  }
-
-  /** Return the time left on the win countdown */
-  public getWinCountdownRemaining() { return this.surviveWinStats.remaining; }
-
-  /**
-   * Change the amount of time left on the win countdown
-   *
-   * @param amount  The new time remaining
-   */
-  public setWinCountdownRemaining(amount: number) {
-    this.surviveWinStats.remaining = amount;
-  }
-
-  /** Return the time on the stopwatch */
-  public getStopwatch() { return this.stopWatch; }
-
-  /**
-   * Change the amount of time on the stopwatch
-   *
-   * @param amount  The new stopwatch value
-   */
-  public setStopwatch(amount: number) { this.stopWatch = amount; }
-
-  /** Indicate that an enemy has been created */
-  public onEnemyCreated() { this.enemyWinStats.created += 1; }
-
-  /** Indicate that a hero has been created */
-  public onHeroCreated() { this.heroLoseStats.created += 1; }
-
-  /** Return the number of heroes that have been defeated so far */
-  public getHeroesDefeated() { return this.heroLoseStats.defeated; }
-
-  /** Return the number of heroes that have been defeated so far */
-  public getHeroesCreated() { return this.heroLoseStats.created; }
-
-  /** Return the number of heroes that have arrived at a destination so far */
-  public getDestinationArrivals() { return this.destinationWinStats.arrived; }
-
-  /**
-   * When a playable level is won, we run this code to shut it down, show an
-   * overlay, and then invoke the JetLagManager to choose the next stage
+   * When a playable level is won, we run this code to shut it down and then
+   * either show an overlay (`winSceneBuilder`) or move straight to the next
+   * stage via `stage.switchTo(this.onWin)`.  Does nothing if the level has
+   * already been won or lost.
    */
   public winLevel() {
+    if (this.decided) return;
+    this.decided = true;
     if (this.winSceneBuilder) stage.requestOverlay(this.winSceneBuilder, true);
-    else stage.switchTo(this.onWin.builder, this.onWin.level);
+    else stage.switchTo(this.onWin);
   }
 
   /**
-   * When a playable level is lost, we run this code to shut it down, show an
-   * overlay, and then invoke the JetLagManager to choose the next stage
+   * When a playable level is lost, we run this code to shut it down and then
+   * either show an overlay (`loseSceneBuilder`) or move straight to the next
+   * stage via `stage.switchTo(this.onLose)`.  Does nothing if the level has
+   * already been won or lost.
    */
   public loseLevel() {
+    if (this.decided) return;
+    this.decided = true;
     if (this.loseSceneBuilder) stage.requestOverlay(this.loseSceneBuilder, true);
-    else stage.switchTo(this.onLose.builder, this.onLose.level);
+    else stage.switchTo(this.onLose);
   }
 }

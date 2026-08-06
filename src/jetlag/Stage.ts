@@ -5,17 +5,21 @@ import { AudioLibraryService } from "./Services/AudioLibrary";
 import { MusicComponent } from "./Components/Music";
 import { NetworkDevice } from "./Devices/Network";
 import { ScoreService } from "./Services/Score";
+import { RandomService } from "./Services/Random";
 import { JetLagGameConfig } from "./Config";
 import { ConsoleDevice } from "./Devices/Console";
 import { KeyboardDevice } from "./Devices/Keyboard";
+import { GamepadDevice } from "./Devices/Gamepad";
 import { RendererDevice, SpriteLocation } from "./Devices/Renderer";
 import { AccelerometerMode, AccelerometerDevice } from "./Devices/Accelerometer";
 import { StorageDevice } from "./Devices/Storage";
 import { TiltService } from "./Services/Tilt";
 import { AdvancedCollisionService, BasicCollisionService } from "./Services/Collisions";
 import { ImageLibraryService } from "./Services/ImageLibrary";
-import { ImageSprite } from "./Components/Appearance";
+import { ImageSprite, MIN_Z_INDEX } from "./Components/Appearance";
 import { HtmlPlatformDevice, PlatformDevice } from "./Devices/Platform";
+import { VisibilityDevice } from "./Devices/Visibility";
+import { TextToSpeechDevice } from "./Devices/TextToSpeech";
 
 /**
  * PPM4UF: Pixels per Meter for Unscaled Fonts.  This is an empirically derived
@@ -54,52 +58,111 @@ const PPM4SVG = 75;
 export class Stage {
   /** The physics world in which all actors exist */
   public world!: Scene;
+
   /** A heads-up display */
   public hud!: Scene;
+
   /** The tilt system for the stage */
   readonly tilt: TiltService;
-  /** Any pause, win, or lose scene that supersedes the world and hud */
+
+  /** The current overlay (pause/win/lose) scene, if any */
   public overlay?: Scene;
+
   /** Background color for the stage being drawn.  Defaults to white */
   public backgroundColor = "#ffffff";
+
   /** The background layers */
   public background!: ParallaxSystem;
+
   /** The foreground layers */
   public foreground!: ParallaxSystem;
-  /** Everything related to music that is controlled on one level at a time */
-  public levelMusic: MusicComponent | undefined;
+
+  /** Music that is controlled on one level at a time */
+  public get levelMusic() { return this._levelMusic; }
+
+  /** Music that is controlled on one level at a time */
+  public set levelMusic(m: MusicComponent | undefined) {
+    this._levelMusic?.stop();
+    this._levelMusic = m;
+    m?.play();
+  }
+
+  /** Music that is controlled on one level at a time */
+  private _levelMusic: MusicComponent | undefined;
+
   /** The Score, suitable for use throughout JetLag */
   readonly score = new ScoreService();
+
+  /** A seedable random number generator, for reproducible randomness */
+  readonly random = new RandomService();
+
   /** A console device, for debug messages */
   readonly console: ConsoleDevice;
+
   /** touch controller, providing gesture inputs */
   public gestures!: GestureDevice;
+
   /** keyboard controller, providing key event inputs */
-  readonly keyboard: KeyboardDevice;
+  readonly keyboard = new KeyboardDevice();
+
+  /**
+   * Up to four gamepad slots, matching `navigator.getGamepads()`'s indices.
+   * Each entry always exists (check `.connected` before using one), so
+   * `stage.gamepads[0]` never throws even if nothing's plugged in yet.
+   */
+  readonly gamepads: GamepadDevice[] = [0, 1, 2, 3].map(i => new GamepadDevice(i));
+
   /** access to the the device's accelerometer */
   readonly accelerometer: AccelerometerDevice;
+
   /** rendering support, for drawing to the screen */
   readonly renderer: RendererDevice;
+
   /** A library of sound and music files */
   readonly musicLibrary: AudioLibraryService;
+
   /** A library of images */
-  readonly imageLibrary: ImageLibraryService;
+  readonly imageLibrary = new ImageLibraryService();
+
   /** Background music that doesn't stop when the level changes */
-  public gameMusic: MusicComponent | undefined;
+  public get gameMusic() { return this._gameMusic; }
+
+  /** Background music that doesn't stop when the level changes */
+  public set gameMusic(m: MusicComponent | undefined) {
+    this._gameMusic?.stop();
+    this._gameMusic = m;
+  }
+
+  /** Background music that doesn't stop when the level changes */
+  private _gameMusic: MusicComponent | undefined;
+
   /** Persistent storage + volatile storage for a game session and a level */
-  readonly storage: StorageDevice;
+  readonly storage = new StorageDevice();
+
   /** Network interface */
   readonly network: NetworkDevice = new NetworkDevice();
+
+  /** Page visibility detection support */
+  readonly visibility = new VisibilityDevice();
+
+  /** Text-to-speech support */
+  readonly speech: TextToSpeechDevice = new TextToSpeechDevice();
+
   /** Scaling ratio for fonts, relative to PPM4UF */
   fontScaling = 1;
+
   /** The screen width (dummy value... gets computed early) */
   screenWidth = 0;
+
   /** The screen height (dummy value... gets computed early) */
   screenHeight = 0;
+
   /** The pixel-meter ratio (dummy value... gets computed early) */
   pixelMeterRatio = 0;
+
   /** The scaling ratio for SVG coords, relative to PPM4SVG */
   svgScaling = 1;
+
   /** Code to run at the end of the next render step (used for screenshots) */
   private afterRender?: () => void;
 
@@ -112,18 +175,15 @@ export class Stage {
    * @param requestScreenshot Should the overlay delay for a cycle or two, so a
    *                          screenshot can be taken first?
    */
-  public requestOverlay(builder: (overlay: Scene, screenshot?: ImageSprite) => void, requestScreenshot: boolean) {
+  public requestOverlay(builder: (overlay: Scene, screenshot?: ImageSprite) => void, requestScreenshot: boolean = false) {
     if (!requestScreenshot) {
       this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionService());
       builder(this.overlay, undefined);
       return;
     }
 
-    // clear the last screenshot, request a new one
-    if (this.renderer.mostRecentScreenShot) {
-      this.renderer.mostRecentScreenShot.destroy(true);
-      this.renderer.mostRecentScreenShot = undefined;
-    }
+    // clear the last screenshot (the setter destroys it), request a new one
+    this.renderer.mostRecentScreenShot = undefined;
     this.renderer.screenshotRequested = true;
 
     let action = () => {
@@ -132,7 +192,7 @@ export class Stage {
           width: this.screenWidth / this.pixelMeterRatio,
           height: this.screenHeight / this.pixelMeterRatio,
           img: this.renderer.mostRecentScreenShot,
-          z: -2
+          z: MIN_Z_INDEX
         });
         this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionService());
         builder(this.overlay, screenshot);
@@ -149,6 +209,15 @@ export class Stage {
   public clearOverlay() {
     this.overlay = undefined;
     this.renderer.resetOverlay();
+  }
+
+  /**
+   * Update every gamepad slot from the browser's live gamepad state, and fire
+   * any button handlers whose pressed state changed
+   */
+  public pollGamepads() {
+    const raw = navigator.getGamepads?.() ?? [];
+    this.gamepads.forEach(g => g.poll(raw[g.index]));
   }
 
   /**
@@ -177,13 +246,16 @@ export class Stage {
     // If we've got an overlay, don't render the world
     if (this.overlay) return;
 
-    // Only set the color and play music if we don't have an overlay showing
-    this.renderer.setFrameColor(this.backgroundColor as any);
-    this.levelMusic?.play();
+    // Only set the color if we don't have an overlay showing
+    this.renderer.setFrameColor(this.backgroundColor);
 
-    // Update the win/lose countdown timers and the stopwatch.  This might end
-    // the level.
+    // Update the win/lose countdown timers and the stopwatch.  This might
+    // end the level via `switchTo()`, which synchronously replaces
+    // `this.world`/`background`/`foreground` and runs the new level's
+    // builder.  If that happens, make sure we don't keep rendering.
+    const worldBeforeTick = this.world;
     this.score.onClockTick(elapsedMs);
+    if (this.overlay || this.world !== worldBeforeTick) return;
 
     // handle accelerometer stuff... note that accelerometer is effectively
     // disabled during an overlay... we could change that by moving this to the
@@ -217,9 +289,7 @@ export class Stage {
    */
   public renderHud(elapsedMs: number) {
     // If we've got an overlay, don't draw the HUD
-    if (this.overlay) {
-      return;
-    }
+    if (this.overlay) return;
 
     this.hud.physics!.world.Step(elapsedMs / 1000, { velocityIterations: 8, positionIterations: 3 });
     this.hud.runRendertimeEvents();
@@ -231,18 +301,22 @@ export class Stage {
    * Before we call programmer code to load a new stage, we call this to
    * ensure that everything is in a clean state.
    */
-  public switchTo(builder: (index: number, stage: Stage) => void, index: number) {
-    // reset music
-    this.levelMusic?.stop();
+  public switchTo(builder: () => void) {
+    // clear any overlay left over from the previous stage
+    this.clearOverlay();
+
+    // reset music (the setter stops whatever was playing)
     this.levelMusic = undefined;
 
     // reset score and storage
     this.score.reset();
     this.storage.clearLevelStorage();
 
-    // reset keyboard and gesture handlers, since they aren't part of the world
+    // reset keyboard, gesture, and gamepad handlers, since they aren't part of
+    // the world
     this.keyboard.clearHandlers();
     this.gestures.reset();
+    this.gamepads.forEach(g => g.clearHandlers());
 
     // reset other fields to default values
     this.backgroundColor = "#ffffff";
@@ -259,7 +333,7 @@ export class Stage {
     this.tilt.reset();
 
     // Now run the level
-    builder(index, this);
+    builder();
   }
 
   /**
@@ -271,24 +345,23 @@ export class Stage {
    *                  game
    * @param platform  Platform-specific features
    */
-  constructor(readonly config: JetLagGameConfig, private domId: string, private builder: (level: number) => void, readonly platform: PlatformDevice) {
+  constructor(readonly config: JetLagGameConfig, private domId: string, private builder: () => void, readonly platform: PlatformDevice) {
     this.console = new ConsoleDevice(config);
 
     // Check if the config needs to be adapted, then check for errors
-    if (config.aspectRatio.width <= 0 || config.aspectRatio.height <= 0)
+    if (config.aspectRatio.width <= 0 || config.aspectRatio.height <= 0) {
       this.console.log("Invalid `aspectRatio` in game config object");
+    }
     this.computeScreenDimensions();
 
-    // Configure the services
-    this.storage = new StorageDevice();
+    // Configure the services that depend on `cfg` or `computeScreenDimensions`
     this.musicLibrary = new AudioLibraryService(config);
-    this.keyboard = new KeyboardDevice();
     this.accelerometer = new AccelerometerDevice(config.accelerometerMode ?? AccelerometerMode.DISABLED);
     this.renderer = new RendererDevice(this.screenWidth, this.screenHeight, domId, this.config.hitBoxes);
-    this.imageLibrary = new ImageLibraryService(config);
 
-    // make sure the volume is reset to its old value
-    this.musicLibrary.resetMusicVolume(parseInt(this.storage.getPersistent("volume") ?? "1"));
+    // Start at half volume.  Games that want persistent volume controls can
+    // read/write their own storage key and call resetMusicVolume() themselves.
+    this.musicLibrary.resetMusicVolume(0.5);
 
     // Configure any systems that should be running
     this.tilt = new TiltService;
@@ -298,13 +371,31 @@ export class Stage {
    * Load any images that need to be loaded, then launch the game.  This is the
    * last step in starting a game.
    */
-  public begin() {
-    // Load the images asynchronously, then start rendering
-    this.imageLibrary.loadAssets(() => {
-      this.gestures = new GestureDevice(this.domId, this);
-      this.switchTo(this.builder, 1);
-      this.renderer.startRenderLoop();
-    });
+  public async begin() {
+    // Finish initializing the Pixi renderer (Pixi v8 requires this be async)
+    await this.renderer.initialize();
+
+    const resources = this.config.resources;
+    const prefix = resources?.prefix ?? "";
+    const loadingScreenFonts = resources?.loadingScreenFonts ?? [];
+    const loadingScreenImageNames = resources?.loadingScreenImageNames ?? [];
+
+    if (loadingScreenFonts.length > 0 || loadingScreenImageNames.length > 0) {
+      // A loading screen is configured: load just enough to draw it and
+      // start the builder
+      await this.imageLibrary.loadFonts(loadingScreenFonts, prefix);
+      await this.imageLibrary.loadImageList(loadingScreenImageNames, prefix);
+    } else {
+      // No loading screen configured: load everything up front, so that simple
+      // games and tutorial demos don't need to deal with a loading screen
+      if (resources?.videoNames) await this.imageLibrary.loadVideos(resources.videoNames, prefix);
+      await this.imageLibrary.loadFonts(resources?.fonts ?? [], prefix);
+      await this.imageLibrary.loadImageList(resources?.imageNames ?? [], prefix);
+    }
+
+    this.gestures = new GestureDevice(this.domId, this);
+    this.switchTo(this.builder);
+    this.renderer.startRenderLoop();
   }
 
   /**
@@ -317,15 +408,10 @@ export class Stage {
     let targetRatio = this.config.aspectRatio.width / this.config.aspectRatio.height;
     // Get the maximum x and y, based on the browser dimensions
     let screen = { x: window.innerWidth, y: window.innerHeight };
-    if (screen.y * targetRatio < screen.x) {
-      // vertical is constraining
-      this.screenHeight = screen.y;
-      this.screenWidth = screen.y * targetRatio;
-    } else {
-      // Horizontal is constraining
-      this.screenWidth = screen.x;
-      this.screenHeight = screen.x / targetRatio;
-    }
+    // Whichever dimension is more constraining determines the height; the
+    // other dimension follows from `targetRatio`.
+    this.screenHeight = Math.min(screen.y, screen.x / targetRatio);
+    this.screenWidth = this.screenHeight * targetRatio;
     // Compute the pixel/meter ratio and the font scaling ratio.
     // NB: A font scale of 1 corresponds to a 100 pixel/meter ratio
     this.pixelMeterRatio = this.screenWidth / this.config.aspectRatio.width;
@@ -344,25 +430,16 @@ export class Stage {
 /**
  * Start a game
  *
- * NB:  The `beforeBegin` method is only used when generating demos for the
- *      book, and `platform` is only used when deploying to mobile or desktop.
- *      If you need to use `platform`, then you can provide `()=>{}` as the
- *      beforeBegin function.
+ * NB: `platform` is for future use with mobile / desktop deploy targets.
  *
- * TODO: Pixi.js v8 strongly recommends using async/await.
- *
- * @param domId       The name of the DIV into which the game should be placed
- * @param config      The game configuration object
- * @param builder     A function for building the first visible level of the
- *                    game
- * @param beforeBegin A function to run before the builder runs.  This is used
- *                    by the book build system, and should be ()=>{} otherwise.
- * @param platform    Platform-specific features.  Defaults to HTML5
+ * @param domId     The name of the DIV into which the game should be placed
+ * @param config    The game configuration object
+ * @param builder   A function for building the first visible level of the game
+ * @param platform  Platform-specific features.  Defaults to HTML5
  */
-export function initializeAndLaunch(domId: string, config: JetLagGameConfig, builder: (level: number) => void, beforeBegin: () => void = () => { }, platform: PlatformDevice = new HtmlPlatformDevice()) {
+export async function initializeAndLaunch(domId: string, config: JetLagGameConfig, builder: () => void, platform: PlatformDevice = new HtmlPlatformDevice()) {
   stage = new Stage(config, domId, builder, platform);
-  beforeBegin();
-  stage.begin();
+  await stage.begin();
 }
 
 /** A global reference to the Stage, suitable for use throughout JetLag */

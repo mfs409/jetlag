@@ -27,32 +27,53 @@ export class Path {
 
   /**
    * Return a copy of the ith point in the path.  We return a copy, so that the
-   * caller can use the point
+   * caller can use the point.  `i` wraps around in both directions, so it's
+   * always safe to pass, e.g., -1 (the last point) or `length` (the first
+   * point again).
    *
    * @param i The index of the point to return (0-based)
    */
   public getPoint(i: number) {
-    while (i < 0) i += this.points.length;
-    return new b2Vec2(this.points[i].x, this.points[i].y);
+    let idx = ((i % this.points.length) + this.points.length) % this.points.length;
+    return new b2Vec2(this.points[idx].x, this.points[idx].y);
   }
 
-  /** Return the number of points in this path */
-  public getNumPoints() { return this.points.length; }
+  /** The number of points in this path */
+  public get length() { return this.points.length; }
 }
 
 /** A rule for moving along a fixed path */
 export class PathMovement {
-  /** The Actor to which this movement is attached */
+  /** The path on which to move */
+  private path: Path;
+
+  /** The speed at which the actor should move */
+  private velocity: number;
+
+  /** Should the path repeat infinitely, or just run once? */
+  private loop: boolean;
+
+  /**
+   * Code to run each time a waypoint of the path is reached.  It will be
+   * given the index of the *next* waypoint.
+   */
+  private waypointCallback?: (which: number) => void;
+
+  /** The RigidBodyComponent to which this movement is attached */
   public set rigidBody(body: RigidBodyComponent | undefined) {
     this._rigidBody = body;
     // This cannot be a static body
-    if (this.rigidBody?.body.GetType() == b2BodyType.b2_staticBody)
+    if (this.rigidBody?.body.GetType() == b2BodyType.b2_staticBody) {
+      stage.console.log(`Warning: You have attached a PathMovement to an actor with a static body.  Switching to kinematic.\n ${Error().stack}`);
       this.rigidBody.body.SetType(b2BodyType.b2_kinematicBody);
+    }
     // A path with <2 points doesn't make sense...
-    if (this.path.getNumPoints() < 2) this.halt();
+    if (this.path.length < 2) this.halt();
     else this.start();
   }
+  /** The RigidBodyComponent to which this movement is attached */
   public get rigidBody() { return this._rigidBody; }
+  /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
 
   /** Is the path still running? */
@@ -62,26 +83,38 @@ export class PathMovement {
   private nextIndex = -1;
 
   /**
-   * Skip forward to one of the waypoints of the path.  Fails silently if the
-   * given waypoint is out of bounds for the current path length.
+   * Code to run on the very first render step after construction.  This lets us
+   * "skip_to" after construction, once the rigidBody is assigned.
+   */
+  private onFirstRender?: () => void;
+
+  /**
+   * Skip forward to one of the waypoints of the path.  Warns and does
+   * nothing if the given waypoint is out of bounds for the current path
+   * length.
    *
    * @param waypoint  The waypoint to skip to.
    */
-  public skip_to(waypoint: number) {
+  private skip_to(waypoint: number) {
     this.done = false;
     if (waypoint == 0) {
       this.start();
     }
-    else if (waypoint >= this.path.getNumPoints()) {
-      return; // Error: point out of bounds
+    else if (waypoint >= this.path.length) {
+      stage.console.log(`Error: skip_to(${waypoint}) is out of bounds for a path with ${this.path.length} points`);
+      return;
     }
     else if (this.rigidBody) {
       // Move to the waypoint, then start moving to next
       let transform = new b2Transform().SetPositionAngle(this.path.getPoint(waypoint), this._rigidBody!.body.GetAngle());
       this.rigidBody.body.SetTransform(transform);
+      if (this.waypointCallback) this.waypointCallback(waypoint); // Run callback for point reached
       this.nextIndex = waypoint + 1;
-      if (this.nextIndex == this.path.getNumPoints())
-        this.nextIndex = 1;
+      if (this.nextIndex == this.path.length) {
+        if (this.loop) this.start(); // start over for the looping case
+        else this.halt(); // halt the path for the non-looping case
+        return;
+      }
       this.goToNext();
     }
   }
@@ -91,8 +124,7 @@ export class PathMovement {
     if (!this.rigidBody) return;
     this.done = true;
     // Stop the movement
-    this.rigidBody.breakStickyJoints();
-    this.rigidBody.body.SetLinearVelocity({ x: 0, y: 0 });
+    this.rigidBody.setVelocity(0, 0);
   }
 
   /** Update the actor to start moving to the next point in the path */
@@ -101,8 +133,7 @@ export class PathMovement {
     // convert from the point to a unit vector, then set velocity
     p.Subtract(this.rigidBody!.getCenter()).Normalize();
     p.Scale(this.velocity);
-    this.rigidBody!.breakStickyJoints();
-    this.rigidBody!.body.SetLinearVelocity(p);
+    this.rigidBody!.setVelocity(p.x, p.y);
     if (this.waypointCallback) this.waypointCallback(this.nextIndex - 1);
   }
 
@@ -120,48 +151,37 @@ export class PathMovement {
   /**
    * Create a policy for moving an actor along a fixed path
    *
-   * @param path              The path on which to move
-   * @param velocity          The speed at which the actor should move
-   * @param loop              Should the path repeat infinitely, or just run
-   *                          once?
-   * @param waypointCallback  Code to run each time a waypoint of the path is
-   *                          reached.  It will be given the index of the *next*
-   *                          waypoint.
+   * @param cfg.path              The path on which to move
+   * @param cfg.velocity          The speed at which the actor should move
+   * @param cfg.loop              Should the path repeat infinitely, or just
+   *                               run once?
+   * @param cfg.waypointCallback  Code to run each time a waypoint of the path
+   *                               is reached.  It will be given the index of
+   *                               the *next* waypoint.
+   * @param cfg.startPoint        The point on the path from which to start
    */
-  constructor(private path: Path, private velocity: number, private loop: boolean, private waypointCallback?: (which: number) => void) {
-    if (path.getNumPoints() < 2) {
-      stage.console.log("Error: path must have at least two points");
-      this.halt();
-    } else {
-      this.start();
-    }
-  }
-
-  /**
-   * Assign a new path to an Actor
-   *
-   * @param path      The new path to follow
-   * @param velocity  The velocity while traveling the path
-   * @param loop      Should it loop?
-   */
-  public resetPath(path: Path, velocity: number, loop: boolean) {
-    this.halt();
-    this.nextIndex = -1;
-    this.done = false;
-    this.path = path;
-    this.velocity = velocity;
-    this.loop = loop;
-    if (this.path.getNumPoints() < 2) {
-      stage.console.log("Error: path must have at least two points");
-    } else {
-      this.start();
-    }
+  constructor(cfg: { path: Path, velocity: number, loop: boolean, waypointCallback?: (which: number) => void, startPoint?: number }) {
+    this.path = cfg.path;
+    this.velocity = cfg.velocity;
+    this.loop = cfg.loop;
+    this.waypointCallback = cfg.waypointCallback;
+    // NB: We don't call halt()/start() here -- both are no-ops until
+    // `rigidBody` is actually attached (see its setter below), which
+    // hasn't happened yet at construction time.  It re-runs this same
+    // `path.length < 2` check itself once a body is attached.
+    if (cfg.path.length < 2) stage.console.log("Error: path must have at least two points");
+    if (cfg.startPoint !== undefined) this.onFirstRender = () => this.skip_to(cfg.startPoint!);
   }
 
   /** Figure out where we need to go next when driving a path */
   prerender(_elapsedMs: number, _camera: CameraService) {
     // quit if we're done and we don't loop
     if (this.done || !this.rigidBody) return;
+
+    if (this.onFirstRender) {
+      this.onFirstRender();
+      this.onFirstRender = undefined;
+    }
 
     // if we haven't passed the next goal, don't set up a new goal
     let total = this.path.getPoint(this.nextIndex - 1).Subtract(this.path.getPoint(this.nextIndex));
@@ -173,7 +193,7 @@ export class PathMovement {
 
     // Update the goal, and restart, stop, or start moving toward it
     this.nextIndex++;
-    if (this.nextIndex == this.path.getNumPoints()) {
+    if (this.nextIndex == this.path.length) {
       if (this.loop) this.start(); // start over for the looping case
       else this.halt(); // halt the path for the non-looping case
       return;
@@ -184,14 +204,18 @@ export class PathMovement {
 
 /** A rule for moving based on Tilt / Accelerometer  */
 export class TiltMovement {
-  /** The Actor to which this movement is attached */
+  /** The RigidBodyComponent to which this movement is attached */
   public set rigidBody(body: RigidBodyComponent | undefined) {
     this._rigidBody = body;
     // this must be a dynamic body, so that forces will work on it
-    if (this.rigidBody?.body.GetType() != b2BodyType.b2_dynamicBody)
+    if (this.rigidBody?.body.GetType() != b2BodyType.b2_dynamicBody) {
+      stage.console.log(`Warning: You have attached a TiltMovement to an actor whose body is not dynamic.  Switching to dynamic.\n ${Error().stack}`);
       this.rigidBody?.body.SetType(b2BodyType.b2_dynamicBody);
+    }
   }
+  /** The RigidBodyComponent to which this movement is attached */
   public get rigidBody() { return this._rigidBody; }
+  /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
 
   /** Construct a policy for moving an actor via tilt */
@@ -199,42 +223,22 @@ export class TiltMovement {
 
   /** Do any last-minute adjustments related to the movement */
   prerender(_elapsedMs: number, _camera: CameraService) { }
-
-  /** Update the Y velocity, without affecting the X velocity */
-  updateYVelocity(v: number) {
-    if (!this.rigidBody?.body.IsEnabled()) return;
-    this.rigidBody.breakStickyJoints();
-    this.rigidBody.body.SetLinearVelocity({ x: this.rigidBody?.body.GetLinearVelocity().x ?? 0, y: v });
-  }
-
-  /** Update the X velocity, without affecting the Y velocity */
-  updateXVelocity(v: number) {
-    if (!this.rigidBody?.body.IsEnabled()) return;
-    this.rigidBody.breakStickyJoints();
-    this.rigidBody.body.SetLinearVelocity({ x: v, y: this.rigidBody?.body.GetLinearVelocity().y ?? 0 });
-  }
-
-  /** Update the X and Y velocity */
-  updateVelocity(v: b2Vec2) {
-    if (this.rigidBody?.body.IsEnabled()) this.rigidBody.body.SetLinearVelocity(v);
-  }
-
-  /** Apply a force to the actor */
-  updateForce(v: b2Vec2) {
-    if (this.rigidBody?.body.IsEnabled()) this.rigidBody.body.ApplyForceToCenter(v);
-  }
 }
 
 /** A rule for moving by chasing some other actor */
 export class ChaseMovement {
-  /** The Actor to which this movement is attached */
+  /** The RigidBodyComponent to which this movement is attached */
   public set rigidBody(body: RigidBodyComponent | undefined) {
     this._rigidBody = body;
     // This cannot be a static body
-    if (this.rigidBody?.body.GetType() == b2BodyType.b2_staticBody)
+    if (this.rigidBody?.body.GetType() == b2BodyType.b2_staticBody) {
+      stage.console.log(`Warning: You have attached a ChaseMovement to an actor with a static body.  Switching to kinematic.\n ${Error().stack}`);
       this.rigidBody.body.SetType(b2BodyType.b2_kinematicBody);
+    }
   }
+  /** The RigidBodyComponent to which this movement is attached */
   public get rigidBody() { return this._rigidBody; }
+  /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
@@ -248,6 +252,10 @@ export class ChaseMovement {
     let x = this.target.rigidBody!.body.GetPosition().x - this.rigidBody.body.GetPosition().x;
     let y = this.target.rigidBody!.body.GetPosition().y - this.rigidBody.body.GetPosition().y;
     let denom = Math.sqrt(x * x + y * y);
+    // If the chaser and target are exactly on top of each other, there's no
+    // direction to normalize toward -- leave velocity alone this tick,
+    // rather than dividing by zero and setting a NaN velocity.
+    if (denom === 0) return;
     x /= denom;
     y /= denom;
 
@@ -266,8 +274,7 @@ export class ChaseMovement {
       x *= this.multiplier;
     }
     // apply velocity
-    this.rigidBody?.breakStickyJoints();
-    this.rigidBody?.body.SetLinearVelocity({ x, y });
+    this.rigidBody?.setVelocity(x, y);
   }
 
   /** The actor to chase */
@@ -303,166 +310,165 @@ export class ChaseMovement {
 
 /** A rule for hovering at a fixed camera position */
 export class HoverMovement {
-  /** The Actor to which this movement is attached */
-  public set rigidBody(body: RigidBodyComponent | undefined) { this._rigidBody = body; }
-  public get rigidBody() { return this._rigidBody; }
-  private _rigidBody?: RigidBodyComponent;
+  /** The RigidBodyComponent to which this movement is attached */
+  public rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
   prerender(_elapsedMs: number, camera: CameraService) {
     if (!this.rigidBody) return;
     if (!this.hover) return;
     let pmr = stage.pixelMeterRatio;
-    this.hover.Set(this.hoverX * pmr, this.hoverY * pmr);
-    let a = camera.screenToMeters(this.hover.x, this.hover.y);
+    this.hover.Set(this.screenX * pmr, this.screenY * pmr);
+    let a = camera.screenToMeters({ x: this.hover.x, y: this.hover.y });
     this.hover.Set(a.x, a.y);
-    let transform = this.rigidBody.body.GetTransform().Clone();
+    let transform = new b2Transform();
     transform.SetPositionAngle(this.hover, this.rigidBody.body.GetAngle());
     this.rigidBody.body.SetTransform(transform);
   }
+
+  /** The X coordinate (in screen pixels, not meters) where the actor should appear */
+  private screenX: number;
+  /** The Y coordinate (in screen pixels, not meters) where the actor should appear */
+  private screenY: number;
 
   /**
    * Indicate that this actor should hover at a specific location on the screen,
    * rather than being placed at some point on the level itself. Note that the
    * coordinates to this command are the center position of the hovering actor.
    * Also, be careful about using hover with zoom... hover is relative to screen
-   * coordinates (pixels), not world coordinates, so it's going to look funny to
-   * use this with zoom
+   * coordinates (pixels, unlike almost everywhere else in JetLag, which uses
+   * meters), not world coordinates, so it's going to look funny to use this
+   * with zoom
    *
-   * @param hoverX the X coordinate (in pixels) where the actor should appear
-   * @param hoverY the Y coordinate (in pixels) where the actor should appear
+   * @param cfg.screenX The X coordinate (in screen pixels) where the actor
+   *                    should appear
+   * @param cfg.screenY The Y coordinate (in screen pixels) where the actor
+   *                    should appear
    */
-  constructor(private hoverX: number, private hoverY: number) {
+  constructor(cfg: { screenX: number, screenY: number }) {
+    this.screenX = cfg.screenX;
+    this.screenY = cfg.screenY;
     let pmr = stage.pixelMeterRatio;
-    this.hover = new b2Vec2(hoverX * pmr, hoverY * pmr);
+    this.hover = new b2Vec2(cfg.screenX * pmr, cfg.screenY * pmr);
   }
 
   /** A vector for computing hover placement */
   private hover?: b2Vec2;
+}
 
-  /** Stop hovering */
-  public stopHover() { this.hover = undefined }
+/**
+ * Toss a projectile. This is for tossing in a single, predetermined
+ * direction.  This method just handles movement.  You shouldn't call it on
+ * your own.  Use ThrowableBehavior's tossFixedDir() method instead.
+ *
+ * @param actor     The projectile actor being tossed
+ * @param fromX     The initial X position
+ * @param fromY     The initial Y position
+ * @param velocityX The X velocity of the projectile when it is tossed
+ * @param velocityY The Y velocity of the projectile when it is tossed
+ */
+export function tossFixedDir(actor: Actor, fromX: number, fromY: number, velocityX: number, velocityY: number) {
+  // Move the projectile and give it velocity
+  let transform = new b2Transform();
+  transform.SetPositionAngle(new b2Vec2(fromX, fromY), 0);
+  actor.rigidBody.body.SetTransform(transform);
+  actor.rigidBody.setVelocity(velocityX, velocityY);
+}
+
+/**
+ * Toss a projectile. This is for tossing in the direction of a specified point.
+ * This method just handles movement.  You shouldn't call it on your own.  Use
+ * ThrowableBehavior's tossAt() method instead.
+ *
+ * @param actor               The projectile actor being tossed
+ * @param rangeFromX          X coordinate of the point where the projectile
+ *                            should actually spawn (the actor's center plus its
+ *                            offset)
+ * @param rangeFromY          Y coordinate of the point where the projectile
+ *                            should actually spawn (the actor's center plus its
+ *                            offset)
+ * @param fromX               X coordinate of the center of the actor doing the
+ *                            toss
+ * @param fromY               Y coordinate of the center of the actor doing the
+ *                            toss
+ * @param toX                 X coordinate of the point at which to toss
+ * @param toY                 Y coordinate of the point at which to toss
+ * @param offsetX             The x distance between the center of the
+ *                            projectile and the center of the actor tossing the
+ *                            projectile
+ * @param offsetY             The y distance between the center of the
+ *                            projectile and the center of the actor tossing the
+ *                            projectile
+ * @param multiplier          A multiplier on projectile speed
+ * @param fixedVectorVelocity A fixed velocity for all projectiles
+ * @param rotateVectorToss    Should projectiles be rotated in the direction
+ *                            they are tossed?
+ */
+export function tossAt(actor: Actor, rangeFromX: number, rangeFromY: number, fromX: number, fromY: number, toX: number, toY: number, offsetX: number, offsetY: number, multiplier: number = 1, fixedVectorVelocity?: number, rotateVectorToss?: boolean) {
+  let transform = new b2Transform();
+  transform.SetPositionAngle(new b2Vec2(rangeFromX, rangeFromY), 0);
+  actor.rigidBody.body.SetTransform(transform);
+
+  // give the projectile velocity
+  let dX = toX - fromX - offsetX;
+  let dY = toY - fromY - offsetY;
+  if (fixedVectorVelocity != undefined) {
+    // compute a unit vector
+    let hypotenuse = Math.sqrt(dX * dX + dY * dY);
+    let tmpX = dX / hypotenuse;
+    let tmpY = dY / hypotenuse;
+    // multiply by fixed velocity
+    tmpX *= fixedVectorVelocity!;
+    tmpY *= fixedVectorVelocity!;
+    actor.rigidBody.setVelocity(tmpX, tmpY);
+  }
+  else {
+    // compute absolute vector, multiply by dampening factor
+    let tmpX = dX * multiplier;
+    let tmpY = dY * multiplier;
+    actor.rigidBody.setVelocity(tmpX, tmpY);
+  }
+
+  // rotate the projectile
+  if (rotateVectorToss) {
+    let angle = Math.atan2(toY - fromY - offsetY, toX - fromX - offsetX) - Math.atan2(-1, 0);
+    actor.rigidBody.rotation = angle;
+  }
 }
 
 /** A rule for how projectiles move */
 export class ProjectileMovement {
-  /** The body of the actor to which this movement is attached */
+  /** The RigidBodyComponent to which this movement is attached */
   public set rigidBody(body: RigidBodyComponent | undefined) {
     this._rigidBody = body;
     // this can't be a static body
     if (!this.rigidBody) return;
-    if (this.rigidBody.body.GetType() == b2BodyType.b2_staticBody)
+    if (this.rigidBody.body.GetType() == b2BodyType.b2_staticBody) {
+      stage.console.log(`Warning: You have attached a ProjectileMovement to an actor with a static body.  Switching to kinematic.\n ${Error().stack}`);
       this.rigidBody?.body.SetType(b2BodyType.b2_kinematicBody);
+    }
     this.rigidBody.body.SetBullet(true);
-    this.rigidBody.body.SetFixedRotation(true); // disable rotation...
+    this.rigidBody.setRotatable(false);
   }
+  /** The RigidBodyComponent to which this movement is attached */
+  public get rigidBody() { return this._rigidBody; }
+  /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
-
-  /* A multiplier on projectile speed */
-  multiplier: number;
-
-  /** A fixed velocity for all projectiles */
-  fixedVectorVelocity?: number;
-
-  /** Should projectiles be rotated in the direction they are tossed? */
-  rotateVectorToss?: boolean;
 
   /** Do any last-minute adjustments related to the movement */
   prerender(_elapsedMs: number, _camera: CameraService) { }
-
-  /** Set a new velocity for the actor */
-  updateVelocity(x: number, y: number) {
-    this._rigidBody?.breakStickyJoints();
-    this._rigidBody?.body.SetLinearVelocity({ x, y });
-  }
-
-  /**
-   * Construct a movement policy that is appropriate for projectiles
-   *
-   * @param cfg.multiplier          A multiplier on projectile speed
-   * @param cfg.fixedVectorVelocity A fixed velocity for all projectiles
-   * @param cfg.rotateVectorToss    Should projectiles be rotated in the
-   *                                direction they are tossed?
-   */
-  constructor(cfg: { multiplier?: number, fixedVectorVelocity?: number, rotateVectorToss?: boolean } = {}) {
-    this.multiplier = cfg.multiplier ?? 1;
-    this.fixedVectorVelocity = cfg.fixedVectorVelocity;
-    this.rotateVectorToss = cfg.rotateVectorToss;
-  }
-
-  /**
-   * Toss a projectile. This is for tossing in a single, predetermined
-   * direction.  This method just handles movement.  You shouldn't call it on
-   * your own.  Use the Role's tossFrom() method instead.
-   *
-   * @param from      The initial position
-   * @param velocityX The X velocity of the projectile when it is tossed
-   * @param velocityY The Y velocity of the projectile when it is tossed
-   */
-  public tossFrom(from: b2Vec2, velocityX: number, velocityY: number) {
-    // Move the projectile and give it velocity
-    let transform = new b2Transform();
-    transform.SetPositionAngle(from, 0);
-    this._rigidBody?.body.SetTransform(transform);
-    this.updateVelocity(velocityX, velocityY);
-  }
-
-  /**
-   * Toss a projectile. This is for tossing in the direction of a specified
-   * point.  This method just handles movement.  You shouldn't call it on your
-   * own.  Use the Role's tossAt() method instead.
-   *
-   * @param fromX   X coordinate of the center of the actor doing the toss
-   * @param fromY   Y coordinate of the center of the actor doing the toss
-   * @param toX     X coordinate of the point at which to toss
-   * @param toY     Y coordinate of the point at which to toss
-   * @param offsetX The x distance between the center of the projectile and
-   *                the center of the actor tossing the projectile
-   * @param offsetY The y distance between the center of the projectile and
-   *                the center of the actor tossing the projectile
-   */
-  public tossAt(from: b2Vec2, fromX: number, fromY: number, toX: number, toY: number, offsetX: number, offsetY: number) {
-    let transform = new b2Transform();
-    transform.SetPositionAngle(from, 0);
-    this._rigidBody?.body.SetTransform(transform);
-
-    // give the projectile velocity
-    let dX = toX - fromX - offsetX;
-    let dY = toY - fromY - offsetY;
-    if (this.fixedVectorVelocity) {
-      // compute a unit vector
-      let hypotenuse = Math.sqrt(dX * dX + dY * dY);
-      let tmpX = dX / hypotenuse;
-      let tmpY = dY / hypotenuse;
-      // multiply by fixed velocity
-      tmpX *= this.fixedVectorVelocity!;
-      tmpY *= this.fixedVectorVelocity!;
-      this.updateVelocity(tmpX, tmpY);
-    }
-    else {
-      // compute absolute vector, multiply by dampening factor
-      let tmpX = dX * this.multiplier;
-      let tmpY = dY * this.multiplier;
-      this.updateVelocity(tmpX, tmpY);
-    }
-
-    // rotate the projectile
-    if (this.rotateVectorToss) {
-      let angle = Math.atan2(toY - fromY - offsetY, toX - fromX - offsetX) - Math.atan2(-1, 0);
-      this._rigidBody?.setRotation(angle);
-    }
-  }
 }
 
-/** A rule for moving based on gravitational forces */
-export class GravityMovement {
-  /** The Actor to which this movement is attached */
+/** A rule for things that move, detect collisions, and experience forces */
+export class DynamicBodyMovement {
+  /** The RigidBodyComponent to which this movement is attached */
   public set rigidBody(body: RigidBodyComponent | undefined) {
     this._rigidBody = body;
-    // this must be a dynamic body
     this.rigidBody?.body.SetType(b2BodyType.b2_dynamicBody);
   }
+  /** The RigidBodyComponent to which this movement is attached */
   public get rigidBody() { return this._rigidBody; }
+  /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
@@ -470,183 +476,47 @@ export class GravityMovement {
 }
 
 /**
- * The manual movement component doesn't do anything by default, but provides
- * ways of moving the actor, so that code attached to input events (keyboard,
- * mouse, gesture) can make the actor move in appropriate ways.
+ * A rule for things that move, but don't detect collisions or experience forces
  */
-export class ManualMovement {
-  /** The Actor to which this movement is attached */
+export class KinematicBodyMovement {
+  /** The RigidBodyComponent to which this movement is attached */
   public set rigidBody(body: RigidBodyComponent | undefined) {
     this._rigidBody = body;
-    // this can't have a static body
-    if (this.rigidBody?.body.GetType() != b2BodyType.b2_dynamicBody)
-      this.rigidBody?.body.SetType(this.gravityAffectsIt ? b2BodyType.b2_dynamicBody : b2BodyType.b2_kinematicBody);
+    this.rigidBody?.body.SetType(b2BodyType.b2_kinematicBody);
   }
+  /** The RigidBodyComponent to which this movement is attached */
   public get rigidBody() { return this._rigidBody; }
-  private _rigidBody?: RigidBodyComponent;
-
-  /** Does gravity affect this Actor? */
-  private gravityAffectsIt: boolean;
-
-  /** Does the actor rotate based on the direction it is moving? */
-  private rotationByDirection: boolean;
-
-  /**
-   * Construct a ManualMovement component
-   *
-   * @param cfg.gravityAffectsIt  Does gravity affect this actor?
-   * @param cfg.rotateByDirection Should the actor rotate based on its direction
-   *                              of movement?
-   */
-  constructor(cfg: { gravityAffectsIt?: boolean, rotateByDirection?: boolean } = {}) {
-    this.gravityAffectsIt = !!cfg.gravityAffectsIt;
-    this.rotationByDirection = !!cfg.rotateByDirection;
-  }
-
-  /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraService) {
-    if (this.rotationByDirection)
-      this.rotateByMovement();
-  }
-
-  /**
-   * Update the velocity
-   *
-   * @param x The new x velocity
-   * @param y The new y velocity
-   */
-  updateVelocity(x: number, y: number) {
-    this.rigidBody?.breakStickyJoints();
-    this.rigidBody?.body.SetLinearVelocity({ x, y });
-  }
-
-  /**
-   * Update the X velocity
-   *
-   * @param x The new x velocity
-   */
-  updateXVelocity(x: number) {
-    this.rigidBody?.breakStickyJoints();
-    this.rigidBody?.body.SetLinearVelocity({ x, y: this.rigidBody.body.GetLinearVelocity().y });
-  }
-
-  /**
-   * Update the Y velocity
-   *
-   * @param y The new x velocity
-   */
-  updateYVelocity(y: number) {
-    this.rigidBody?.breakStickyJoints();
-    this.rigidBody?.body.SetLinearVelocity({ x: this.rigidBody.body.GetLinearVelocity().x, y });
-  }
-
-  /** Return the X velocity of of this actor */
-  public getXVelocity() {
-    return this.rigidBody?.body.GetLinearVelocity().x;
-  }
-
-  /** Return the Y velocity of of this actor */
-  public getYVelocity() {
-    return this.rigidBody?.body.GetLinearVelocity().y;
-  }
-
-  /**
-   * Set the angular velocity, for making a body rotate
-   *
-   * @param rps The velocity, in radians per second
-   */
-  public updateAngularVelocity(rps: number) {
-    this.rigidBody?.body.SetAngularVelocity(rps);
-  }
-
-  /**
-   * Set the absolute velocity of this actor
-   *
-   * @param x Velocity in X dimension
-   * @param y Velocity in Y dimension
-   */
-  public setAbsoluteVelocity(x: number, y: number) {
-    // change its velocity
-    this.updateVelocity(x, y);
-  }
-
-  /** Indicate that this actor should rotate based on its direction of movement */
-  private rotateByMovement() {
-    if (!this.rigidBody) return;
-    let x = -this.rigidBody.body.GetLinearVelocity().x;
-    let y = -this.rigidBody.body.GetLinearVelocity().y;
-    let angle = Math.atan2(y, x) + Math.atan2(-1, 0);
-    let transform = new b2Transform();
-    transform.SetPositionAngle(this.rigidBody.body.GetPosition(), angle);
-    this.rigidBody.body.SetTransform(transform);
-  }
-
-  /**
-   * Change the rotation of the body
-   *
-   * @param delta How much to add to the current rotation
-   */
-  public increaseRotation(delta: number) {
-    if (!this.rigidBody) return;
-    let body = this.rigidBody.body;
-    let rot = body.GetAngle() + delta;
-    body.SetAngularVelocity(0);
-    let transform = new b2Transform();
-    transform.SetPositionAngle(body.GetPosition(), rot);
-    body.SetTransform(transform);
-  }
-
-  /**
-   * Set a dampening factor to cause a moving body to slow down without
-   * colliding with anything
-   *
-   * @param amount The amount of damping to apply
-   */
-  public setDamping(amount: number) {
-    this.rigidBody?.body.SetLinearDamping(amount);
-  }
-
-  /**
-   * Set a dampening factor to cause a spinning body to decrease its rate of
-   * spin
-   *
-   * @param amount The amount of damping to apply
-   */
-  public setAngularDamping(amount: number) {
-    this.rigidBody?.body.SetAngularDamping(amount);
-  }
-
-  /** Indicate that this actor should be immune to the force of gravity */
-  public setGravityDefy() {
-    this.rigidBody?.body.SetGravityScale(0);
-  }
-
-  /**
-   * Add velocity to this actor
-   *
-   * @param x Velocity in X dimension
-   * @param y Velocity in Y dimension
-   */
-  public addVelocity(x: number, y: number) {
-    if (!this.rigidBody) return;
-    // Add to the velocity of the actor
-    let v = this.rigidBody.body.GetLinearVelocity();
-    let x2 = v.x + x;
-    let y2 = v.y + y;
-    this.updateVelocity(x2, y2);
-  }
-}
-
-/** A rule for things that don't actually move */
-export class InertMovement {
-  /** The Actor to which this movement is attached */
-  public set rigidBody(body: RigidBodyComponent | undefined) { this._rigidBody = body; }
-  public get rigidBody() { return this._rigidBody; }
+  /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
 
   /** Do any last-minute adjustments related to the movement */
   prerender(_elapsedMs: number, _camera: CameraService) { }
 }
 
+/** A rule for things that don't actually move or detect collisions */
+export class StaticBodyMovement {
+  /** The RigidBodyComponent to which this movement is attached */
+  public set rigidBody(body: RigidBodyComponent | undefined) {
+    this._rigidBody = body;
+    this.rigidBody?.body.SetType(b2BodyType.b2_staticBody);
+  }
+  /** The RigidBodyComponent to which this movement is attached */
+  public get rigidBody() { return this._rigidBody; }
+  /** The RigidBodyComponent to which this movement is attached */
+  private _rigidBody?: RigidBodyComponent;
+
+  /** Do any last-minute adjustments related to the movement */
+  prerender(_elapsedMs: number, _camera: CameraService) { }
+}
+
+/** This rule says "just stick with the body type that you've already got" */
+export class PassThroughMovement {
+  /** The RigidBodyComponent to which this movement is attached */
+  public rigidBody?: RigidBodyComponent;
+
+  /** Do any last-minute adjustments related to the movement */
+  prerender(_elapsedMs: number, _camera: CameraService) { }
+}
+
 /** MovementComponent is the type of any movement rules that an Actor can have */
-export type MovementComponent = PathMovement | TiltMovement | ChaseMovement | HoverMovement | ProjectileMovement | GravityMovement | ManualMovement | InertMovement;
+export type MovementComponent = PathMovement | TiltMovement | ChaseMovement | HoverMovement | ProjectileMovement | DynamicBodyMovement | KinematicBodyMovement | StaticBodyMovement | PassThroughMovement;

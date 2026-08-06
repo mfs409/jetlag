@@ -5,16 +5,18 @@
   "owner": "Michael Spear",
   "license": "MIT",
   "scripts": {
-    "start": "node ./scripts/dev.mjs; node dist/index.js",
-    "build": "node ./scripts/build.mjs",
-    "clean": "rm -rf ./dist ./check",
-    "check": "tsc"
+    "start": "node ./scripts/main.mjs start",
+    "build": "node ./scripts/main.mjs build",
+    "clean": "node ./scripts/main.mjs clean",
+    "check": "tsc",
+    "help": "node ./scripts/main.mjs help"
   },
   "dependencies": {
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "esbuild-serve": "^1.0.1",
-    "typescript": "^5.4.5"
+    "chalk": "^6.0.0",
+    "esbuild": "^0.28.1",
+    "typescript": "^7.0.2"
   }
 }

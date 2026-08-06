@@ -2,7 +2,7 @@ import { Filter } from "pixi.js";
 
 /**
  * FilterComponent is a wrapper around a Pixi.js filter.  It provides a clean
- * interface by which:
+ * interface through which:
  *   1. Programmers can wrap arbitrary Pixi filters
  *   2. Programmers can attach filters to a Z plane or to WORLD/OVERLAY/HUD
  *   3. Programmers can leverage custom logic for updating their filters

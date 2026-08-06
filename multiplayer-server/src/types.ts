@@ -260,4 +260,4 @@ export class ReqLogout {
  * The Message type unions all of the message types, to make the rest of the
  * code easier to work with 
  */
-export type Message = EvtUserJoined | EvtUserLeft | Broadcast | ResErrHasUser | ResErrNoRoom | ResErrUserTaken | ResErrHasRoom | ResErrNoRoom | ResErrFormat | ResLoggedIn | ResLoggedOut | ResSent | ResCreated | ResJoined | ReqLoginToken | ReqCreate | ReqJoin | ReqLogout;
+export type Message = EvtUserJoined | EvtUserLeft | Broadcast | ResErrHasUser | ResErrNoUser | ResErrUserTaken | ResErrHasRoom | ResErrNoRoom | ResErrFormat | ResLoggedIn | ResLoggedOut | ResSent | ResCreated | ResJoined | ReqLoginToken | ReqCreate | ReqJoin | ReqLogout;

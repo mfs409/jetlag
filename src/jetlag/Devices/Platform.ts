@@ -6,8 +6,10 @@ import { AccelerometerMode } from "./Accelerometer";
  * the platform:
  * - Device Vibration
  * - App Termination
- * - Device-Specific Event Handlers
- * - Persistent Storage
+ * - Tilt/Accelerometer
+ *
+ * At the current time, this is over-engineered.  But if you wish to support
+ * mobile devices (e.g., by using Capacitor.js), then this will be useful.
  */
 export interface PlatformDevice {
   /** Quit the game and close its window */
@@ -38,10 +40,12 @@ export class HtmlPlatformDevice implements PlatformDevice {
    * @param ms  The number of milliseconds to vibrate
    */
   vibrate(ms: number) {
-    if (!!navigator.vibrate)
+    if (!!navigator.vibrate) {
       navigator.vibrate(ms);
-    else
+    }
+    else {
       stage.console.log("Simulating " + ms + "ms of vibrate");
+    }
   }
 
   /**

@@ -8,18 +8,60 @@ import { stage } from "../Stage";
  * We use ISound so that the rest of JetLag doesn't need to know about Howler,
  * but an ISound is really just a Howl object.
  *
- * TODO:  pause() is a reasonable choice for background music, but sound effects
- *        don't currently pause when a pause screen is showing.
+ * NB:  Sound effects don't currently pause when a pause screen is showing.
  */
 export interface ISound {
-  /** Play the sound */
+  /**
+   * Play the sound, as a new, independent instance (the same sound can be
+   * played more than once concurrently)
+   *
+   * @returns An id for this specific instance of the sound, for use with the
+   *          other methods below, so they can control this instance without
+   *          affecting any other concurrently-playing instance of the same
+   *          sound
+   */
   play(): number;
-  /** Stop playing the sound */
+
+  /**
+   * Stop playing the sound, resetting its playback position to the start
+   *
+   * @param id  The id (from `play()`) of the specific instance to stop.  Omit
+   *            to stop all instances.
+   */
   stop(id?: number): void;
-  /** Pause the sound, so we can resume it later */
+
+  /**
+   * Pause the sound, so we can resume it later via `play()`
+   *
+   * @param id  The id (from `play()`) of the specific instance to pause.  Omit
+   *            to pause all instances.
+   */
   pause(id?: number): void;
-  /** Report if the sound is currently playing */
+
+  /**
+   * Report if the sound is currently playing
+   *
+   * @param id  The id (from `play()`) of the specific instance to check.  Omit
+   *            to report if any instance of the sound is playing.
+   */
   playing(id?: number): boolean;
+
+  /**
+   * Get the current playback position (in seconds)
+   *
+   * @param id  The id (from `play()`) of the specific instance to query.  Omit
+   *            to query the most recent instance.
+   */
+  seek(id?: number): number;
+
+  /**
+   * Move the playback position to `seek` (in seconds)
+   *
+   * @param seek  The new playback position, in seconds
+   * @param id    The id (from `play()`) of the specific instance to move.  Omit
+   *              to move the most recent instance.
+   */
+  seek(seek: number, id?: number): this;
 }
 
 /**
@@ -29,23 +71,29 @@ export interface ISound {
  */
 export class AudioLibraryService {
   /** All of the sounds (non-looping audio) in the game, by name */
-  private readonly sounds: { [index: string]: ISound } = {};
+  private readonly sounds = new Map<string, ISound>();
 
   /** All of the music (looping audio) in the game, by name */
-  private readonly music: { [index: string]: ISound } = {};
+  private readonly music = new Map<string, ISound>();
 
   /**
    * Create the service by loading all of the game's audio files
    *
+   * NB: The creation of Howls is async.  It's possible that they will take a
+   * long time to load, in which case playback is queued until they are loaded.
+   *
    * @param config The game-wide configuration
    */
   constructor(config: JetLagGameConfig) {
-    if (!config.resources)
+    if (!config.resources) {
       return;
-    for (let name of config.resources.soundNames ?? [])
-      this.sounds[name] = new Howl({ src: [config.resources.prefix + name] });
-    for (let name of config.resources.musicNames ?? [])
-      this.music[name] = new Howl({ src: [config.resources.prefix + name], loop: true });
+    }
+    for (let name of config.resources.soundNames ?? []) {
+      this.sounds.set(name, new Howl({ src: [config.resources.prefix + name] }));
+    }
+    for (let name of config.resources.musicNames ?? []) {
+      this.music.set(name, new Howl({ src: [config.resources.prefix + name], loop: true }));
+    }
   }
 
   /**
@@ -54,9 +102,9 @@ export class AudioLibraryService {
    * @param soundName Name of the sound file to retrieve
    */
   getSound(soundName: string) {
-    let ret = this.sounds[soundName];
+    let ret = this.sounds.get(soundName);
     if (!ret)
-      stage.console.log("Error retrieving sound '" + soundName + "'");
+      stage.console.log(`Error retrieving sound '${soundName}'`);
     return ret;
   }
 
@@ -66,9 +114,9 @@ export class AudioLibraryService {
    * @param musicName Name of the music file to retrieve
    */
   getMusic(musicName: string) {
-    let ret = this.music[musicName];
+    let ret = this.music.get(musicName);
     if (!ret)
-      stage.console.log("Error retrieving music '" + musicName + "'");
+      stage.console.log(`Error retrieving music '${musicName}'`);
     return ret;
   }
 

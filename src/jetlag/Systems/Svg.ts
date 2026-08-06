@@ -2,6 +2,13 @@ import { b2Vec2 } from "@box2d/core";
 import { stage } from "../Stage";
 
 /**
+ * The parser states for an SVG path's "d" data: reading the very first point
+ * of the path (its x, then its y), and then reading each subsequent point
+ * (its x, then its y).
+ */
+const enum SvgParseState { READ_FIRST_X = -2, READ_FIRST_Y = -1, READ_X = 0, READ_Y = 1 }
+
+/**
  * The Svg System is for loading SVG line drawings into a game.  SVG line
  * drawings can be made in InkScape. In JetLag, we do not use line drawings to
  * their full potential. We only use them to define a set of lines for a simple,
@@ -25,12 +32,8 @@ export class SvgSystem {
   /** The computed top and left boundaries of the SVG, in pixels */
   private top_left?: b2Vec2;
 
-  /**
-   * The parser is essentially a finite state machine. The states are 0 for
-   * "read next x", 1 for "read next y", -2 for "read first x", and -1 for
-   * "read first y"
-   */
-  private state = 0;
+  /** The parser is essentially a finite state machine; this is its state */
+  private state: SvgParseState = SvgParseState.READ_X;
 
   /**
    * We can't actually draw curves. When we encounter a curve, we use this
@@ -39,12 +42,8 @@ export class SvgSystem {
    */
   private swallow?: number;
 
-  /**
-   * Track if we're parsing a curve or a line. Valid values are 0 for
-   * "uninitialized", 1 for "starting to read", 2 for "parsing curve", and 3
-   * for "parsing line"
-   */
-  private mode = 0;
+  /** Are we currently parsing a curve (true) or a line (false)? */
+  private inCurve = false;
 
   /**
    * Construct an object for drawing entities based on an SVG.  The arguments to
@@ -97,12 +96,9 @@ export class SvgSystem {
     let file_contents = (event.currentTarget as XMLHttpRequest).response;
     let dp = new DOMParser();
     let doc = dp.parseFromString(file_contents, "text/xml");
-    let gs = doc.getElementsByTagName("g");
-    for (let i = 0; i < gs.length; ++i) {
-      let g = gs[i];
-      let paths = g.getElementsByTagName("path");
-      for (let j = 0; j < paths.length; ++j) {
-        let d = paths[j].getAttribute("d");
+    for (let g of doc.getElementsByTagName("g")) {
+      for (let path of g.getElementsByTagName("path")) {
+        let d = path.getAttribute("d");
         if (d) {
           // We process it twice: first time is to get the top and
           // left, second time is to actually draw it
@@ -125,6 +121,11 @@ export class SvgSystem {
    *                     (false), where we actually draw the lines
    */
   private processD(d: string, readonlyMode: boolean) {
+    // Each call walks a whole "d" string from scratch, so the parser state
+    // must not leak in from a previous call (a previous <path>, or the other
+    // pass -- readonly vs. draw -- over this same <path>).
+    this.inCurve = false;
+    this.swallow = undefined;
     // split the string into characters and floating point values
     // Note: we need to split on ' ' and ',', so we'll do a replace first
     let z = d.replace(/,/g, " ");
@@ -136,12 +137,12 @@ export class SvgSystem {
       switch (s) {
         // start of the path, relative mode
         case "m":
-          this.state = -2;
+          this.state = SvgParseState.READ_FIRST_X;
           absolute = false;
           break;
         // start of the path, absolute mode
         case "M":
-          this.state = -2;
+          this.state = SvgParseState.READ_FIRST_X;
           absolute = true;
           break;
         // beginning of a (set of) curve definitions, relative mode
@@ -149,7 +150,7 @@ export class SvgSystem {
         // NB: we coerce curves into lines by ignoring the first four
         // parameters... this leaves us with just the endpoints
         case "c":
-          this.mode = 2;
+          this.inCurve = true;
           this.swallow = 4;
           break;
         // end of path, relative mode
@@ -160,13 +161,13 @@ export class SvgSystem {
           break;
         // beginning of a (set of) line definitions, relative mode
         case "l":
-          this.mode = 3;
+          this.inCurve = false;
           absolute = false;
           this.swallow = 0;
           break;
         // beginning of a (set of) line definitions, absolute mode
         case "L":
-          this.mode = 3;
+          this.inCurve = false;
           absolute = true;
           this.swallow = 0;
           break;
@@ -182,27 +183,27 @@ export class SvgSystem {
             // convert next point to float
             let val = parseFloat(s);
             // if it's the initial x, save it
-            if (this.state == -2) {
-              this.state = -1;
+            if (this.state == SvgParseState.READ_FIRST_X) {
+              this.state = SvgParseState.READ_FIRST_Y;
               this.last.x = val;
               this.first.x = val;
             }
             // if it's the initial y, save it... can't draw a line
             // yet, because we have one endpoint
-            else if (this.state == -1) {
-              this.state = 0;
+            else if (this.state == SvgParseState.READ_FIRST_Y) {
+              this.state = SvgParseState.READ_X;
               this.last.y = val;
               this.first.y = val;
             }
             // if it's an X value, save it
-            else if (this.state == 0) {
+            else if (this.state == SvgParseState.READ_X) {
               if (absolute) this.curr.x = val;
               else this.curr.x = this.last.x + val;
-              this.state = 1;
+              this.state = SvgParseState.READ_Y;
             }
             // if it's a Y value, save it and draw a line
-            else if (this.state == 1) {
-              this.state = 0;
+            else if (this.state == SvgParseState.READ_Y) {
+              this.state = SvgParseState.READ_X;
               if (absolute) this.curr.y = val;
               else this.curr.y = this.last.y - val;
               // draw the line
@@ -211,7 +212,7 @@ export class SvgSystem {
               this.last.x = this.curr.x;
               this.last.y = this.curr.y;
               // if we are in curve mode, reinitialize the swallower
-              if (this.mode == 2) this.swallow = 4;
+              if (this.inCurve) this.swallow = 4;
             }
           }
           break;
@@ -220,62 +221,53 @@ export class SvgSystem {
   }
 
   /**
-   * This is a convenience method to separate the transformation and stretch
-   * logic from the logic for actually drawing lines
+   * Reflect a line's endpoints over the first point drawn (to convert SVG's
+   * "down is minus" Y axis to our "down is plus" Y axis), and apply the
+   * user-requested stretch.  Shared by `addLine` (which goes on to also
+   * normalize by the bounding box and convert to meters) and `updateTL`
+   * (which uses these same pixel coordinates to compute that bounding box in
+   * the first place).
    *
-   * There are two challenges. The first is that an SVG deals with pixels,
-   * whereas we like to draw actors in meters. This matters because user
-   * translations will be in meters, but SVG points and SVG translations will
-   * be in pixels.
-   *
-   * The second challenge is that SVGs appear to have a "down is minus" Y
-   * axis, whereas our system has a "down is plus" Y axis. To get around this,
-   * we reflect every Y coordinate over the horizontal line that intersects
-   * with the first point drawn.
+   * @param start The point from which the line originates
+   * @param stop  The point to which the line extends
+   */
+  private reflectAndStretch(start: b2Vec2, stop: b2Vec2) {
+    let x1 = start.x, x2 = stop.x, y1 = this.first.y - start.y, y2 = this.first.y - stop.y;
+    x1 *= this.userStretch.x;
+    y1 *= this.userStretch.y;
+    x2 *= this.userStretch.x;
+    y2 *= this.userStretch.y;
+    return { x1, y1, x2, y2 };
+  }
+
+  /**
+   * Transform a line from raw SVG pixel coordinates all the way to meters
+   * (see `reflectAndStretch`/`pixelToMeters`), and draw it.
    *
    * @param start The point from which the line originates
    * @param stop  The point to which the line extends
    */
   private addLine(start: b2Vec2, stop: b2Vec2) {
-    // Get the pixel coordinates of the SVG line
-    let x1 = start.x,
-      x2 = stop.x,
-      y1 = start.y,
-      y2 = stop.y;
+    let { x1, y1, x2, y2 } = this.reflectAndStretch(start, stop);
+    let p1 = this.pixelToMeters(x1, y1);
+    let p2 = this.pixelToMeters(x2, y2);
+    this.drawLine(p1.x, p1.y, p2.x, p2.y);
+  }
 
-    // reflect through first.y
-    y1 = this.first.y - y1;
-    y2 = this.first.y - y2;
-
-    // multiply the coordinates by the stretch
-    x1 *= this.userStretch.x;
-    y1 *= this.userStretch.y;
-    x2 *= this.userStretch.x;
-    y2 *= this.userStretch.y;
-
-    // normalize by top left pixels (0,0)
-    x1 -= this.top_left!.x;
-    x2 -= this.top_left!.x;
-    y1 -= this.top_left!.y;
-    y2 -= this.top_left!.y;
-
-    // convert the coordinates to meters.  Be sure to scale according to the
-    // screen scaling factor.
-    x1 *= stage.svgScaling;
-    y1 *= stage.svgScaling
-    x2 *= stage.svgScaling
-    y2 *= stage.svgScaling
-    x1 /= stage.pixelMeterRatio;
-    y1 /= stage.pixelMeterRatio;
-    x2 /= stage.pixelMeterRatio;
-    y2 /= stage.pixelMeterRatio;
-
-    // add in the user transform in meters and draw it
-    x1 += this.translate.x;
-    y1 += this.translate.y;
-    x2 += this.translate.x;
-    y2 += this.translate.y;
-    this.drawLine(x1, y1, x2, y2);
+  /**
+   * Convert a point from SVG pixel space to meters: normalize it by the
+   * bounding box's top-left pixel, scale by the screen scaling factor, and
+   * add in the user's translate.
+   *
+   * @param px The point's X coordinate, in pixels
+   * @param py The point's Y coordinate, in pixels
+   */
+  private pixelToMeters(px: number, py: number) {
+    let scale = stage.svgScaling / stage.pixelMeterRatio;
+    return {
+      x: (px - this.top_left!.x) * scale + this.translate.x,
+      y: (py - this.top_left!.y) * scale + this.translate.y,
+    };
   }
 
   /**
@@ -291,7 +283,7 @@ export class SvgSystem {
     // compute center and length
     let centerX = (x1 + x2) / 2;
     let centerY = (y1 + y2) / 2;
-    let len = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+    let len = Math.hypot(x1 - x2, y1 - y2);
     let rot = Math.atan2(y2 - y1, x2 - x1);
     this.actorMaker(centerX, centerY, len, rot);
   }
@@ -306,26 +298,13 @@ export class SvgSystem {
    * @param stop  The point to which the line extends
    */
   private updateTL(start: b2Vec2, stop: b2Vec2) {
-    // Get the pixel coordinates of the SVG line
-    let x1 = start.x, x2 = stop.x, y1 = start.y, y2 = stop.y;
-
-    // reflect through first.y
-    y1 = this.first.y - y1;
-    y2 = this.first.y - y2;
-
-    // multiply the coordinates by the stretch
-    x1 *= this.userStretch.x;
-    y1 *= this.userStretch.y;
-    x2 *= this.userStretch.x;
-    y2 *= this.userStretch.y;
+    let { x1, y1, x2, y2 } = this.reflectAndStretch(start, stop);
 
     // If this is the first line, we need to initialize our top/left storage
     if (!this.top_left) this.top_left = new b2Vec2(x1, y1);
 
     // Update our estimates of top/left
-    if (x1 < this.top_left.x) this.top_left.x = x1;
-    if (y1 < this.top_left.y) this.top_left.y = y1;
-    if (x2 < this.top_left.x) this.top_left.x = x2;
-    if (y2 < this.top_left.y) this.top_left.y = y2;
+    this.top_left.x = Math.min(this.top_left.x, x1, x2);
+    this.top_left.y = Math.min(this.top_left.y, y1, y2);
   }
 }

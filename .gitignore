@@ -3,3 +3,4 @@ node_modules/
 dev-serve/
 dist/
 check/
+local/

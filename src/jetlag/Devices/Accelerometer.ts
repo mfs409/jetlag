@@ -2,12 +2,13 @@ import { b2Vec2 } from "@box2d/core";
 import { stage } from "../Stage";
 
 /**
- * We are probably going to need a way to re-interpret the meaning of
- * accelerometer values depending on the orientation of the device (at least
- * portrait vs. landscape).  Until we have a use case, we'll just anticipate as
- * best we can by having this enum to pass to the constructor.
+ * Accelerometer behavior can vary among devices (phones, tablets).  This enum
+ * is a crude attempt to provide a hook for JetLag to recalibrate its
+ * Accelerometer directions depending on the device.
  *
  * TODO: This is only tested on Android phones, not tablets.  iOS is not tested.
+ * This should be thought of as code to anticipate a problem, not to solve a
+ * real problem.
  */
 export enum AccelerometerMode {
   ANDROID_LANDSCAPE, ANDROID_PORTRAIT, IOS_LANDSCAPE, IOS_PORTRAIT, DISABLED

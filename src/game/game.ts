@@ -1,4 +1,4 @@
-import { Actor, BoxBody, CircleBody, FilledBox, FilledCircle, FilledPolygon, GridSystem, Hero, JetLagGameConfig, KeyCodes, ManualMovement, Obstacle, PolygonBody, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, BoxBody, CircleBody, FilledBox, FilledCircle, FilledPolygon, GridSystem, PlayerControlBehavior, JetLagGameConfig, KeyCodes, SolidBehavior, PolygonBody, initializeAndLaunch, stage } from "../jetlag";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
@@ -18,10 +18,8 @@ class Config implements JetLagGameConfig {
  * starts becoming more polished, you will probably want to use several
  * functions like this one as a way to organize the parts of your game (levels,
  * chooser, welcome screen, store, etc).
- *
- * @param level Which level of the game should be displayed
  */
-function builder(_level: number) {
+function builder() {
   // Draw a grid on the screen, to help us think about the positions of actors.
   // Remember that when `hitBoxes` is true, clicking the screen will show
   // coordinates in the developer console.
@@ -31,33 +29,34 @@ function builder(_level: number) {
   let hero = new Actor({
     appearance: new FilledCircle({ radius: .5, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
     rigidBody: new CircleBody({ cx: 5, cy: 2, radius: .5 }),
-    role: new Hero(),
-    movement: new ManualMovement(),
+    behaviors: new PlayerControlBehavior(),
   });
 
   // Make an obstacle that is a rectangle
   new Actor({
     rigidBody: new BoxBody({ cx: 3, cy: 4, width: 1, height: 1 }),
     appearance: new FilledBox({ width: 1, height: 1, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
-    role: new Obstacle(),
+    behaviors: new SolidBehavior(),
   });
 
   // Make an obstacle that is a polygon
   new Actor({
-    rigidBody: new PolygonBody({ cx: 10, cy: 5, vertices: [0, -.5, .5, 0, 0, .5, -1, 0] }),
-    appearance: new FilledPolygon({ vertices: [0, -.5, .5, 0, 0, .5, -1, 0], fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
-    role: new Obstacle(),
+    rigidBody: new PolygonBody({ cx: 10, cy: 5, vertices: [{ x: 0, y: -.5 }, { x: .5, y: 0 }, { x: 0, y: .5 }, { x: -1, y: 0 }] }),
+    appearance: new FilledPolygon({ vertices: [{ x: 0, y: -.5 }, { x: .5, y: 0 }, { x: 0, y: .5 }, { x: -1, y: 0 }], fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
+    behaviors: new SolidBehavior(),
   });
 
-  // Pressing a key will change the hero's velocity
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_UP, () => (hero.movement as ManualMovement).updateYVelocity(0));
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_DOWN, () => (hero.movement as ManualMovement).updateYVelocity(0));
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_LEFT, () => (hero.movement as ManualMovement).updateXVelocity(0));
-  stage.keyboard.setKeyUpHandler(KeyCodes.KEY_RIGHT, () => (hero.movement as ManualMovement).updateXVelocity(0));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_UP, () => (hero.movement as ManualMovement).updateYVelocity(-5));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_DOWN, () => (hero.movement as ManualMovement).updateYVelocity(5));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_LEFT, () => (hero.movement as ManualMovement).updateXVelocity(-5));
-  stage.keyboard.setKeyDownHandler(KeyCodes.KEY_RIGHT, () => (hero.movement as ManualMovement).updateXVelocity(5));
+  // Pressing a key will change the hero's velocity.  Each handler is bound to
+  // both an arrow key and its WASD equivalent via the array syntax, instead of
+  // doubling every line with a separate call per key.
+  stage.keyboard.setKeyUpHandler([KeyCodes.KEY_UP, KeyCodes.KEY_W], () => hero.rigidBody.yVelocity = 0);
+  stage.keyboard.setKeyUpHandler([KeyCodes.KEY_DOWN, KeyCodes.KEY_S], () => hero.rigidBody.yVelocity = 0);
+  stage.keyboard.setKeyUpHandler([KeyCodes.KEY_LEFT, KeyCodes.KEY_A], () => hero.rigidBody.xVelocity = 0);
+  stage.keyboard.setKeyUpHandler([KeyCodes.KEY_RIGHT, KeyCodes.KEY_D], () => hero.rigidBody.xVelocity = 0);
+  stage.keyboard.setKeyDownHandler([KeyCodes.KEY_UP, KeyCodes.KEY_W], () => hero.rigidBody.yVelocity = -5);
+  stage.keyboard.setKeyDownHandler([KeyCodes.KEY_DOWN, KeyCodes.KEY_S], () => hero.rigidBody.yVelocity = 5);
+  stage.keyboard.setKeyDownHandler([KeyCodes.KEY_LEFT, KeyCodes.KEY_A], () => hero.rigidBody.xVelocity = -5);
+  stage.keyboard.setKeyDownHandler([KeyCodes.KEY_RIGHT, KeyCodes.KEY_D], () => hero.rigidBody.xVelocity = 5);
 }
 
 // call the function that starts running the game in the `game-player` div tag

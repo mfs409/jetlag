@@ -6,6 +6,11 @@ export enum NetworkState { Start, User, UserRoom }
 /**
  * NetworkDevice interfaces with a server (see the "multiplayer-server" folder)
  * via socket.io to send and receive network events.
+ *
+ * Naming convention: every incoming event handler is `onX` (assign your own
+ * function to react to it); every outgoing action is `requestX` (for anything
+ * the server can accept or reject) or a bare verb that pairs with `connect()`
+ * (`disconnect()`, `sendBroadcast()`).
  */
 export class NetworkDevice {
   /** A socket for communicating with the server */
@@ -15,52 +20,52 @@ export class NetworkDevice {
   state: NetworkState = NetworkState.Start;
 
   /** An event handler for when the socket initially connects */
-  evtConnected: () => void = () => { };
+  onConnected: () => void = () => { };
 
   /** An event handler for when the socket disconnects */
-  evtDisconnected: (msg: string) => void = () => { };
+  onDisconnected: (msg: string) => void = () => { };
 
   /** An event handler for when a remote user joins the room */
-  evtUserJoined: (msg: string) => void = () => { };
+  onUserJoined: (msg: string) => void = () => { };
 
   /** An event handler for when a remote user exits the room */
-  evtUserLeft: (msg: string) => void = () => { };
+  onUserLeft: (msg: string) => void = () => { };
 
   /** An event handler for when a remote user sends a message */
-  broadcast: (msg: string) => void = () => { };
+  onBroadcast: (msg: string) => void = () => { };
 
   /** An event handler for when we try to log in when we're already logged in */
-  resErrHasUser: (msg: string) => void = () => { };
+  onErrHasUser: (msg: string) => void = () => { };
 
   /** An event handler for errors due to not logging in first */
-  resErrNoUser: (msg: string) => void = () => { };
+  onErrNoUser: (msg: string) => void = () => { };
 
   /** An event handler for when the server says our username is taken */
-  resErrUserTaken: (msg: string) => void = () => { };
+  onErrUserTaken: (msg: string) => void = () => { };
 
   /** An event handler for when we request a room but already have one */
-  resErrHasRoom: (msg: string) => void = () => { };
+  onErrHasRoom: (msg: string) => void = () => { };
 
   /** An event handler for errors due to not having a room */
-  resErrNoRoom: (msg: string) => void = () => { };
+  onErrNoRoom: (msg: string) => void = () => { };
 
   /** An event handler for errors due to incorrectly formatted requests */
-  resErrFormat: (msg: string) => void = () => { };
+  onErrFormat: (msg: string) => void = () => { };
 
   /** An event handler for when a login request succeeds */
-  resLoggedIn: (msg: string) => void = () => { };
+  onLoggedIn: (msg: string) => void = () => { };
 
   /** An event handler for when a logout request succeeds */
-  resLoggedOut: (msg: string) => void = () => { };
+  onLoggedOut: (msg: string) => void = () => { };
 
   /** An event handler for when a broadcast is sent successfully */
-  resSent: (msg: string) => void = () => { };
+  onSent: (msg: string) => void = () => { };
 
   /** An event handler for when we succeed in making a new room */
-  resCreated: (msg: string) => void = () => { };
+  onCreated: (msg: string) => void = () => { };
 
   /** An event handler for when we succeed in joining an existing room */
-  resJoined: (msg: string) => void = () => { };
+  onJoined: (msg: string) => void = () => { };
 
   /**
    * Construct a NetworkDevice, for interacting with a remote server via
@@ -79,24 +84,29 @@ export class NetworkDevice {
     this.socket = io(serverAddress);
 
     // Set up listeners for all event messages
-    this.socket.on("EvtConnected", this.evtConnected);
-    this.socket.on("EvtDisconnected", this.evtDisconnected);
-    this.socket.on("EvtUserJoined", this.evtUserJoined);
-    this.socket.on("EvtUserLeft", this.evtUserLeft);
-    this.socket.on("Broadcast", this.broadcast);
-    this.socket.on("ResErrHasUser", this.resErrHasUser);
-    this.socket.on("ResErrNoUser", this.resErrNoUser);
-    this.socket.on("ResErrUserTaken", this.resErrUserTaken);
-    this.socket.on("ResErrHasRoom", this.resErrHasRoom);
-    this.socket.on("ResErrNoRoom", this.resErrNoRoom);
-    this.socket.on("ResErrFormat", this.resErrFormat);
-    this.socket.on("ResLoggedIn", this.resLoggedIn);
-    this.socket.on("ResLoggedOut", this.resLoggedOut);
-    this.socket.on("ResSent", this.resSent);
-    this.socket.on("ResCreated", this.resCreated);
-    this.socket.on("ResJoined", this.resJoined);
-    this.socket.on("connect", this.evtConnected);
-    this.socket.on("disconnect", this.evtDisconnected);
+    //
+    // NB: Arrow functions allow for games to redefine these on the fly
+    this.socket.on("EvtUserJoined", (msg) => this.onUserJoined(msg));
+    this.socket.on("EvtUserLeft", (msg) => this.onUserLeft(msg));
+    this.socket.on("Broadcast", (msg) => this.onBroadcast(msg));
+    this.socket.on("ResErrHasUser", (msg) => this.onErrHasUser(msg));
+    this.socket.on("ResErrNoUser", (msg) => this.onErrNoUser(msg));
+    this.socket.on("ResErrUserTaken", (msg) => this.onErrUserTaken(msg));
+    this.socket.on("ResErrHasRoom", (msg) => this.onErrHasRoom(msg));
+    this.socket.on("ResErrNoRoom", (msg) => this.onErrNoRoom(msg));
+    this.socket.on("ResErrFormat", (msg) => this.onErrFormat(msg));
+    this.socket.on("ResSent", (msg) => this.onSent(msg));
+
+    // These four also update `state`, since they mark a transition in the
+    // login/room lifecycle.
+    this.socket.on("ResLoggedIn", (msg) => { this.state = NetworkState.User; this.onLoggedIn(msg); });
+    this.socket.on("ResLoggedOut", (msg) => { this.state = NetworkState.Start; this.onLoggedOut(msg); });
+    this.socket.on("ResCreated", (msg) => { this.state = NetworkState.UserRoom; this.onCreated(msg); });
+    this.socket.on("ResJoined", (msg) => { this.state = NetworkState.UserRoom; this.onJoined(msg); });
+
+    // These are socket.io events
+    this.socket.on("connect", () => this.onConnected());
+    this.socket.on("disconnect", (msg) => { this.state = NetworkState.Start; this.onDisconnected(msg); });
   }
 
   /**
@@ -105,37 +115,37 @@ export class NetworkDevice {
    * @param userId   The desired userId
    * @param userName The desired userName
    */
-  doReqLoginToken(userId: string, userName: string) {
+  requestLogin(userId: string, userName: string) {
     this.socket?.emit("ReqLoginToken", JSON.stringify({ token: `${userId},${userName}` }))
   }
 
   /** Send a message to the server to try to create a new room */
-  doReqCreate() { this.socket?.emit("ReqCreate", ""); }
+  requestCreate() { this.socket?.emit("ReqCreate", ""); }
 
   /**
    * Send a message to the server to try to join an existing room
    *
    * @param roomId The Id of the room to join
    */
-  doReqJoin(roomId: string) {
+  requestJoin(roomId: string) {
     this.socket?.emit("ReqJoin", JSON.stringify({ roomId }))
   }
 
   /** Send a request to the server to log out */
-  doReqLogout() { this.socket?.emit("ReqLogout", ""); }
+  requestLogout() { this.socket?.emit("ReqLogout", ""); }
 
   /**
    * Broadcast a message to all other recipients in the room
    *
    * @param message The message to send
    */
-  doBroadcast(message: string) { this.socket?.emit("Broadcast", message); }
+  sendBroadcast(message: string) { this.socket?.emit("Broadcast", message); }
 
   /** Forcibly disconnect from the server */
-  doDisconnect() {
+  disconnect() {
     this.socket?.disconnect();
     this.socket = undefined;
-
+    this.state = NetworkState.Start;
   }
 
   /**
@@ -143,21 +153,22 @@ export class NetworkDevice {
    * disconnecting.
    */
   reset() {
-    this.evtConnected = () => { };
-    this.evtDisconnected = () => { };
-    this.evtUserJoined = () => { };
-    this.evtUserLeft = () => { };
-    this.broadcast = () => { };
-    this.resErrHasUser = () => { };
-    this.resErrNoUser = () => { };
-    this.resErrUserTaken = () => { };
-    this.resErrHasRoom = () => { };
-    this.resErrNoRoom = () => { };
-    this.resErrFormat = () => { };
-    this.resLoggedIn = () => { };
-    this.resLoggedOut = () => { };
-    this.resSent = () => { };
-    this.resCreated = () => { };
-    this.resJoined = () => { };
+    this.state = NetworkState.Start;
+    this.onConnected = () => { };
+    this.onDisconnected = () => { };
+    this.onUserJoined = () => { };
+    this.onUserLeft = () => { };
+    this.onBroadcast = () => { };
+    this.onErrHasUser = () => { };
+    this.onErrNoUser = () => { };
+    this.onErrUserTaken = () => { };
+    this.onErrHasRoom = () => { };
+    this.onErrNoRoom = () => { };
+    this.onErrFormat = () => { };
+    this.onLoggedIn = () => { };
+    this.onLoggedOut = () => { };
+    this.onSent = () => { };
+    this.onCreated = () => { };
+    this.onJoined = () => { };
   }
 }

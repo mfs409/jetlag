@@ -15,13 +15,13 @@
  */
 export class StorageDevice {
   /** The "session" storage */
-  private readonly sessionFacts: { [index: string]: any } = {};
+  private readonly sessionFacts = new Map<string, any>();
 
   /** The "level" storage */
-  private levelFacts: { [index: string]: any } = {};
+  private levelFacts = new Map<string, any>();
 
   /** Clear the level storage */
-  public clearLevelStorage() { this.levelFacts = {}; }
+  public clearLevelStorage() { this.levelFacts.clear(); }
 
   /**
    * Save something to the level storage
@@ -29,14 +29,14 @@ export class StorageDevice {
    * @param key   The key by which to remember the data being saved
    * @param value The value to store with the provided key
    */
-  public setLevel(key: string, value: any) { this.levelFacts[key] = value; }
+  public setLevel(key: string, value: any) { this.levelFacts.set(key, value); }
 
   /**
    * Look up a value from the level storage
    *
    * @param key The key with which the value was previously saved
    */
-  public getLevel(key: string) { return this.levelFacts[key]; }
+  public getLevel(key: string) { return this.levelFacts.get(key); }
 
   /**
    * Save something to the session storage
@@ -44,14 +44,14 @@ export class StorageDevice {
    * @param key   The key by which to remember the data being saved
    * @param value The value to store with the provided key
    */
-  public setSession(key: string, value: any) { this.sessionFacts[key] = value; }
+  public setSession(key: string, value: any) { this.sessionFacts.set(key, value); }
 
   /**
    * Look up a value from the session storage
    *
    * @param key The key with which the value was previously saved
    */
-  public getSession(key: string) { return this.sessionFacts[key]; }
+  public getSession(key: string) { return this.sessionFacts.get(key); }
 
   /**
    * Save something to the persistent storage

@@ -78,6 +78,23 @@ function sendAsJson(socket: Socket, peer: User, tag: string, msg: Message) {
 }
 
 /**
+ * Safely parse a client-provided JSON message.  Client input is untrusted,
+ * so a malformed (non-JSON) payload must not throw -- that would crash the
+ * whole server for every connected user, not just the sender.
+ *
+ * @param msg The raw message to parse
+ *
+ * @returns The parsed object, or undefined if `msg` isn't valid JSON
+ */
+function tryParseJson<T>(msg: string): T | undefined {
+  try {
+    return JSON.parse(msg) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Send a Message object as JSON to the `socket` owner
  *
  * @param socket The socket on which to send
@@ -132,7 +149,9 @@ function reqLoginToken(msg: string, socket: Socket, users: Map<string, User>, so
   // The token must be valid
   //
   // TODO: This will become an OAuth flow eventually
-  let parts = ((JSON.parse(msg) as ReqLoginToken).token ?? "").split(',');
+  const parsed = tryParseJson<ReqLoginToken>(msg);
+  if (!parsed) return emitAsJson(socket, ResErrFormat.TAG, new ResErrFormat("Invalid request format"));
+  let parts = (parsed.token ?? "").split(',');
   if (parts.length != 2) return emitAsJson(socket, ResErrFormat.TAG, new ResErrFormat("Invalid request format"));
   // The user cannot be logged in somewhere else
   if (users.has(parts[0])) return emitAsJson(socket, ResErrUserTaken.TAG, new ResErrUserTaken("This user is active on another socket"));
@@ -202,7 +221,7 @@ function reqJoin(msg: string, socket: Socket, rooms: Map<string, Room>, sockets:
   // The user cannot already have a room
   if (user.room) return emitAsJson(socket, ResErrHasRoom.TAG, new ResErrHasRoom("This user already has a room"));
   // The message must include a room Id
-  let roomId = (JSON.parse(msg) as ReqJoin).roomId;
+  let roomId = tryParseJson<ReqJoin>(msg)?.roomId;
   if (!roomId) return emitAsJson(socket, ResErrFormat.TAG, new ResErrFormat("Invalid request format"));
   // The room must exist
   let room = rooms.get(roomId);
@@ -222,6 +241,30 @@ function reqJoin(msg: string, socket: Socket, rooms: Map<string, Room>, sockets:
 }
 
 /**
+ * Remove `user` from their current room (if any), notify the peers left
+ * behind, and schedule the room for deletion if it's now empty.  Shared by
+ * `reqLogout` and `evtDrop`, since a user leaves their room the same way
+ * whether they logged out deliberately or just disconnected.
+ *
+ * @param user    The user who is leaving their room
+ * @param socket  The socket on which the user was connected
+ * @param rooms   A mapping from room Id to Room objects
+ */
+function leaveRoom(user: User, socket: Socket, rooms: Map<string, Room>) {
+  if (!user.room) return;
+  user.room.users.delete(user);
+  user.room.users.forEach((peer) => sendAsJson(socket, peer, EvtUserLeft.TAG, new EvtUserLeft(user.id, user.name)));
+  // Five-second timeout before we close an empty room
+  if (user.room.users.size == 0) {
+    let roomId = user.room.id;
+    setTimeout(() => {
+      let room = rooms.get(roomId);
+      if (room && room.users.size == 0) rooms.delete(roomId);
+    }, 5000);
+  }
+}
+
+/**
  * Handle a request to log a user out
  *
  * @param socket  The socket on which the request arrived
@@ -236,20 +279,7 @@ function reqLogout(socket: Socket, users: Map<string, User>, rooms: Map<string, 
     emitAsJson(socket, ResErrNoUser.TAG, new ResErrNoUser("This socket does not have a user"));
     return;
   }
-  // If the user has a room, remove the user from the room and notify peers
-  if (user.room) {
-    user.room.users.delete(user);
-    user.room.users.forEach((peer) => sendAsJson(socket, peer, EvtUserLeft.TAG, new EvtUserLeft(user.id, user.name)));
-    // Five-second timeout before we close an empty room
-    if (user.room.users.size == 0) {
-      let roomId = user.room.id;
-      setTimeout(() => {
-        let room = rooms.get(roomId);
-        if (room && room.users.size == 0)
-          rooms.delete(roomId);
-      }, 5000);
-    }
-  }
+  leaveRoom(user, socket, rooms);
   // Remove the user from any tables, then send an Ack
   sockets.delete(socket.id)
   users.delete(user.id)
@@ -269,19 +299,7 @@ function evtDrop(socket: Socket, users: Map<string, User>, rooms: Map<string, Ro
   // If the user hadn't logged in yet, we're just done
   let user = sockets.get(socket.id);
   if (!user) return;
-  // If the user has a room, remove the user from the room and notify peers
-  if (user.room) {
-    user.room.users.delete(user);
-    user.room.users.forEach((peer) => sendAsJson(socket, peer, EvtUserLeft.TAG, new EvtUserLeft(user.id, user.name)));
-    // Five-second timeout before we close an empty room
-    if (user.room.users.size == 0) {
-      let roomId = user.room.id;
-      setTimeout(() => {
-        let room = rooms.get(roomId);
-        if (room && room.users.size == 0) rooms.delete(roomId);
-      }, 5000);
-    }
-  }
+  leaveRoom(user, socket, rooms);
   // Remove the user from any tables (NB: Nobody to send an Ack to)
   sockets.delete(socket.id);
   users.delete(user.id);

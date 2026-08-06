@@ -1,4 +1,4 @@
-import { FilledBox, ZIndex } from "../Components/Appearance";
+import { FilledBox, MIN_Z_INDEX, ZIndex } from "../Components/Appearance";
 import { BoxBody } from "../Components/RigidBody";
 import { Actor } from "../Entities/Actor";
 import { Scene } from "../Entities/Scene";
@@ -22,7 +22,7 @@ export class GridSystem {
   public static makeGrid(scene: Scene, top_left: { x: number, y: number }, bottom_right: { x: number, y: number }, z?: ZIndex) {
     let width = bottom_right.x - top_left.x;
     let height = bottom_right.y - top_left.y;
-    z = z ?? -2;
+    z = z ?? MIN_Z_INDEX;
 
     for (let x = top_left.x + .5; x <= bottom_right.x + 1; x += 2) {
       new Actor({

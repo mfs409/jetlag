@@ -29,10 +29,17 @@ export class MusicComponent {
     }
   }
 
-  /** Report if there is music that is playing */
-  public playing() {
+  /** True if there is music that is playing */
+  public get playing() {
     return (this.music) ? this.music.playing() && this.is_playing : false;
   }
+
+  /**
+   * Move the music's playback position
+   *
+   * @param seconds Where to seek to, in seconds
+   */
+  public seek(seconds: number) { this.music?.seek(seconds); }
 
   /**
    * Construct a MusicComponent by providing a music object to play.

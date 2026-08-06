@@ -11,5 +11,5 @@ export class ConsoleDevice {
   constructor(private cfg: JetLagGameConfig) { }
 
   /** Display a message to the console if we're not in debug mode */
-  log(msg: string) { if (this.cfg.hitBoxes) console.log(msg); }
+  log(msg: string | number) { if (this.cfg.hitBoxes) console.log(msg); }
 }

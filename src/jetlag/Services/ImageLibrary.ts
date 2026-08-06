@@ -1,5 +1,4 @@
-import { Assets, Graphics, Sprite as PixiSprite, Text as PixiText, Texture, VideoResource } from "pixi.js";
-import { JetLagGameConfig } from "../Config";
+import { Assets, Graphics, Sprite as PixiSprite, Text as PixiText, Texture } from "pixi.js";
 import { stage } from "../Stage";
 
 /** DebugSprite is used when we need to render a debug outline on an actor */
@@ -7,7 +6,7 @@ export class DebugSprite {
   /** The PIXI context that we use for making the shape's outline */
   readonly shape = new Graphics();
 
-  /** A radial line when debugShape is a circle */
+  /** A radial line when debugShape is a circle, to show rotation */
   readonly line = new Graphics();
 }
 
@@ -54,12 +53,16 @@ export class Text {
    * Create some text, with the font size scaled according to the stage's
    * current scale.
    *
-   * @param txt   The text to show
-   * @param opts  PIXI options for the text
+   * @param txt The text to show
+   * @param cfg PIXI options for the text
    */
-  public static makeText(txt: string, opts: any) {
-    opts.fontSize = Math.floor(opts.fontSize * stage.fontScaling);
-    return new Text(new PixiText(txt, opts));
+  public static makeText(txt: string, cfg: any) {
+    cfg.fontSize = Math.floor(cfg.fontSize * stage.fontScaling);
+    // `lineHeight` needs to scale right along with `fontSize`, or multi-line
+    // text will end up with the wrong line spacing relative to its font size
+    // once the stage's scale isn't 1.
+    if (cfg.lineHeight !== undefined) cfg.lineHeight = Math.floor(cfg.lineHeight * stage.fontScaling);
+    return new Text(new PixiText({ text: txt, style: cfg }));
   }
 }
 
@@ -70,83 +73,117 @@ export class Text {
 export class ImageLibraryService {
   /**
    * A map with all of the game's image-based textures in it.  This is slightly
-   * easier using than PIXI.Assets directly, since we don't have to deal with
+   * easier than using PIXI.Assets directly, since we don't have to deal with
    * promises, but of course that means we handle the caching ourselves.
    */
-  private imgTextures = new Map<string, Texture>;
+  private imgTextures = new Map<string, Texture>();
+
+  /** A map with all of the game's video-based textures in it. */
+  private vidTextures = new Map<string, Texture>();
 
   /**
-   * A map with all of the game's video-based textures in it.
-   *
-   * TODO:  It would be beneficial to figure out if the way we are currently
-   *        loading textures is appropriate for high-performance games.
+   * Track the progress of image loading, on a scale from 0 to 1, where 1
+   * means "100% loaded".  "2" means post-loading steps are also complete.
    */
-  private vidTextures = new Map<string, VideoResource>;
+  public imageLoadingProgress = 2;
+
+  /** Track the progress of font loading, the same way as `imageLoadingProgress`. */
+  public fontLoadingProgress = 2;
+
+  /** Track the progress of video loading, the same way as `imageLoadingProgress`. */
+  public videoLoadingProgress = 2;
 
   /**
-   * Load all of the graphics assets, then call the callback to start the game
-   *
-   * @param callback The code to run once all assets are loaded
+   * Create the service.  This does not load any assets; that happens via
+   * `loadFonts`/`loadImageList`/`loadVideos`, which are invoked by Stage.
    */
-  loadAssets(callback: () => void) {
-    // If there are no assets, run the callback immediately
-    if (!this.config.resources) {
-      callback();
-      return;
-    }
-
-    // Fetch all of the videos first
-    //
-    // TODO:  Video fetching has an asynchronous aspect to it.  We are currently
-    //        calling `load()` and ignoring the timing of the callback.  For
-    //        lots of large video assets, this could mean that a cut scene would
-    //        be requested before it was available.  Pixi.js v8 makes this
-    //        easier, but as of 25 May 2024 filters in v8.1.4 are posing a challenge
-    //        to updating JetLag's Pixi.js dependency.  Revisit in v8.2?
-    if (this.config.resources.videoNames) {
-      for (let vidName of this.config.resources.videoNames) {
-        const res = new VideoResource(this.config.resources.prefix + "/" + vidName, { autoPlay: false });
-        res.load().then(x => x.source.autoplay = false)
-        this.vidTextures.set(vidName, res);
-      }
-    }
-
-    // Next load all of the image assets, using the PIXI Assets infrastructure.
-    // When they're all loaded, invoke the callback.
-    //
-    // If there are no images to load, just run the callback immediately
-    if (this.config.resources.imageNames) {
-      Assets.load(this.config.resources.imageNames).then((textures) => {
-        for (let imgName of this.config.resources!.imageNames!) {
-          // If we loaded a sprite sheet, then we need to deconstruct it to get
-          // all its image names.  Otherwise it's easy...
-          if (imgName.match(".json") != null) {
-            for (let o of Object.keys(textures[imgName].textures))
-              this.imgTextures.set(o, textures[imgName].textures[o]);
-          }
-          else {
-            this.imgTextures.set(imgName, textures[imgName]);
-          }
-        }
-        callback();
-      });
-    }
-    else {
-      callback();
-    }
+  constructor() {
+    // basePath isn't set by default, so PIXI won't resolve relative asset paths
+    // until we set it.  We have to set it to the current directory, not the
+    // current file URL.
+    Assets.resolver.basePath = new URL(".", window.location.href).href;
   }
 
   /**
-   * Create the service by loading all of the game's image files
+   * Load fonts into Pixi, so that we can be sure they are available before
+   * Pixi tries to use the fonts to render text.
    *
-   * @param config The game-wide configuration
+   * @param names   An array of font names
+   * @param prefix  A prefix to append to each font name that needs to be
+   *                loaded
    */
-  constructor(private config: JetLagGameConfig) {
-    if (!config.resources)
-      return;
-    // Set the names of the graphics assets, but don't load them yet.
-    for (let imgName of config.resources.imageNames ?? [])
-      Assets.add({ alias: imgName, src: config.resources.prefix + imgName });
+  async loadFonts(names: string[], prefix: string) {
+    if (names.length === 0) return;
+    for (let fontName of names) {
+      Assets.add({ alias: fontName, src: prefix + fontName });
+    }
+    await Assets.load(names, (p) => { this.fontLoadingProgress = p; });
+    this.fontLoadingProgress = 2;
+  }
+
+  /**
+   * Load images into Pixi, so that we can be sure they are available before
+   * Pixi tries to use the images to make sprites
+   *
+   * @param names   An array of image names
+   * @param prefix  A prefix to append to each image name that needs to be
+   *                loaded
+   */
+  async loadImageList(names: string[], prefix: string) {
+    if (names.length === 0) return;
+
+    for (let imgName of names) {
+      Assets.add({ alias: imgName, src: prefix + imgName });
+    }
+
+    // Split into 5 batches, so we can report progress incrementally
+    const batchSize = Math.ceil(names.length / 5);
+    const batches: string[][] = [];
+    for (let i = 0; i < names.length; i += batchSize) {
+      batches.push(names.slice(i, i + batchSize));
+    }
+
+    // Load each batch sequentially
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      let textures = await Assets.load(batch, (p) => {
+        // Scale progress: completed batches + current batch's progress
+        this.imageLoadingProgress = (batchIndex + p) / batches.length;
+      });
+
+      // Process textures from this batch
+      for (let imgName of batch) {
+        // If we loaded a sprite sheet, then we need to deconstruct it to get
+        // all its image names.  Otherwise it's easy...
+        if (imgName.endsWith(".json")) {
+          for (let o of Object.keys(textures[imgName].textures))
+            this.imgTextures.set(o, textures[imgName].textures[o]);
+        }
+        else {
+          this.imgTextures.set(imgName, textures[imgName]);
+        }
+      }
+    }
+
+    this.imageLoadingProgress = 2;
+  }
+
+  /**
+   * Load videos into Pixi, so that we can be sure they are available before
+   * Pixi tries to use them for cut scenes.
+   *
+   * @param names   An array of video names
+   * @param prefix  A prefix to append to each video name that needs to be
+   *                loaded
+   */
+  async loadVideos(names: string[], prefix: string) {
+    if (names.length === 0) return;
+    for (let vidName of names) {
+      Assets.add({ alias: vidName, src: prefix + "/" + vidName, data: { autoPlay: false, preload: true } });
+    }
+    const textures = await Assets.load(names, (p) => { this.videoLoadingProgress = p; });
+    for (let vidName of names) this.vidTextures.set(vidName, textures[vidName]);
+    this.videoLoadingProgress = 2;
   }
 
   /**
@@ -158,9 +195,9 @@ export class ImageLibraryService {
    */
   public getSprite(imgName: string) {
     let texture = this.imgTextures.get(imgName);
-    if (!texture) throw "Unable to find graphics asset '" + imgName + "'";
-    // NB:  If we wanted to use Pixi to modify the texture, then we'd need to
-    //      clone it first.
+    if (!texture) {
+      throw `Unable to find graphics asset '${imgName}'`;
+    }
     return new Sprite(imgName, new PixiSprite(texture));
   }
 
@@ -170,11 +207,17 @@ export class ImageLibraryService {
    *
    * @param imgName The name of the image to load
    *
+   * @warning This returns the shared, cached Texture.  If you want to modify
+   *          it, clone it first, or every other sprite using this image will
+   *          see the change too.
+   *
    * @returns A Texture built from the image
    */
   public getImageAsTexture(imgName: string) {
     let texture = this.imgTextures.get(imgName);
-    if (!texture) throw "Unable to find graphics asset '" + imgName + "'";
+    if (!texture) {
+      throw `Unable to find graphics asset '${imgName}'`;
+    }
     return texture;
   }
 
@@ -187,10 +230,9 @@ export class ImageLibraryService {
    */
   public getVideo(vidName: string) {
     let texture = this.vidTextures.get(vidName);
-    texture!.source.autoplay = false;
-    texture!.source.preload = "auto";
-    if (!texture)
+    if (!texture) {
       throw `Unable to find graphics asset '${vidName}'`;
-    return new Sprite(vidName, new PixiSprite(Texture.from(texture.source)));
+    }
+    return new Sprite(vidName, new PixiSprite(texture));
   }
 }

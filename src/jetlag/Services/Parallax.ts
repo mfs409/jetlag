@@ -18,23 +18,35 @@ class ParallaxLayer {
   /** Last camera position */
   private lastCam = new b2Vec2(0, 0);
 
+  /** Speed at which it scrolls.  Important values are 0, 1, and between.  Differs for auto and non-auto. */
+  private readonly speed: number;
+
+  /** True for X scrolling, false for Y scrolling */
+  private readonly isHorizontal: boolean;
+
+  /** True if this should scroll regardless of the camera */
+  private readonly isAuto: boolean;
+
   /**
    * Construct a ParallaxLayer that can be rendered correctly
    *
-   * @param anchor        A reference point for where one tile of the
-   *                      defaultImage will be placed.
-   * @param imageMaker  An ImageSprite or AnimatedSprite that will be cloned
-   *                      in order to produce enough images to achieve a good
-   *                      scrolling effect.
-   * @param speed         Speed at which it scrolls.  Important values are 0, 1,
-   *                      and between.  Differs for auto and non-auto.
-   * @param isHorizontal  True for X scrolling, false for Y scrolling
-   * @param isAuto        True if this should scroll regardless of the camera
+   * @param cfg.anchor        A reference point for where one tile of the
+   *                          defaultImage will be placed.
+   * @param cfg.speed         Speed at which it scrolls.  Important values are
+   *                          0, 1, and between.  Differs for auto and non-auto.
+   * @param cfg.isHorizontal  True for X scrolling, false for Y scrolling
+   * @param cfg.isAuto        True if this should scroll regardless of the camera
+   * @param imageMaker        An ImageSprite or AnimatedSprite that will be
+   *                          cloned in order to produce enough images to
+   *                          achieve a good scrolling effect.
    */
-  constructor(anchor: { cx: number, cy: number }, imageMaker: () => (ImageSprite | AnimatedSprite), private speed: number, private isHorizontal: boolean, private isAuto: boolean) {
+  constructor(cfg: { anchor: { cx: number, cy: number }, speed: number, isHorizontal: boolean, isAuto: boolean }, imageMaker: () => (ImageSprite | AnimatedSprite)) {
+    this.speed = cfg.speed;
+    this.isHorizontal = cfg.isHorizontal;
+    this.isAuto = cfg.isAuto;
     let firstImage = imageMaker();
     this.images.push(firstImage);
-    this.last.Set(anchor.cx - firstImage.width / 2, anchor.cy - firstImage.height / 2);
+    this.last.Set(cfg.anchor.cx - firstImage.width / 2, cfg.anchor.cy - firstImage.height / 2);
     // figure out how many sprites we need to properly tile the image
     let num = 1;
     if (this.isHorizontal) {
@@ -57,10 +69,12 @@ class ParallaxLayer {
    *                   (false)?
    */
   public render(camera: CameraService, elapsedMs: number, foreground: boolean) {
-    for (let i of this.images)
-      i.prerender(elapsedMs);
-    if (this.isAuto) this.renderAuto(camera, elapsedMs, foreground);
-    else this.renderRelative(camera, elapsedMs, foreground);
+    this.images.forEach(i => i.prerender(elapsedMs));
+    if (this.isAuto) {
+      this.renderAuto(camera, elapsedMs, foreground);
+    } else {
+      this.renderRelative(camera, foreground);
+    }
   }
 
   /**
@@ -73,9 +87,12 @@ class ParallaxLayer {
    */
   private renderAuto(camera: CameraService, elapsedMs: number, foreground: boolean) {
     // Determine the position of a reference tile of the image
-    if (this.isHorizontal) this.last.x += this.speed * elapsedMs;
-    else this.last.y += this.speed * elapsedMs;
-    this.normalizeAndRender(camera, elapsedMs, foreground);
+    if (this.isHorizontal) {
+      this.last.x += this.speed * elapsedMs;
+    } else {
+      this.last.y += this.speed * elapsedMs;
+    }
+    this.normalizeAndRender(camera, foreground);
   }
 
   /**
@@ -85,51 +102,49 @@ class ParallaxLayer {
    *     camera does not move suddenly
    *
    * @param camera     The camera for the world that these layers accompany
-   * @param elapsedMs  The elapsed time since we last drew this layer
    * @param foreground Does this go in the foreground (true) or background
    *                   (false)?
    */
-  private renderRelative(camera: CameraService, elapsedMs: number, foreground: boolean) {
+  private renderRelative(camera: CameraService, foreground: boolean) {
     // Determine the change in camera
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let dx = x - this.lastCam.x;
     let dy = y - this.lastCam.y;
     // Determine the relative change to the reference tile
-    if (this.isHorizontal) this.last.x = this.last.x + dx * this.speed;
-    else this.last.y = this.last.y + dy * this.speed;
-    this.normalizeAndRender(camera, elapsedMs, foreground);
+    if (this.isHorizontal) {
+      this.last.x = this.last.x + dx * this.speed;
+    } else {
+      this.last.y = this.last.y + dy * this.speed;
+    }
+    this.normalizeAndRender(camera, foreground);
   }
 
   /**
    * This is how we actually figure out where to draw the background
-   * 
+   *
    * @param camera     The camera for the world that these layers accompany
    * @param foreground Does this go in the foreground (true) or background
    *                   (false)?
    */
-  private normalizeAndRender(camera: CameraService, elapsedMs: number, foreground: boolean) {
+  private normalizeAndRender(camera: CameraService, foreground: boolean) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
-    let camW = stage.screenWidth / stage.pixelMeterRatio;
-    let camH = stage.screenHeight / stage.pixelMeterRatio;
-    // Normalize the reference tile
-    // TODO: Do this without a while loop
+    // Normalize the reference tile: pick the tile whose left/top edge is at or
+    // before x/y, and whose far edge is past it.  This is `last.x/y` modulo the
+    // tile size, offset to be relative to `x`/`y`.  Doing it via modulo keeps
+    // this O(1).
     if (this.isHorizontal) {
       let w = this.images[0].width;
-      while (this.last.x > x + camW) this.last.x -= w;
-      while (this.last.x + w < x) this.last.x += w;
-      while (this.last.x > x) this.last.x -= w;
+      this.last.x = x - (((x - this.last.x) % w) + w) % w;
     } else {
       let h = this.images[0].height;
-      while (this.last.y > y + camH) this.last.y -= h;
-      while (this.last.y + h < y) this.last.y += h;
-      while (this.last.y > y) this.last.y -= h;
+      this.last.y = y - (((y - this.last.y) % h) + h) % h;
     }
     // save camera for next render
     this.lastCam.x = x;
     this.lastCam.y = y;
-    this.renderVisibleTiles(camera, elapsedMs, foreground);
+    this.renderVisibleTiles(camera, foreground);
   }
 
   /**
@@ -137,11 +152,10 @@ class ParallaxLayer {
    * that are visible
    *
    * @param camera     The camera for the world that these layers accompany
-   * @param elapsedMs  The elapsed time since we last drew this layer
    * @param foreground Does this go in the foreground (true) or background
    *                   (false)?
    */
-  private renderVisibleTiles(camera: CameraService, elapsedMs: number, foreground: boolean) {
+  private renderVisibleTiles(camera: CameraService, foreground: boolean) {
     let x = camera.getLeft(); // left of viewport
     let y = camera.getTop(); // top of viewport
     let camW = stage.screenWidth / stage.pixelMeterRatio;
@@ -152,7 +166,7 @@ class ParallaxLayer {
       while (plx < x + camW) {
         let cx = plx + this.images[i].width / 2;
         let cy = this.last.y + this.images[i].height / 2;
-        this.images[i].renderAsParallax({ cx, cy }, camera, elapsedMs, foreground);
+        this.images[i].renderAsParallax({ cx, cy }, camera, foreground);
         plx += this.images[i].width;
         i++;
       }
@@ -163,7 +177,7 @@ class ParallaxLayer {
       while (ply < y + camH) {
         let cx = this.last.x + this.images[i].width / 2;
         let cy = ply + this.images[i].height / 2;;
-        this.images[i].renderAsParallax({ cx, cy }, camera, elapsedMs, foreground);
+        this.images[i].renderAsParallax({ cx, cy }, camera, foreground);
         ply += this.images[i].height;
         i++;
       }
@@ -190,14 +204,19 @@ export class ParallaxSystem {
    *
    * @param cfg.anchor        The position of one instance of the image.  All
    *                          other instances will be tiled from this point.
-   * @param cfg.imageMaker    Code for making each ImageSprite or AnimatedSprite
    * @param cfg.speed         Speed that the picture seems to move.
    * @param cfg.isHorizontal  True for moving in X, false for moving in Y
    * @param cfg.isAuto        Should the image scroll automatically, or in
    *                          relation to the camera position?
+   * @param imageMaker        Code for making each ImageSprite or AnimatedSprite
    */
-  public addLayer(cfg: { anchor: { cx: number, cy: number }, imageMaker: () => (ImageSprite | AnimatedSprite), speed: number, isHorizontal?: boolean, isAuto?: boolean }) {
-    this.layers.push(new ParallaxLayer(cfg.anchor, cfg.imageMaker, cfg.speed, cfg.isHorizontal == undefined ? true : !!cfg.isHorizontal, !!cfg.isAuto));
+  public addLayer(cfg: { anchor: { cx: number, cy: number }, speed: number, isHorizontal?: boolean, isAuto?: boolean }, imageMaker: () => (ImageSprite | AnimatedSprite)) {
+    this.layers.push(new ParallaxLayer({
+      anchor: cfg.anchor,
+      speed: cfg.speed,
+      isHorizontal: cfg.isHorizontal == undefined ? true : !!cfg.isHorizontal,
+      isAuto: !!cfg.isAuto,
+    }, imageMaker));
   }
 
   /**
@@ -209,7 +228,6 @@ export class ParallaxSystem {
    *                   (false)?
    */
   public render(camera: CameraService, elapsedMs: number, foreground: boolean) {
-    for (let pl of this.layers)
-      pl.render(camera, elapsedMs, foreground);
+    this.layers.forEach(pl => pl.render(camera, elapsedMs, foreground));
   }
 }

@@ -21,19 +21,19 @@ let sockets = new Map<string, User>();
 let app = createServer((req, res) => {
   // Route '/' and '/index.html' to the index.html file
   if (req.url == '/' || req.url == '/index.html') {
-    res.writeHead(200, { "Context-Type": "text/html" });
+    res.writeHead(200, { "Content-Type": "text/html" });
     createReadStream(__dirname + '/index.html').pipe(res);
   }
   // Route '/socket.io.js' to the copy of the socket.io library in
   // node_modules
   else if (req.url == '/socket.io.js') {
-    res.writeHead(200, { "Context-Type": "text/javascript" });
+    res.writeHead(200, { "Content-Type": "text/javascript" });
     createReadStream(__dirname + '/socket.io.js').pipe(res);
   }
   // Use 404.html for everything else
   else {
-    res.writeHead(404, { "Context-Type": "text/html" });
-    createReadStream('./404.html').pipe(res);
+    res.writeHead(404, { "Content-Type": "text/html" });
+    createReadStream(__dirname + '/404.html').pipe(res);
   }
 });
 

@@ -6,17 +6,11 @@ export class TimedEvent {
   /** The number of milliseconds before we execute this event's action */
   private msUntilNext: number;
 
-  /** Should we repeat this event */
-  private repeat: boolean;
-
   /** The milliseconds between executions of this event */
   private msInterval: number;
 
   /** Has the event been explicitly cancelled */
   public cancelled = false;
-
-  /** The action to run */
-  private action: () => void = () => { };
 
   /**
    * Create a TimedEvent that can be scheduled to run in the future.
@@ -25,10 +19,8 @@ export class TimedEvent {
    * @param repeat   Should this event repeat?
    * @param action   The action to perform when time is up
    */
-  constructor(interval: number, repeat: boolean, action: () => void) {
-    this.repeat = repeat;
+  constructor(interval: number, private repeat: boolean, private action: () => void) {
     this.msInterval = interval * 1000;
-    this.action = action;
     this.msUntilNext = this.msInterval;
   }
 
@@ -38,8 +30,7 @@ export class TimedEvent {
    * if this is a looping event, and elapsedMs is greater tha the period of the
    * timer, it will not run multiple times.
    *
-   * Warning: This should only be called by Stage.  You probably want to call
-   *          `add()` instead.
+   * Warning: This should only be called by Stage
    *
    * @param elapsedMs The milliseconds that have transpired
    *
@@ -64,6 +55,9 @@ export class TimedEvent {
    * immediately... the event will be run on the next iteration of the render
    * loop.
    *
+   * This can be useful if you want the time spent on a PauseScene to count
+   * toward in-game time.
+   *
    * @param elapsed How many more seconds have transpired.  Can be negative to
    *                delay when the next timer event happens.
    */
@@ -71,12 +65,13 @@ export class TimedEvent {
 }
 
 /**
- * Timer is an abstract clock object that can execute events at some point in
- * the future.  Critically, a timer only advances when its associated scene
- * wants it to advance.  Thus we can easily pause a timer, and delay execution
- * of all of its events, by simply failing to call advance().  It is also easy
- * to destroy a timer and end the repetition of the events it entails, because
- * we can do so at the granularity of the Timer, not the individual events.
+ * TimerService manages an abstract clock object that can execute events at some
+ * point in the future.  Critically, time only advances when the associated
+ * scene wants it to advance.  Thus we can easily pause a timer, and delay
+ * execution of all of its events, by simply failing to call advance().  It is
+ * also easy to destroy the service and end the repetition of the events it
+ * entails, because we can do so at the granularity of the TimerService, not the
+ * individual events.
  */
 export class TimerService {
   /** The set of events that are pending */

@@ -23,7 +23,7 @@ export class Scene {
   readonly camera: CameraService;
 
   /** A timer, for creating time-based events */
-  readonly timer: TimerService = new TimerService();
+  readonly timer = new TimerService();
 
   /** Events that get processed on the next render, then discarded */
   readonly oneTimeEvents: (() => void)[] = [];
@@ -33,9 +33,11 @@ export class Scene {
 
   /** Run any pending events that should happen during a render */
   public runRendertimeEvents() {
+    // NB: Must use let-of syntax because a one-time event can insert into the
+    // oneTimeEvents, in which case we want that to run, too.
     for (let e of this.oneTimeEvents) e();
     this.oneTimeEvents.length = 0;
-    for (let e of this.repeatEvents) e();
+    this.repeatEvents.forEach(e => e());
   }
 
   /**
@@ -48,14 +50,17 @@ export class Scene {
     this.camera = new CameraService(pixelMeterRatio);
   }
 
+  /** The gravity in this world */
+  public get gravity() { return this.physics.world.GetGravity(); }
+
   /**
    * Set (or reset) the gravity in this world
    *
-   * @param x The gravitational force in the x dimension
-   * @param y The gravitational force in the y dimension (remember up is
-   *          negative!)
+   * @param g.x The gravitational force in the x dimension
+   * @param g.y The gravitational force in the y dimension (remember up is
+   *            negative!)
    */
-  public setGravity(x: number, y: number) {
-    this.physics?.world.SetGravity(new b2Vec2(x, y));
+  public set gravity(g: { x: number, y: number }) {
+    this.physics.world.SetGravity(new b2Vec2(g.x, g.y));
   }
 }
