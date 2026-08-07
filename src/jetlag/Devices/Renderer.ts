@@ -176,6 +176,25 @@ export class RendererDevice {
    */
   private debug?: Container;
 
+  /** Are hitbox/debug outlines currently being drawn? */
+  public get debugVisible() { return this.debug !== undefined; }
+
+  /**
+   * Turn hitbox/debug outline rendering on or off at runtime.
+   *
+   * NB: When `Config.hitBoxes` is false, this doesn't turn debug boxes on.  It
+   * just gives a way to show/hide the boxes when `Config.hitBoxes` is true.
+   */
+  public setDebugVisible(visible: boolean) {
+    if (visible === this.debugVisible) return;
+    if (visible) {
+      this.debug = new Container();
+    } else {
+      this.pixi.stage.removeChild(this.debug!);
+      this.debug = undefined;
+    }
+  }
+
   /** The "time" in milliseconds, where 0 is when the game started */
   private elapsed = 0;
 
