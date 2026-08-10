@@ -46,9 +46,7 @@ function builder() {
     behaviors: new SolidBehavior(),
   });
 
-  // Pressing a key will change the hero's velocity.  Each handler is bound to
-  // both an arrow key and its WASD equivalent via the array syntax, instead of
-  // doubling every line with a separate call per key.
+  // Pressing an arrow or WASD key will change the hero's velocity
   stage.keyboard.setKeyUpHandler([KeyCodes.KEY_UP, KeyCodes.KEY_W], () => hero.rigidBody.yVelocity = 0);
   stage.keyboard.setKeyUpHandler([KeyCodes.KEY_DOWN, KeyCodes.KEY_S], () => hero.rigidBody.yVelocity = 0);
   stage.keyboard.setKeyUpHandler([KeyCodes.KEY_LEFT, KeyCodes.KEY_A], () => hero.rigidBody.xVelocity = 0);
