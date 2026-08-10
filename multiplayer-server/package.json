@@ -8,7 +8,7 @@
     "start": "node ./scripts/main.mjs start",
     "build": "node ./scripts/main.mjs build",
     "clean": "node ./scripts/main.mjs clean",
-    "check": "tsc",
+    "check": "tsc --noemit",
     "help": "node ./scripts/main.mjs help"
   },
   "dependencies": {

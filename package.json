@@ -5,7 +5,7 @@
     "scripts": {
         "start": "node scripts/main.mjs start",
         "build": "node scripts/main.mjs build",
-        "check": "tsc",
+        "check": "tsc --noemit",
         "clean": "node scripts/main.mjs clean",
         "help": "node scripts/main.mjs help"
     },

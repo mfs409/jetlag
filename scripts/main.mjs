@@ -44,8 +44,6 @@ const srcAssets = path.join(root, "assets");
 const DEV_OUTPUT_FOLDER = path.join(root, "dev-serve");
 /** Where `npm run build` puts its build output */
 const GAME_DIST_FOLDER = path.join(root, "dist");
-/** Where `npm run check` puts its output */
-const TYPE_CHECK_FOLDER = path.join(root, "check");
 
 /**
  * Clobber a folder, and all of its contents, recursively.  Then re-create the
@@ -60,7 +58,7 @@ function resetFolder(folder) {
 
 /** Clean up by deleting all output folders */
 function clean() {
-  for (const folder of [TYPE_CHECK_FOLDER, GAME_DIST_FOLDER, DEV_OUTPUT_FOLDER]) {
+  for (const folder of [GAME_DIST_FOLDER, DEV_OUTPUT_FOLDER]) {
     fs.rmSync(folder, { recursive: true, force: true });
   }
   console.log(chalk.green(`  ✓ Removed build output folders`));

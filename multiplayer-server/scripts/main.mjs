@@ -39,8 +39,6 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const srcFolder = path.join(root, "src");
 /** Where build output goes */
 const DIST_FOLDER = path.join(root, "dist");
-/** Where `npm run check` puts its output */
-const TYPE_CHECK_FOLDER = path.join(root, "check");
 
 /** Static files that just get copied into `dist`, not bundled */
 const staticFiles = ["index.html", "404.html"];
@@ -56,7 +54,7 @@ function buildStaticFiles(deployFolder) {
 
 /** Clean up by deleting all output folders */
 function clean() {
-  for (const folder of [TYPE_CHECK_FOLDER, DIST_FOLDER]) {
+  for (const folder of [DIST_FOLDER]) {
     fs.rmSync(folder, { recursive: true, force: true });
   }
   console.log(chalk.green(`  ✓ Removed build output folders`));
