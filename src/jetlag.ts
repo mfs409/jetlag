@@ -92,6 +92,7 @@ export { RandomService } from './jetlag/Services/Random';
 export { TiltService } from './jetlag/Services/Tilt';
 export { ParallaxSystem } from './jetlag/Services/Parallax';
 export { GridSystem } from './jetlag/Systems/Grid';
+export { DebugToggle } from './jetlag/Systems/DebugToggle';
 export { SvgSystem } from './jetlag/Systems/Svg';
 export { BasicCollisionService } from './jetlag/Services/Collisions';
 export { AdvancedCollisionService } from './jetlag/Services/Collisions';

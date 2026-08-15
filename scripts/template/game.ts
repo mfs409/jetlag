@@ -1,4 +1,4 @@
-import { Actor, BoxBody, CircleBody, FilledBox, FilledCircle, FilledPolygon, GridSystem, PlayerControlBehavior, JetLagGameConfig, KeyCodes, SolidBehavior, PolygonBody, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, BoxBody, CircleBody, DebugToggle, DynamicBodyMovement, FilledBox, FilledCircle, FilledPolygon, GridSystem, PlayerControlBehavior, JetLagGameConfig, KeyCodes, SolidBehavior, PolygonBody, initializeAndLaunch, stage } from "../../jetlag";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
@@ -25,10 +25,15 @@ function builder() {
   // coordinates in the developer console.
   GridSystem.makeGrid(stage.world, { x: 0, y: 0 }, { x: 16, y: 9 });
 
+  // Enable the 'b' key to turn on/off hitBoxes at any time.  This line should
+  // be removed before releasing a game, but it's helpful during development.
+  DebugToggle.enable();
+
   // Make a "hero" who moves via keyboard control and appears as a circle
   let hero = new Actor({
     appearance: new FilledCircle({ radius: .5, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
     rigidBody: new CircleBody({ cx: 5, cy: 2, radius: .5 }),
+    movement: new DynamicBodyMovement(),
     behaviors: new PlayerControlBehavior(),
   });
 
