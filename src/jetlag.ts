@@ -24,7 +24,7 @@ export { CollectableBehavior } from './jetlag/Components/Behavior';
 export { GoalBehavior } from './jetlag/Components/Behavior';
 export { HazardBehavior } from './jetlag/Components/Behavior';
 export { SolidBehavior } from './jetlag/Components/Behavior';
-export { TriggerBehavior } from './jetlag/Components/Behavior';
+export { TouchPlateBehavior } from './jetlag/Components/Behavior';
 export { ProximityBehavior } from './jetlag/Components/Behavior';
 export { ThrowableBehavior } from './jetlag/Components/Behavior';
 export { PunchBehavior } from './jetlag/Components/Behavior';

@@ -34,7 +34,7 @@ export enum CollisionExemptions {
   /** Something that can do harm to other actors */
   HAZARD = 6,
   /** The inverse of the default: everything passes over it */
-  TRIGGER = 7,
+  TOUCH_PLATE = 7,
   /** The default: nothing passes over it */
   SOLID = 8,
   /** The actor is really just a decoration, not a physical object */
@@ -103,6 +103,16 @@ export function getBehavior<T extends Behavior>(actor: Actor, ctor: new (...args
  */
 export function dispatchCollision(self: Actor, other: Actor) {
   return self.behaviors.some(b => b.onCollide(self, other));
+}
+
+/**
+ * Tell every Behavior on `self` that its contact with `other` just ended.
+ *
+ * @param self  The actor this behavior is attached to
+ * @param other The actor whose contact with `self` just ended
+ */
+export function dispatchEndCollision(self: Actor, other: Actor) {
+  self.behaviors.forEach(b => b.onEndCollide(self, other));
 }
 
 /**
@@ -198,6 +208,13 @@ export abstract class Behavior {
    *          the collision.
    */
   onCollide(_self: Actor, _other: Actor) { return false; }
+
+  /**
+   * Code to run when a contact between this Behavior's Actor (`self`) and
+   * `other` ends.  By default, nothing happens.  A contact also ends when
+   * either actor is removed from the world.
+   */
+  onEndCollide(_self: Actor, _other: Actor): void { }
 
   /** Code to run immediately before rendering this Behavior's Actor */
   prerender(elapsedMs: number) {
@@ -864,10 +881,16 @@ export class SolidBehavior extends Behavior {
 }
 
 /**
- * TriggerBehavior is for an actor who doesn't register Box2D collisions, but
- * runs code on contact
+ * TouchPlateBehavior is for an actor who doesn't register Box2D collisions, but
+ * runs code when something enters it (`onEnter`) and when that something leaves
+ * it (`onLeave`).  It's like a pressure plate.
+ *
+ * `Other` is a trick for avoiding type casts: If the constructor's eligible()
+ * argument is a type guard (returns `other is Other` instead of returning
+ * boolean), then onEnter and onLeave work with Other without having to cast to
+ * Other first.
  */
-export class TriggerBehavior extends Behavior {
+export class TouchPlateBehavior<Other extends Actor = Actor> extends Behavior {
   /** The actor associated with this Behavior */
   public set actor(actor: Actor | undefined) {
     this._actor = actor;
@@ -877,37 +900,60 @@ export class TriggerBehavior extends Behavior {
   /** The actor associated with this Behavior */
   public get actor() { return this._actor; }
 
-  /** The code to run when an eligible actor crosses this */
-  public onTrigger: (self: Actor, other: Actor) => void;
+  /** The code to run when an eligible actor enters this (starts touching it) */
+  public onEnter: (self: Actor, other: Other) => void;
 
-  /** Which actors trigger this?  Defaults to player-controlled actors only. */
+  /** The code to run when an eligible actor stops touching this */
+  public onLeave: (self: Actor, other: Other) => void;
+
+  /**
+   * Which actors does this affect?  Defaults to player-controlled actors only.
+   */
   public eligible: (other: Actor) => boolean;
 
   /**
-   * Construct a TriggerBehavior
+   * Construct a TouchPlateBehavior.  If `eligible` is a type guard, such as
+   * `(a: Actor): a is Bug => a.data instanceof BugData`, then `onEnter` and
+   * `onLeave` are given an actor of that type, so they don't need to cast.
    *
-   * @param cfg.onTrigger The code to run when an eligible actor crosses this
-   * @param cfg.eligible  Which actors trigger this (default: only
-   *                       player-controlled actors)
-   * @param cfg.team      The team this actor belongs to (default 0)
+   * @param cfg.onEnter  The code to run when an eligible actor enters this
+   *                     (that is, starts touching it)
+   * @param cfg.onLeave  The code to run when an eligible actor leaves this
+   *                     (that is, stops touching it)
+   * @param cfg.eligible Which actors this reacts to (default: only
+   *                     player-controlled actors)
+   * @param cfg.team     The team this actor belongs to (default 0)
    */
-  constructor(cfg: { onTrigger: (self: Actor, other: Actor) => void, eligible?: (other: Actor) => boolean, team?: number }) {
+  constructor(cfg: { onEnter?: (self: Actor, other: Other) => void, onLeave?: (self: Actor, other: Other) => void, eligible: (other: Actor) => other is Other, team?: number });
+  constructor(cfg: { onEnter?: (self: Actor, other: Actor) => void, onLeave?: (self: Actor, other: Actor) => void, eligible?: (other: Actor) => boolean, team?: number });
+  constructor(cfg: { onEnter?: (self: Actor, other: any) => void, onLeave?: (self: Actor, other: any) => void, eligible?: (other: Actor) => boolean, team?: number }) {
     super(cfg);
-    this.collisionRules.properties.push(CollisionExemptions.TRIGGER);
-    this.onTrigger = cfg.onTrigger;
+    this.collisionRules.properties.push(CollisionExemptions.TOUCH_PLATE);
+    this.onEnter = cfg.onEnter ?? (() => { });
+    this.onLeave = cfg.onLeave ?? (() => { });
     this.eligible = cfg.eligible ?? defaultPlayerOnly;
   }
 
   /**
-   * Run `onTrigger` if `other` is eligible
+   * Run `onEnter` if `other` is eligible
    *
    * @param self  This Behavior's actor
    * @param other The actor touching `self`
    */
   onCollide(self: Actor, other: Actor) {
     if (!this.eligible(other)) return false;
-    this.onTrigger(self, other);
+    this.onEnter(self, other as Other);
     return true;
+  }
+
+  /**
+   * Run `onLeave` if `other` is eligible
+   *
+   * @param self  This Behavior's actor
+   * @param other The actor that was touching `self`
+   */
+  onEndCollide(self: Actor, other: Actor) {
+    if (this.eligible(other)) this.onLeave(self, other as Other);
   }
 }
 

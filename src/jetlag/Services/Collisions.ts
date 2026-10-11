@@ -2,7 +2,7 @@ import { b2AABB, b2Contact, b2ContactImpulse, b2DistanceJoint, b2DistanceJointDe
 import { Actor, actorFromBody } from "../Entities/Actor";
 import { Scene } from "../Entities/Scene";
 import { DIRECTION } from "../Components/StateManager";
-import { CollisionExemptions, dispatchCollision, dispatchProximityEnd, dispatchProximityStart, dispatchPunchContact, relativeZone } from "../Components/Behavior";
+import { CollisionExemptions, dispatchCollision, dispatchEndCollision, dispatchProximityEnd, dispatchProximityStart, dispatchPunchContact, relativeZone } from "../Components/Behavior";
 import { stage } from "../Stage";
 
 /**
@@ -15,9 +15,6 @@ class PointToActorCallback {
 
   /** A helper vector for tracking the location that is being queried */
   private readonly touchVector = new b2Vec2(0, 0);
-
-  /** The tolerance (in meters) when looking in a region around a point */
-  private readonly tolerance = 0.1;
 
   /** The bounding box around the point that is being tested */
   private readonly aabb = new b2AABB();
@@ -50,14 +47,17 @@ class PointToActorCallback {
   /**
    * See if there is an Entity at point (x, y)
    *
-   * @param pt    The point that is being checked
-   * @param world The world in which the check is happening
+   * @param pt       The point that is being checked
+   * @param world    The world in which the check is happening
+   * @param bbLength The side length (in meters) of the square, centered on
+   *                 `pt`, in which to look for entities
    */
-  query(pt: { x: number, y: number }, world: b2World) {
+  query(pt: { x: number, y: number }, world: b2World, bbLength: number) {
+    const half = bbLength / 2;
     this.foundEntities.length = 0;
     this.touchVector.Set(pt.x, pt.y);
-    this.aabb.lowerBound.Set(pt.x - this.tolerance, pt.y - this.tolerance);
-    this.aabb.upperBound.Set(pt.x + this.tolerance, pt.y + this.tolerance);
+    this.aabb.lowerBound.Set(pt.x - half, pt.y - half);
+    this.aabb.upperBound.Set(pt.x + half, pt.y + half);
     world.QueryAABB(this.aabb, (fix: b2Fixture) => this.checkIfActive(fix));
   }
 }
@@ -75,13 +75,23 @@ export class BasicCollisionService {
   protected readonly pointQuerier = new PointToActorCallback();
 
   /**
-   * Query to find the actors at a screen coordinate
+   * Query to find the actors at a coordinate.  This finds the actors whose
+   * bounding boxes overlap a square centered on the coordinate.  Box2D pads
+   * each bounding box by about 0.1 meters, so the search area is about 0.2
+   * meters larger than `bbLength` in each dimension.
+   *
+   * NB: The returned array is reused by the next call, so copy it if you need
+   *     to keep it.
    *
    * @param coords.x  The X coordinate (in meters) to look up
    * @param coords.y  The Y coordinate (in meters) to look up
+   * @param bbLength  The side length (in meters) of the square to search.  Use
+   *                  a small value to find what's at a point (like a tap), or
+   *                  the size of something you want to place, to find out if
+   *                  anything is in its way.  Defaults to 0.2.
    */
-  public actorsAt(coords: { x: number, y: number }) {
-    this.pointQuerier.query(coords, this.world);
+  public actorsAt(coords: { x: number, y: number }, bbLength = 0.2) {
+    this.pointQuerier.query(coords, this.world, bbLength);
     return this.pointQuerier.foundEntities;
   }
 }
@@ -190,6 +200,13 @@ class ContactListener {
     // enter/exit zone -- so just skip the endContactHandlers system below
     // for it, the same way proximity fixtures do.
     if (fixA === a.rigidBody?.punchFixture || fixB === b.rigidBody?.punchFixture) return;
+
+    // After the next render, notify each actor's Behaviors that the contact
+    // ended
+    this.scene.oneTimeEvents.push(() => {
+      dispatchEndCollision(a, b);
+      dispatchEndCollision(b, a);
+    });
 
     // If this pair is in the array, splice it out and run the array entry.
     //
