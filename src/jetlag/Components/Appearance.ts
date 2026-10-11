@@ -1362,3 +1362,19 @@ export class ParticleComponent {
  * AppearanceComponent is the type of anything that can be drawn to the screen
  */
 export type AppearanceComponent = TextSprite | ImageSprite | AnimatedSprite | VideoSprite | FilledBox | FilledRoundedBox | FilledCircle | FilledPolygon | ParticleComponent;
+
+/**
+ * Get the first appearance of type `T` on `actor`.  Throw an error if it can't
+ * be found.
+ *
+ * @param actor The actor whose appearances are being searched
+ * @param ctor  The constructor of the appearance type to look for, such as
+ *              `AnimatedSprite`
+ *
+ * @returns The appearance
+ */
+export function getAppearance<T extends AppearanceComponent>(actor: Actor, ctor: new (...args: any[]) => T): T {
+  const found = actor.appearance.find(a => a instanceof ctor) as T | undefined;
+  if (!found) throw new Error(`This actor has no ${ctor.name}`);
+  return found;
+}

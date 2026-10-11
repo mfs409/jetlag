@@ -2,7 +2,7 @@ import { RigidBodyComponent } from "../Components/RigidBody";
 import { AppearanceComponent } from "../Components/Appearance";
 import { StateManagerComponent } from "../Components/StateManager";
 import { SoundEffectComponent } from "../Components/SoundEffect";
-import { PassiveBehavior, Behavior, setProperty } from "../Components/Behavior";
+import { PassiveBehavior, Behavior } from "../Components/Behavior";
 import { Scene } from "./Scene";
 import { MovementComponent, PassThroughMovement, TiltMovement } from "../Components/Movement";
 import { stage } from "../Stage";
@@ -54,10 +54,28 @@ export class GestureHandlers {
 }
 
 /**
+ * Everything that can be given to the `Actor` constructor, other than `data`,
+ * which has its own rules (see the constructor)
+ */
+interface ActorConfig {
+  rigidBody: RigidBodyComponent,
+  appearance: AppearanceComponent | AppearanceComponent[],
+  movement?: MovementComponent,
+  behaviors?: Behavior | Behavior[],
+  gestures?: GestureHandlers,
+  sounds?: SoundEffectComponent,
+  onDisappear?: (a: Actor) => void
+}
+
+/**
  * Actor is the main entity of the game.  Pretty much everything on the stage is
  * an actor.
+ *
+ * An actor can carry data of type `D` in its `data` field.  `D` will be
+ * inferred by the `data` argument provided to the Actor constructor. If you
+ * omit it, `data` will have type `unknown`.
  */
-export class Actor {
+export class Actor<D = unknown> {
   /**
    * A unique, creation-order id.  Used to deterministically break ties when
    * two Actors' Behaviors both might react to the same contact: whichever
@@ -116,13 +134,10 @@ export class Actor {
   readonly appearance: AppearanceComponent[];
 
   /**
-   * A map of state that is specific to this actor.
-   *
-   * This is used by Behavior components, and also by the programmer.  It is the
-   * programmer's responsibility to avoid using string keys that are also used
-   * by a Behavior component.
+   * Data that is specific to this actor, of whatever type was given at
+   * construction time.  It is strongly typed.
    */
-  readonly properties = new Map<string, any>();
+  readonly data: D;
 
   /** The current state of this Actor */
   readonly state = new StateManagerComponent();
@@ -132,6 +147,19 @@ export class Actor {
 
   /** Code to run when the actor disappears */
   readonly onDisappear: undefined | ((a: Actor) => void);
+
+  // NB: Below, there are two overloads on the constructor.
+  //
+  // - The first is for when a Data is provided.  TypeScript sees the data
+  //   object, figures out the type, and is happy.
+  // - The second is for when a Data is not provided.  Typescript gives
+  //   `unknown` in this case, and is happy.
+  // - The trick is that the second case will generate a compiler error if the
+  //   programmer calls new Actor<Type>({...}) and forgets to provide a `data`
+  //   of that same `Type`.
+  // - In all cases, the "third constructor" is the implementation (invisible to
+  //   callers).  It coerces config.data to D, which is ok when it's undefined,
+  //   because of the second overload.
 
   /**
    * Create an Actor
@@ -143,13 +171,14 @@ export class Actor {
    * @param config.gestures     Any gestures to attach to this actor
    * @param config.sounds       The sounds for this actor
    * @param config.onDisappear  Code to run when the actor disappears
-   * @param config.properties   Additional named properties to merge into
-   *                            `actor.properties` after every Behavior has had
-   *                            a chance to set its own via `attach()`. Throws
-   *                            if a key here collides with one a Behavior
-   *                            already claimed.
+   * @param config.data         Data to attach as `actor.data`.  It is required
+   *                            if `D` is anything other than `unknown`, so
+   *                            that `actor.data` always has the type it claims
    */
-  public constructor(config: { rigidBody: RigidBodyComponent, appearance: AppearanceComponent | AppearanceComponent[], movement?: MovementComponent, behaviors?: Behavior | Behavior[], gestures?: GestureHandlers, sounds?: SoundEffectComponent, onDisappear?: (a: Actor) => void, properties?: Map<string, any> }) {
+  public constructor(config: ActorConfig & { data: D });
+  public constructor(config: ActorConfig & (unknown extends D ? { data?: undefined } : never));
+  public constructor(config: ActorConfig & { data?: D }) {
+    this.data = config.data as D;
     this.scene = config.rigidBody.scene;
 
     let appearance = [] as AppearanceComponent[];
@@ -183,7 +212,6 @@ export class Actor {
     this.behaviors = behaviors;
     this.behaviors.forEach(b => b.actor = this);
     this.behaviors.forEach(b => b.attach(this));
-    for (const [key, value] of config.properties ?? []) setProperty(this, key, value);
 
     if (config.gestures) {
       this.gestures = config.gestures;

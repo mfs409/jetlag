@@ -69,7 +69,8 @@ export function relativeZone(self: Actor, other: Actor): DIRECTION {
 }
 
 /**
- * Find the first Behavior of type `T` on `actor`, if any
+ * Find the first Behavior of type `T` on `actor`, if any.  Use this when the
+ * actor might not have one.  When it must, use `getBehavior` instead.
  *
  * @param actor The actor whose behaviors are being searched
  * @param ctor  The constructor of the Behavior type to look for
@@ -79,51 +80,18 @@ export function findBehavior<T extends Behavior>(actor: Actor, ctor: new (...arg
 }
 
 /**
- * Set `actor.properties[key]` for the first time.  Each key is owned by the
- * Behavior that first sets it (or, for keys not claimed by any Behavior, by the
- * Actor's own `properties` constructor argument, which is merged in last).
- * Setting twice is an error.
+ * Get the first Behavior of type `T` on `actor`, and fail if it doesn't have
+ * one. When the actor might not have one, use `findBehavior` instead.
  *
- * @param actor The actor whose property is being set
- * @param key   The property's key (by convention, a Behavior's own static key
- *              constant, e.g. `HealthBehavior.HIT_POINTS`)
- * @param value The property's initial value
- */
-export function setProperty(actor: Actor, key: string, value: any) {
-  if (actor.properties.has(key)) {
-    throw new Error(`Actor property "${key}" was already set; cannot override it`);
-  }
-  actor.properties.set(key, value);
-}
-
-/**
- * Update an already-set `actor.properties[key]`.  This is for a Behavior
- * changing its own property's value over time, so it throws if the key was
- * never set.
+ * @param actor The actor whose behaviors are being searched
+ * @param ctor  The constructor of the Behavior type to look for
  *
- * @param actor The actor whose property is being updated
- * @param key   The property's key (must already be set, via `setProperty`)
- * @param value The property's new value
+ * @returns The Behavior
  */
-export function updateProperty(actor: Actor, key: string, value: any) {
-  if (!actor.properties.has(key)) {
-    throw new Error(`Actor property "${key}" was never set; cannot update it`);
-  }
-  actor.properties.set(key, value);
-}
-
-/**
- * Read `actor.properties[key]`, throwing if it was never set (instead of
- * returning `undefined`)
- *
- * @param actor The actor whose property is being read
- * @param key   The property's key
- */
-export function getProperty<T>(actor: Actor, key: string): T {
-  if (!actor.properties.has(key)) {
-    throw new Error(`Actor property "${key}" was never set`);
-  }
-  return actor.properties.get(key) as T;
+export function getBehavior<T extends Behavior>(actor: Actor, ctor: new (...args: any[]) => T): T {
+  const found = findBehavior(actor, ctor);
+  if (!found) throw new Error(`This actor has no ${ctor.name}`);
+  return found;
 }
 
 /**
@@ -186,7 +154,7 @@ export abstract class Behavior {
   /**
    * Attach the behavior to an actor.  This is called internally, once per
    * behavior.  It lets a Behavior customize parts of the actor (such as its
-   * rigid body and properties).
+   * rigid body).
    */
   attach(_actor: Actor): void { }
 
@@ -315,8 +283,11 @@ export class JumpBehavior extends Behavior {
   /** Allow the actor to do > 1 but not infinite jumps while in the air */
   private numJumpsAllowed: number;
 
-  /** The `actor.properties` key for how many jumps have been made since the actor was last on the ground */
-  static readonly CURR_JUMPS = "currJumps";
+  /** How many jumps have been made since the actor was last on the ground */
+  private jumpsMade = 0;
+
+  /** How many jumps have been made since the actor was last on the ground */
+  public get currentJumps() { return this.jumpsMade; }
 
   /**
    * Construct a JumpBehavior
@@ -333,15 +304,11 @@ export class JumpBehavior extends Behavior {
     this.numJumpsAllowed = Math.max(1, cfg.numJumpsAllowed ?? 1);
   }
 
-  /** Initializes this actor's jump count to 0 */
-  attach(actor: Actor) { setProperty(actor, JumpBehavior.CURR_JUMPS, 0); }
-
   /** Make the actor jump, unless it is in the air and out of jumps */
   public jump(x: number, y: number) {
     if (!this._actor) return;
-    let currJumps = getProperty<number>(this._actor, JumpBehavior.CURR_JUMPS);
-    if (!this.allowMultiJump && currJumps >= this.numJumpsAllowed) return;
-    updateProperty(this._actor, JumpBehavior.CURR_JUMPS, currJumps + 1);
+    if (!this.allowMultiJump && this.jumpsMade >= this.numJumpsAllowed) return;
+    this.jumpsMade++;
 
     let v = this._actor.rigidBody.body.GetLinearVelocity();
     // NB: setVelocity() breaks any existing sticky joint first (or it would
@@ -362,7 +329,7 @@ export class JumpBehavior extends Behavior {
     if (this._actor.state.current.jumping) {
       this._actor.state.changeState(this._actor, StateEvent.JUMP_N);
     }
-    updateProperty(this._actor, JumpBehavior.CURR_JUMPS, 0);
+    this.jumpsMade = 0;
   }
 }
 
@@ -420,19 +387,19 @@ export class CrawlBehavior extends Behavior {
  * It also provides invincibility.
  */
 export class HealthBehavior extends Behavior {
-  /** The `actor.properties` key for remaining hit points */
-  static readonly HIT_POINTS = "hitPoints";
+  /** Remaining hit points */
+  private _hitPoints: number;
 
-  /** The `actor.properties` key for remaining invincibility time, in milliseconds */
-  static readonly INVINCIBLE_REMAINING_MS = "invincibleRemainingMs";
+  /** Remaining invincibility time, in milliseconds */
+  private invincibleRemainingMs = 0;
 
   /** Remaining hit points */
-  public get hitPoints() { return getProperty<number>(this._actor!, HealthBehavior.HIT_POINTS); }
+  public get hitPoints() { return this._hitPoints; }
 
   /** Setting this fires `onHitPointsChange` (if provided) when the value actually changes */
   public set hitPoints(amount: number) {
-    let old = this.hitPoints;
-    updateProperty(this._actor!, HealthBehavior.HIT_POINTS, amount);
+    let old = this._hitPoints;
+    this._hitPoints = amount;
     if (old != amount && this.onHitPointsChange) this.onHitPointsChange(this._actor!);
   }
 
@@ -441,7 +408,7 @@ export class HealthBehavior extends Behavior {
 
   /** Time (seconds) until invincibility runs out */
   public get invincibleRemaining() {
-    return Math.max(0, getProperty<number>(this._actor!, HealthBehavior.INVINCIBLE_REMAINING_MS) / 1000);
+    return Math.max(0, this.invincibleRemainingMs / 1000);
   }
 
   /**
@@ -453,18 +420,13 @@ export class HealthBehavior extends Behavior {
    */
   public set invincibleRemaining(amountSeconds: number) {
     const wasInvincible = this.invincibleRemaining > 0;
-    updateProperty(this._actor!, HealthBehavior.INVINCIBLE_REMAINING_MS, amountSeconds * 1000);
+    this.invincibleRemainingMs = amountSeconds * 1000;
     if (amountSeconds > 0) this._actor!.state.changeState(this._actor!, StateEvent.INV_Y);
     else if (wasInvincible) this._actor!.state.changeState(this._actor!, StateEvent.INV_N);
   }
 
   /** Code to run when this actor's health drops to 0 and it is defeated */
   public onDefeated?: (a: Actor, defeatedBy?: Actor) => void;
-
-  /**
-   * The starting hit points, captured at construction time and written into
-   * `actor.properties` by `attach()` */
-  private initialHitPoints: number;
 
   /**
    * Construct a HealthBehavior
@@ -476,22 +438,18 @@ export class HealthBehavior extends Behavior {
    */
   constructor(cfg: { hitPoints?: number, onHitPointsChange?: (a: Actor) => void, onDefeated?: (a: Actor, defeatedBy?: Actor) => void, team?: number } = {}) {
     super(cfg);
-    this.initialHitPoints = cfg.hitPoints ?? 1;
+    this._hitPoints = cfg.hitPoints ?? 1;
     this.onHitPointsChange = cfg.onHitPointsChange;
     this.onDefeated = cfg.onDefeated;
   }
 
-  /** Initializes this actor's hit points and invincibility properties, and registers the invincibility-decay prerender task */
+  /** Registers the invincibility-decay prerender task */
   attach(actor: Actor) {
-    setProperty(actor, HealthBehavior.HIT_POINTS, this.initialHitPoints);
-    setProperty(actor, HealthBehavior.INVINCIBLE_REMAINING_MS, 0);
-
     // Decay invincibility over time, firing INV_N once it reaches 0
     this.prerenderTasks.push((elapsedMs: number) => {
-      const remaining = getProperty<number>(actor, HealthBehavior.INVINCIBLE_REMAINING_MS);
-      if (remaining > 0) {
-        const next = remaining - elapsedMs;
-        updateProperty(actor, HealthBehavior.INVINCIBLE_REMAINING_MS, Math.max(0, next));
+      if (this.invincibleRemainingMs > 0) {
+        const next = this.invincibleRemainingMs - elapsedMs;
+        this.invincibleRemainingMs = Math.max(0, next);
         if (next <= 0) actor.state.changeState(actor, StateEvent.INV_N);
       }
     });
@@ -583,8 +541,11 @@ export class CollectableBehavior extends Behavior {
  * logic to decide whether to accept the arrival.
  */
 export class GoalBehavior extends Behavior {
-  /** The `actor.properties` key for how many actors are currently held */
-  static readonly HOLDING = "holding";
+  /** How many actors are currently held */
+  private held = 0;
+
+  /** How many actors are currently held */
+  public get holding() { return this.held; }
 
   /** How many actors this Goal can hold */
   private capacity: number;
@@ -620,21 +581,17 @@ export class GoalBehavior extends Behavior {
     this.eligible = cfg.eligible ?? defaultPlayerOnly;
   }
 
-  /** Initializes this Goal's "how many actors are currently held" property to 0 */
-  attach(actor: Actor) { setProperty(actor, GoalBehavior.HOLDING, 0); }
-
   /** Accept `other` if it's eligible, there's remaining capacity, and `onArrival` allows it; removes `other` on acceptance */
   onCollide(self: Actor, other: Actor) {
     if (!this.eligible(other)) return false;
-    const holding = getProperty<number>(self, GoalBehavior.HOLDING);
-    if (holding >= this.capacity) return true;
+    if (this.held >= this.capacity) return true;
     if (typeof this.onArrival === "string") {
       stage.score.counters.add(this.onArrival, 1);
     } else if (!this.onArrival(other)) {
       return true;
     }
     self.sounds?.play("arrive");
-    updateProperty(self, GoalBehavior.HOLDING, holding + 1);
+    this.held++;
     other.remove();
     return true;
   }
