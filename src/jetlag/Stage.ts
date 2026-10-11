@@ -137,7 +137,7 @@ export class Stage {
   private _gameMusic: MusicComponent | undefined;
 
   /** Persistent storage + volatile storage for a game session and a level */
-  readonly storage = new StorageDevice();
+  readonly storage: StorageDevice;
 
   /** Network interface */
   readonly network: NetworkDevice = new NetworkDevice();
@@ -347,6 +347,7 @@ export class Stage {
    */
   constructor(readonly config: JetLagGameConfig, private domId: string, private builder: () => void, readonly platform: PlatformDevice) {
     this.console = new ConsoleDevice(config);
+    this.storage = new StorageDevice(config.storageKey ?? "");
 
     // Check if the config needs to be adapted, then check for errors
     if (config.aspectRatio.width <= 0 || config.aspectRatio.height <= 0) {

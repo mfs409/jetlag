@@ -31,7 +31,7 @@ export interface JetLagGameConfig {
     /** Fonts to load */
     readonly fonts?: string[];
   };
-  /** Key for accessing persistent storage */
+  /** A prefix for every key in persistent storage */
   readonly storageKey?: string;
   /** Accelerometer mode (customize for each device target and orientation) */
   readonly accelerometerMode?: AccelerometerMode;

@@ -76,7 +76,7 @@ export { GestureDevice } from './jetlag/Devices/Gesture';
 export { AccelerometerMode } from './jetlag/Devices/Accelerometer';
 export { AccelerometerDevice } from './jetlag/Devices/Accelerometer';
 export { RendererDevice, SpriteLocation } from './jetlag/Devices/Renderer';
-export { StorageDevice } from './jetlag/Devices/Storage';
+export { StorageDevice, SessionValue, LevelValue } from './jetlag/Devices/Storage';
 export { PlatformDevice } from './jetlag/Devices/Platform';
 export { HtmlPlatformDevice } from './jetlag/Devices/Platform';
 export { VisibilityDevice } from './jetlag/Devices/Visibility';
