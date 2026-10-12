@@ -127,14 +127,47 @@ export class PathMovement {
     this.rigidBody.setVelocity(0, 0);
   }
 
-  /** Update the actor to start moving to the next point in the path */
-  private goToNext() {
+  /** Start the actor moving toward the next point in the path */
+  private aim() {
     let p = this.path.getPoint(this.nextIndex);
     // convert from the point to a unit vector, then set velocity
     p.Subtract(this.rigidBody!.getCenter()).Normalize();
     p.Scale(this.velocity);
     this.rigidBody!.setVelocity(p.x, p.y);
+  }
+
+  /** Update the actor to start moving to the next point in the path */
+  private goToNext() {
+    this.aim();
     if (this.waypointCallback) this.waypointCallback(this.nextIndex - 1);
+  }
+
+  /** Is the movement paused?  See `pause()`. */
+  private paused = false;
+
+  /** Is the movement paused right now? */
+  public get isPaused() { return this.paused; }
+
+  /**
+   * Stop the actor where it is, and hold it there until `resume()` is called.
+   * It's safe to call this from the `waypointCallback`, so that an actor can
+   * stop when it reaches a waypoint.
+   */
+  public pause() {
+    if (this.paused) return;
+    this.paused = true;
+    this.rigidBody?.setVelocity(0, 0);
+  }
+
+  /**
+   * Carry on toward the next waypoint, from wherever the actor is now.  Does
+   * nothing if the movement isn't paused.  The `waypointCallback` is not run
+   * again for the waypoint that the actor stopped at.
+   */
+  public resume() {
+    if (!this.paused) return;
+    this.paused = false;
+    if (!this.done && this.rigidBody) this.aim();
   }
 
   /** Begin running a path */
@@ -176,7 +209,7 @@ export class PathMovement {
   /** Figure out where we need to go next when driving a path */
   prerender(_elapsedMs: number, _camera: CameraService) {
     // quit if we're done and we don't loop
-    if (this.done || !this.rigidBody) return;
+    if (this.done || this.paused || !this.rigidBody) return;
 
     if (this.onFirstRender) {
       this.onFirstRender();
