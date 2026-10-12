@@ -18,7 +18,7 @@ import { b2Vec2 } from "@box2d/core";
  * - Overlay: We use short-lived scenes that obscure the world for situations
  *   like starting a level, winning/losing a level, and pausing a level.
  */
-export class Scene {
+export class Scene<P extends AdvancedCollisionService | BasicCollisionService = AdvancedCollisionService | BasicCollisionService> {
   /** A camera, for making sure important actors are on screen */
   readonly camera: CameraService;
 
@@ -28,26 +28,32 @@ export class Scene {
   /** Events that get processed on the next render, then discarded */
   readonly oneTimeEvents: (() => void)[] = [];
 
-  /** Events that get processed on every render */
-  readonly repeatEvents: (() => void)[] = [];
+  /**
+   * Events that get processed on every render.  Each one is given `dt`, the
+   * number of seconds since the previous render.
+   */
+  readonly repeatEvents: ((dt: number) => void)[] = [];
 
-  /** Run any pending events that should happen during a render */
-  public runRendertimeEvents() {
+  /**
+   * Run any pending events that should happen during a render
+   *
+   * @param elapsedMs The time in milliseconds since the previous render
+   */
+  public runRendertimeEvents(elapsedMs: number) {
     // NB: Must use let-of syntax because a one-time event can insert into the
     // oneTimeEvents, in which case we want that to run, too.
     for (let e of this.oneTimeEvents) e();
     this.oneTimeEvents.length = 0;
-    this.repeatEvents.forEach(e => e());
+    this.repeatEvents.forEach(e => e(elapsedMs / 1000));
   }
 
   /**
    * Construct a new scene
    *
-   * @param pixelMeterRatio The pixel-to-meter ratio, possibly adjusted for zoom
-   * @param physics         The physics system for the scene
+   * @param physics The physics system for the scene
    */
-  constructor(pixelMeterRatio: number, public physics: AdvancedCollisionService | BasicCollisionService) {
-    this.camera = new CameraService(pixelMeterRatio);
+  constructor(public physics: P) {
+    this.camera = new CameraService();
   }
 
   /** The gravity in this world */

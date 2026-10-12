@@ -84,35 +84,41 @@ export class CameraService {
   }
 
   /**
-   * Create a CameraService
-   *
-   * @param ratio The effective (scaled) pixel/meter ratio
+   * Create a CameraService.  It starts out with (0, 0) at the top left corner
    */
-  constructor(private ratio: number) {
-    // set up the game camera, with (0, 0) in the top left
-    let w = stage.screenWidth / ratio;
-    let h = stage.screenHeight / ratio;
-
-    this.center.Set(w / 2, h / 2);
-    this.screenDims.Set(stage.screenWidth, stage.screenHeight);
-    this.scale = this.ratio;
+  constructor() {
+    this.center.Set(stage.screenWidth / stage.pixelMeterRatio / 2, stage.screenHeight / stage.pixelMeterRatio / 2);
+    this.resize();
   }
 
-  /** The pixel/meter ratio of the camera */
-  public get scale(): number { return this.ratio; }
+  /** The current zoom factor */
+  private _zoom = 1;
 
   /**
-   * Set the pixel/meter ratio of the camera.  Bigger numbers mean zooming in,
-   * and smaller ones mean zooming out.
-   *
-   * NB: The base value is computed at load time to maximize screen width.
-   *
-   * @param ratio The new pixel/meter ratio
+   * How far the camera is zoomed.  1 is the starting view, 2 is twice as close,
+   * and 0.5 is twice as far.
    */
-  public set scale(ratio: number) {
-    this.ratio = ratio;
-    // Update our precomputed visible screen dimensions
-    this.scaledVisibleRegionDims.Set(this.screenDims.x / ratio, this.screenDims.y / ratio);
+  public get zoom(): number { return this._zoom; }
+  public set zoom(z: number) {
+    this._zoom = z;
+    this.resize();
+  }
+
+  /**
+   * The pixel/meter ratio of the camera.  It is computed from the zoom and the
+   * size of the screen, so it works with resizing.
+   */
+  public get scale(): number { return this._zoom * stage.pixelMeterRatio; }
+
+  /**
+   * Update everything that depends on the size of the screen.  The stage calls
+   * this when the window changes size.
+   */
+  public resize() {
+    this.screenDims.Set(stage.screenWidth, stage.screenHeight);
+    this.scaledVisibleRegionDims.Set(this.screenDims.x / this.scale, this.screenDims.y / this.scale);
+    // Keep the view inside the bounds, even though the view just changed size
+    this.setCenter({ x: this.center.x, y: this.center.y });
     // Warn if the new scale is too small to fill the screen
     this.checkDims();
   }
@@ -202,7 +208,7 @@ export class CameraService {
    * @param screen.y The Y coordinate, in pixels
    */
   public screenToMeters(screen: { x: number, y: number }) {
-    return { x: screen.x / this.ratio + this.getLeft(), y: screen.y / this.ratio + this.getTop() };
+    return { x: screen.x / this.scale + this.getLeft(), y: screen.y / this.scale + this.getTop() };
   }
 
   /**
@@ -212,7 +218,7 @@ export class CameraService {
    * @param world.y The Y coordinate, in meters
    */
   public metersToScreen(world: { x: number, y: number }) {
-    return { x: (world.x - this.getLeft()) * this.ratio, y: (world.y - this.getTop()) * this.ratio };
+    return { x: (world.x - this.getLeft()) * this.scale, y: (world.y - this.getTop()) * this.scale };
   }
 
   /**
@@ -224,12 +230,12 @@ export class CameraService {
    */
   private checkDims() {
     if (this.maxX != undefined && this.minX != undefined) {
-      let w = this.ratio * (this.maxX - this.minX);
+      let w = this.scale * (this.maxX - this.minX);
       if (Math.round(w) < Math.round(this.screenDims.x)) stage.console.log("Warning, the visible game area is less than the screen width");
     }
 
     if (this.maxY != undefined && this.minY != undefined) {
-      let h = this.ratio * (this.maxY - this.minY);
+      let h = this.scale * (this.maxY - this.minY);
       if (Math.round(h) < Math.round(this.screenDims.y)) stage.console.log("Warning, the visible game area is less than the screen height");
     }
   }
@@ -244,9 +250,9 @@ export class CameraService {
   /** Render the actors associated with this camera */
   render(elapsedMs: number, location: SpriteLocation) {
     // Draw everything
-    for (let renderable of this.actors)
-      if (renderable.prerender(elapsedMs))
-        for (let a of renderable.appearance)
+    for (let actor of this.actors)
+      if (actor.prerender(elapsedMs))
+        for (let a of actor.appearance)
           a.render(this, location);
   }
 }

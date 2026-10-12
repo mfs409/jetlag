@@ -268,8 +268,22 @@ export class RendererDevice {
    * must be awaited before the renderer is used.
    */
   public async initialize() {
-    await this.pixi.init({ width: this.screenWidth, height: this.screenHeight, antialias: false });
+    await this.pixi.init({ width: this.screenWidth, height: this.screenHeight, antialias: false, resolution: window.devicePixelRatio, autoDensity: true });
     document.getElementById(this.domId)!.appendChild(this.pixi.canvas);
+  }
+
+  /**
+   * Change the size of the canvas, because the window changed size.  The
+   * canvas is drawn with one real pixel per screen pixel (or more, on a
+   * high-density display), so the game stays sharp at any size.
+   *
+   * @param screenWidth   The new width of the screen
+   * @param screenHeight  The new height of the screen
+   */
+  public resize(screenWidth: number, screenHeight: number) {
+    this.screenWidth = screenWidth;
+    this.screenHeight = screenHeight;
+    this.pixi.renderer.resize(screenWidth, screenHeight);
   }
 
   /**
@@ -468,6 +482,21 @@ export class RendererDevice {
   }
 
   /**
+   * Turn the width of a line, in meters, into a whole number of pixels.  Lines
+   * are drawn without antialiasing, so a line that is 1.2 pixels wide comes out
+   * as one pixel for some lines, and two for others, depending on where each
+   * one happens to fall.  A whole number of pixels looks the same everywhere.
+   * A line is never thinner than one pixel, so it can't disappear.
+   *
+   * @param meters The width of the line, in meters
+   *
+   * @returns The width of the line, in pixels
+   */
+  private lineWidthInPixels(meters: number) {
+    return Math.max(1, Math.round(meters * stage.pixelMeterRatio));
+  }
+
+  /**
    * Add a filled sprite (a Pixi Graphic) to the main container
    *
    * @param appearance  The filled sprite to draw
@@ -490,7 +519,7 @@ export class RendererDevice {
       if (appearance.fillColor)
         graphic.fill(appearance.fillColor);
       if (appearance.lineWidth && appearance.lineColor)
-        graphic.stroke({ width: appearance.lineWidth * stage.pixelMeterRatio, color: appearance.lineColor });
+        graphic.stroke({ width: this.lineWidthInPixels(appearance.lineWidth), color: appearance.lineColor });
       graphic.position.set(x, y);
       graphic.pivot.set(x + w / 2, y + h / 2);
       graphic.rotation = body.rotation;
@@ -503,7 +532,7 @@ export class RendererDevice {
       if (appearance.fillColor)
         graphic.fill(appearance.fillColor);
       if (appearance.lineWidth && appearance.lineColor)
-        graphic.stroke({ width: appearance.lineWidth * stage.pixelMeterRatio, color: appearance.lineColor });
+        graphic.stroke({ width: this.lineWidthInPixels(appearance.lineWidth), color: appearance.lineColor });
       graphic.position.set(x, y);
       graphic.pivot.set(x + w / 2, y + h / 2);
       graphic.rotation = body.rotation;
@@ -514,7 +543,7 @@ export class RendererDevice {
       if (appearance.fillColor)
         graphic.fill(appearance.fillColor);
       if (appearance.lineWidth && appearance.lineColor)
-        graphic.stroke({ width: appearance.lineWidth * stage.pixelMeterRatio, color: appearance.lineColor });
+        graphic.stroke({ width: this.lineWidthInPixels(appearance.lineWidth), color: appearance.lineColor });
     }
     else if (appearance instanceof FilledPolygon) {
       // For polygons, we need to translate the points (they are 0-relative in
@@ -524,7 +553,7 @@ export class RendererDevice {
       if (appearance.fillColor)
         graphic.fill(appearance.fillColor);
       if (appearance.lineWidth && appearance.lineColor)
-        graphic.stroke({ width: appearance.lineWidth * stage.pixelMeterRatio, color: appearance.lineColor });
+        graphic.stroke({ width: this.lineWidthInPixels(appearance.lineWidth), color: appearance.lineColor });
       graphic.position.set(x, y);
       graphic.pivot.set(x, y);
       graphic.rotation = body.rotation;

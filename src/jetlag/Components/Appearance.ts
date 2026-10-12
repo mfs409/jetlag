@@ -145,13 +145,16 @@ export class TextSprite {
     this.offset = cfg.offset ?? { dx: 0, dy: 0 };
   }
 
+  /** The `fontScaling` that the current style was built with */
+  private fontScalingCache = stage.fontScaling;
+
   /**
    * Re-derive the PIXI text style from `face`/`color`/`size`/`strokeWidth`/
-   * `strokeColor`/`lineHeight` and apply it in place.  PIXI bakes the style
-   * once when the `Text` is created, so this is what makes changing those
-   * fields after construction actually visible, instead of a silent no-op.
+   * `strokeColor`/`lineHeight` and apply it in place.  This lets us resize
+   * fonts correctly on a screen dimension change.
    */
   private rebuildStyle() {
+    this.fontScalingCache = stage.fontScaling;
     Object.assign(this.text.text.style, {
       fontFamily: this._face,
       fontSize: Math.floor(this._size * stage.fontScaling),
@@ -173,6 +176,8 @@ export class TextSprite {
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor) {
       // Update the text before passing to the renderer!
+      // The window might have changed size since the style was built
+      if (this.fontScalingCache !== stage.fontScaling) this.rebuildStyle();
       this.text.text.text = (typeof this.producer == "string") ? this.producer : this.producer(this.actor);
       this.width = this.text.text.width;
       this.height = this.text.text.height;

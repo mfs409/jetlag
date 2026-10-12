@@ -20,6 +20,21 @@ export class GestureDevice {
   private mouseHoverActors = new Set<Actor>();
 
   /**
+   * There's a small issue in hammer.js, where swipe handlers aren't
+   * canvas-relative, but page-relative.  This helper unifies all systems that
+   * need to work with canvas-relative coordinates but might get page-relative
+   * coordinates.
+   *
+   * @param clientX The x coordinate on the page
+   * @param clientY The y coordinate on the page
+   */
+  private canvasCoords(clientX: number, clientY: number) {
+    const canvas = this.elt as HTMLCanvasElement;
+    const box = canvas.getBoundingClientRect();
+    return { x: clientX - box.left, y: clientY - box.top };
+  }
+
+  /**
    * Create the device by providing the name of an HTML element (typically
    * a DIV) that should begin receiving gestures.
    *
@@ -35,11 +50,11 @@ export class GestureDevice {
     this.elt.oncontextmenu = () => false;
 
     let mouseFunc = (ev: MouseEvent) => {
-      let world_coords = stage.world.camera.screenToMeters({ x: ev.offsetX, y: ev.offsetY });
-      let hud_coords = stage.hud.camera.screenToMeters({ x: ev.offsetX, y: ev.offsetY });
+      let world_coords = stage.world.camera.screenToMeters(this.canvasCoords(ev.clientX, ev.clientY));
+      let hud_coords = stage.hud.camera.screenToMeters(this.canvasCoords(ev.clientX, ev.clientY));
       // If we have an overlay scene right now, let it handle the tap
       if (stage.overlay) {
-        let overlay_coords = stage.overlay.camera.screenToMeters({ x: ev.offsetX, y: ev.offsetY });
+        let overlay_coords = stage.overlay.camera.screenToMeters(this.canvasCoords(ev.clientX, ev.clientY));
         this.mouseHover(stage.overlay, overlay_coords);
       }
       // Handle in hud or world
@@ -59,9 +74,9 @@ export class GestureDevice {
     let hammer = new Hammer(this.elt);
     hammer.on("tap", (ev: HammerInput) => {
       let e = ev.srcEvent as PointerEvent;
-      let overlay_coords = stage.overlay?.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
-      let world_coords = stage.world.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
-      let hud_coords = stage.hud.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
+      let overlay_coords = stage.overlay?.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
+      let world_coords = stage.world.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
+      let hud_coords = stage.hud.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
       // Log the coordinates, to aid in debugging
       stage.console.log("World Touch: (" + world_coords.x + ", " + world_coords.y + ")");
       stage.console.log("HUD Touch: (" + hud_coords.x + ", " + hud_coords.y + ")");
@@ -82,29 +97,29 @@ export class GestureDevice {
     hammer.get("pan").set({ direction: Hammer.DIRECTION_ALL });
     hammer.on("panstart", (ev: HammerInput) => {
       let e = ev.srcEvent as PointerEvent;
-      let overlay_coords = stage.overlay?.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
-      let hud_coords = stage.hud.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
+      let overlay_coords = stage.overlay?.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
+      let hud_coords = stage.hud.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
       if (stage.overlay) this.panStart(stage.overlay, overlay_coords!);
       else this.panStart(stage.hud, hud_coords);
     });
     hammer.on("panmove", (ev: HammerInput) => {
       let e = ev.srcEvent as PointerEvent;
-      let overlay_coords = stage.overlay?.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
-      let hud_coords = stage.hud.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
+      let overlay_coords = stage.overlay?.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
+      let hud_coords = stage.hud.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
       if (stage.overlay) this.panMove(stage.overlay, overlay_coords!);
       else this.panMove(stage.hud, hud_coords);
     });
     hammer.on("panend", (ev: HammerInput) => {
       let e = ev.srcEvent as PointerEvent;
-      let overlay_coords = stage.overlay?.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
-      let hud_coords = stage.hud.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
+      let overlay_coords = stage.overlay?.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
+      let hud_coords = stage.hud.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
       if (stage.overlay) this.panStop(stage.overlay, overlay_coords!);
       else this.panStop(stage.hud, hud_coords);
     });
     hammer.on("pancancel", (ev: HammerInput) => {
       let e = ev.srcEvent as PointerEvent;
-      let overlay_coords = stage.overlay?.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
-      let hud_coords = stage.hud.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
+      let overlay_coords = stage.overlay?.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
+      let hud_coords = stage.hud.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
       if (stage.overlay) this.panStop(stage.overlay, overlay_coords!);
       else this.panStop(stage.hud, hud_coords);
     });
@@ -113,8 +128,8 @@ export class GestureDevice {
     // http://hammerjs.github.io/api/
     hammer.on("hammer.input", (ev: HammerInput) => {
       let e = ev.srcEvent as PointerEvent;
-      let overlay_coords = stage.overlay?.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
-      let hud_coords = stage.hud.camera.screenToMeters({ x: e.offsetX, y: e.offsetY });
+      let overlay_coords = stage.overlay?.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
+      let hud_coords = stage.hud.camera.screenToMeters(this.canvasCoords(e.clientX, e.clientY));
       if (ev.eventType == 1) {
         if (stage.overlay) this.touchDown(stage.overlay, overlay_coords!);
         else this.touchDown(stage.hud, hud_coords);
@@ -130,8 +145,8 @@ export class GestureDevice {
     // NB:  This could be split into swipeup, swipeleft, swiperight, swipedown,
     //      but that's probably not worth it.
     hammer.on("swipe", (ev: HammerInput) => {
-      let start_coord = stage.hud.camera.screenToMeters({ x: ev.center.x - ev.deltaX, y: ev.center.y - ev.deltaY });
-      let end_coord = stage.hud.camera.screenToMeters({ x: ev.center.x, y: ev.center.y });
+      let start_coord = stage.hud.camera.screenToMeters(this.canvasCoords(ev.center.x - ev.deltaX, ev.center.y - ev.deltaY));
+      let end_coord = stage.hud.camera.screenToMeters(this.canvasCoords(ev.center.x, ev.center.y));
       this.swipe(stage.hud, start_coord, end_coord, ev.deltaTime);
     });
     hammer.get("swipe").set({ direction: Hammer.DIRECTION_ALL });

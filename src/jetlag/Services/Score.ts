@@ -91,10 +91,10 @@ export class ScoreService {
   public loseConditions: (() => boolean)[] = [];
 
   /** Code for building an overlay to announce that current level is won */
-  public winSceneBuilder?: (overlay: Scene, screenshot?: ImageSprite) => void;
+  public winSceneBuilder?: (overlay: Scene, screenshot: ImageSprite) => void;
 
   /** Code for building an overlay to announce that current level is lost */
-  public loseSceneBuilder?: (overlay: Scene, screenshot?: ImageSprite) => void;
+  public loseSceneBuilder?: (overlay: Scene, screenshot: ImageSprite) => void;
 
   /**
    * Has this level already been won or lost?  This field prevents re-computing,

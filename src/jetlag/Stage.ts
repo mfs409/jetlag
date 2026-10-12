@@ -57,7 +57,7 @@ const PPM4SVG = 75;
  */
 export class Stage {
   /** The physics world in which all actors exist */
-  public world!: Scene;
+  public world!: Scene<AdvancedCollisionService>;
 
   /** A heads-up display */
   public hud!: Scene;
@@ -93,7 +93,7 @@ export class Stage {
   /** The Score, suitable for use throughout JetLag */
   readonly score = new ScoreService();
 
-  /** A seedable random number generator, for reproducible randomness */
+  /** A random number generator, for reproducible randomness */
   readonly random = new RandomService();
 
   /** A console device, for debug messages */
@@ -171,14 +171,20 @@ export class Stage {
    * It's something that goes on top of everything else, and prevents the game
    * from playing, such as a pause scene, a win/lose scene, or a welcome scene.
    *
-   * @param builder           Code for creating the overlay
+   * @param builder           Code for creating the overlay.  When
+   *                          `requestScreenshot` is true, it is also given the
+   *                          screenshot
    * @param requestScreenshot Should the overlay delay for a cycle or two, so a
-   *                          screenshot can be taken first?
+   *                          screenshot can be taken first?  (Default false)
    */
-  public requestOverlay(builder: (overlay: Scene, screenshot?: ImageSprite) => void, requestScreenshot: boolean = false) {
+  public requestOverlay(builder: (overlay: Scene) => void, requestScreenshot?: false): void;
+  public requestOverlay(builder: (overlay: Scene, screenshot: ImageSprite) => void, requestScreenshot: true): void;
+  public requestOverlay(builder: (overlay: Scene, screenshot: ImageSprite) => void, requestScreenshot: boolean = false) {
     if (!requestScreenshot) {
-      this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionService());
-      builder(this.overlay, undefined);
+      this.overlay = new Scene(new BasicCollisionService());
+      // NB: there is no screenshot, but the overloads above only let a builder
+      // that doesn't ask for one get here
+      builder(this.overlay, undefined as unknown as ImageSprite);
       return;
     }
 
@@ -194,7 +200,7 @@ export class Stage {
           img: this.renderer.mostRecentScreenShot,
           z: MIN_Z_INDEX
         });
-        this.overlay = new Scene(this.pixelMeterRatio, new BasicCollisionService());
+        this.overlay = new Scene(new BasicCollisionService());
         builder(this.overlay, screenshot);
         this.afterRender = undefined;
       }
@@ -230,9 +236,9 @@ export class Stage {
     if (!this.overlay) return;
     this.overlay.physics!.world.Step(elapsedMs / 1000, { velocityIterations: 8, positionIterations: 3 });
     this.overlay.timer.advance(elapsedMs);
-    this.overlay.runRendertimeEvents();
-    // NB:  The timer might cancel the overlay, so we can't assume it's still
-    //      valid...
+    // NB:  The timer might cancel the overlay (or even switch to a new stage),
+    //      so we can't assume it's still valid...
+    this.overlay?.runRendertimeEvents(elapsedMs);
     this.overlay?.camera.render(elapsedMs, SpriteLocation.OVERLAY);
   }
 
@@ -266,7 +272,7 @@ export class Stage {
     this.world.physics!.world.Step(elapsedMs / 1000, { velocityIterations: 8, positionIterations: 3 })
 
     // Run any pending world events, and clear one-time events
-    this.world.runRendertimeEvents();
+    this.world.runRendertimeEvents(elapsedMs);
 
     // Determine the center of the camera's focus
     this.world.camera.adjustCamera();
@@ -292,7 +298,7 @@ export class Stage {
     if (this.overlay) return;
 
     this.hud.physics!.world.Step(elapsedMs / 1000, { velocityIterations: 8, positionIterations: 3 });
-    this.hud.runRendertimeEvents();
+    this.hud.runRendertimeEvents(elapsedMs);
     this.hud.timer.advance(elapsedMs);
     this.hud.camera.render(elapsedMs, SpriteLocation.HUD);
   }
@@ -325,9 +331,9 @@ export class Stage {
     this.renderer.reset();
 
     // Just re-make the scenes and systems, instead of clearing the old ones
-    this.world = new Scene(this.pixelMeterRatio, new AdvancedCollisionService());
+    this.world = new Scene(new AdvancedCollisionService());
     (this.world.physics as AdvancedCollisionService).setScene(this.world);
-    this.hud = new Scene(this.pixelMeterRatio, new BasicCollisionService());
+    this.hud = new Scene(new BasicCollisionService());
     this.background = new ParallaxSystem();
     this.foreground = new ParallaxSystem();
     this.tilt.reset();
@@ -359,6 +365,8 @@ export class Stage {
     this.musicLibrary = new AudioLibraryService(config);
     this.accelerometer = new AccelerometerDevice(config.accelerometerMode ?? AccelerometerMode.DISABLED);
     this.renderer = new RendererDevice(this.screenWidth, this.screenHeight, domId, this.config.hitBoxes);
+    window.addEventListener("resize", () => this.resize());
+    document.addEventListener("fullscreenchange", () => this.resize());
 
     // Start at half volume.  Games that want persistent volume controls can
     // read/write their own storage key and call resetMusicVolume() themselves.
@@ -402,7 +410,7 @@ export class Stage {
   /**
    * Compute the dimensions of the canvas into which the game will be drawn. Use
    * this.config to determine the target ratio, then do a ratio-preserving
-   * expansion of the resulting box until it fills the screen in one dimension.
+   * expansion of the resulting box until it fills the window in one dimension.
    */
   private computeScreenDimensions() {
     // Compute the target aspect ratio, which must be preserved
@@ -418,6 +426,20 @@ export class Stage {
     this.pixelMeterRatio = this.screenWidth / this.config.aspectRatio.width;
     this.fontScaling = this.pixelMeterRatio / PPM4UF;
     this.svgScaling = this.pixelMeterRatio / PPM4SVG;
+  }
+
+  /**
+   * Fit the game to the window again, because the window changed size or went
+   * full screen.  The game keeps its shape, so the world looks the same, only
+   * bigger or smaller.  Everything that depends on the size of the screen
+   * (cameras, text) gets it from here.
+   */
+  private resize() {
+    this.computeScreenDimensions();
+    this.renderer.resize(this.screenWidth, this.screenHeight);
+    this.world?.camera.resize();
+    this.hud?.camera.resize();
+    this.overlay?.camera.resize();
   }
 
   /** Close the window to exit the game */
