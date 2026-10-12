@@ -9,11 +9,14 @@ export class ActorPoolSystem {
   /** A collection of all the available actors */
   private pool = [] as Actor[];
 
-  /** The number of actors remaining */
+  /** The number of actors waiting in the pool, ready for `get` */
+  public get size() { return this.pool.length; }
+
+  /** The number of times `get` may still be called, if a `limit` was set */
   public get remaining() { return this._limit ?? 0; }
-  /** The number of actors remaining */
+  /** Limit how many times `get` may be called */
   public set limit(v: number) { this._limit = v; }
-  /** The number of actors remaining */
+  /** The number of times `get` may still be called */
   private _limit?: number;
 
   /**
