@@ -1,6 +1,5 @@
 import { Howl, Howler } from "howler";
 import { JetLagGameConfig } from "../Config";
-import { stage } from "../Stage";
 
 /**
  * An abstract representation of a sound
@@ -62,6 +61,41 @@ export interface ISound {
    *              to move the most recent instance.
    */
   seek(seek: number, id?: number): this;
+
+  /**
+   * Get the playback rate (speed) of the sound.  1 is normal, 2 is twice as
+   * fast (and an octave higher), and 0.5 is half as fast (and an octave lower).
+   *
+   * @param id  The id (from `play()`) of the specific instance to query.  Omit
+   *            to query the most recent instance.
+   */
+  rate(id?: number): number;
+  /**
+   * Change the playback rate (speed) of the sound.  Since a faster sound is
+   * also higher, this is how to play one recording at different pitches.
+   *
+   * @param rate  The new rate: 1 is normal, 2 is twice as fast, and 0.5 is half
+   *              as fast
+   * @param id    The id (from `play()`) of the specific instance to change.
+   *              Omit to change all instances.
+   */
+  rate(rate: number, id?: number): this;
+
+  /**
+   * Get the volume of the sound
+   *
+   * @param id  The id (from `play()`) of the specific instance to query.  Omit
+   *            to query the most recent instance.
+   */
+  volume(id?: number): number;
+  /**
+   * Change the volume of the sound
+   *
+   * @param volume  The new volume, from 0 (silent) to 1 (full)
+   * @param id      The id (from `play()`) of the specific instance to change.
+   *                Omit to change all instances.
+   */
+  volume(volume: number, id?: number): this;
 }
 
 /**
@@ -97,26 +131,28 @@ export class AudioLibraryService {
   }
 
   /**
-   * Get a previously loaded Sound object
+   * Get a previously loaded Sound object.  It's an error to ask for a sound
+   * that isn't in the list of sound names in the game's `Config`.
    *
    * @param soundName Name of the sound file to retrieve
    */
-  getSound(soundName: string) {
-    let ret = this.sounds.get(soundName);
+  getSound(soundName: string): ISound {
+    const ret = this.sounds.get(soundName);
     if (!ret)
-      stage.console.log(`Error retrieving sound '${soundName}'`);
+      throw new Error(`There is no sound named '${soundName}'`);
     return ret;
   }
 
   /**
-   * Get a previously loaded Music object
+   * Get a previously loaded Music object.  It's an error to ask for music that
+   * isn't in the list of music names in the game's `Config`.
    *
    * @param musicName Name of the music file to retrieve
    */
-  getMusic(musicName: string) {
-    let ret = this.music.get(musicName);
+  getMusic(musicName: string): ISound {
+    const ret = this.music.get(musicName);
     if (!ret)
-      stage.console.log(`Error retrieving music '${musicName}'`);
+      throw new Error(`There is no music named '${musicName}'`);
     return ret;
   }
 
