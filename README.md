@@ -32,20 +32,23 @@ Next, make your first project:
 npm run create
 ```
 
-This will ask for a name, then create `src/<name>/` with a small starter game in it, and register it in `projects.json`.
+This will ask for a name, then create `src/<name>/` with a small starter game in it.
 Once you've done that, run `npm start` to compile and serve your code.
 JetLag uses `esbuild` for compilation, so every time you make a change, the code will recompile and your browser will auto-reload.
-To test your game, open a browser and navigate to <http://localhost:7000>.
+The terminal says which address to open, such as <http://localhost:7000/my_game/my_game.html>.
 
 This folder is set up to allow you to make many games from the same checkout of JetLag.
-Running `npm run create` again makes another `src/<name>/` folder alongside the first, and both are tracked in `projects.json`.
-With more than one project, `npm start`/`npm run serve` (with no name given) serves all of them at once, with a gallery page linking to each; to work on just one, use `npm run serve -- <name>`.
-You can edit `projects.json` to customize the gallery page.
-See `npm run help` for the rest of the commands (`build`, `check`, `clean`).
+Running `npm run create` again makes another `src/<name>/` folder alongside the first.
+A project is any `src/<name>/` folder that has a `<name>.ts` and a `<name>.html` in it.
+To serve a project, give its name: `npm run serve -- <name>`.
+`npm start` is a shorthand for when you have just one project.
+See `npm run help` for the rest of the commands.
 
-By default, every project made via `npm run create` shares the single top-level `assets` folder, so a set of assets only needs to exist once no matter how many projects you make.
-If you'd rather a project keep its own private assets (e.g. a real game you intend to ship on its own), make an `assets` folder inside its `src/<name>/` folder, and change that project's entry in `projects.json` to point at it: `"assets": "src/<name>/assets"`.
-Whichever you choose, that path and the `resources.prefix` your project's `.ts` file uses need to agree, since nothing checks that for you.
+By default, every project shares the single `src/assets` folder, so a set of assets only needs to exist once no matter how many projects you make.
+A project that's meant to ship on its own, such as a real game, can keep its own private assets instead.
+To do that, make an `assets` folder inside its `src/<name>/` folder, and set the project's `resources.prefix` to `"./assets/"`.
+Whichever you choose, `resources.prefix` has to match where the files are, since nothing checks that for you.
+`npm run build -- <name>` copies the project's own `assets` folder into `dist/<name>/`, or, if it doesn't have one, the shared one.
 
 To add images and sounds to your game, follow these steps:
 
@@ -59,7 +62,7 @@ Please see the tutorials for more information.
 ## Coding Standards
 
 JetLag is supposed to be a library that its users will modify and extend for their own purposes.
-Consequently, we prefer that programmers preserve the structure we have in the repository, where `jetlag` and every project made via `npm run create` are sub-folders of the `src` folder, and `projects.json` (at the repository root) always reflects exactly which of those sub-folders are real projects.
+Consequently, we prefer that programmers preserve the structure we have in the repository, where `jetlag`, `assets`, and every project made via `npm run create` are sub-folders of the `src` folder.
 
 ## Contributors
 
@@ -80,7 +83,8 @@ If you contributed, and we missed your name, please send a note reminding us to 
 - Sebastian Chavarro
 - Anh Nguyen
 - Yassine Rafih
+- James Goodwin
 
 ## Third-Party Assets
 
-JetLag itself is MIT licensed (see `LICENSE`), but `assets/Arimo-Regular.ttf` and `assets/Arimo-Bold.ttf` are the Arimo font from Google Fonts, licensed separately under the SIL Open Font License, Version 1.1 (see `assets/Arimo-OFL.txt`).
+JetLag itself is MIT licensed (see `LICENSE`), but `src/assets/Arimo-Regular.ttf` and `src/assets/Arimo-Bold.ttf` are the Arimo font from Google Fonts, licensed separately under the SIL Open Font License, Version 1.1 (see `src/assets/Arimo-OFL.txt`).

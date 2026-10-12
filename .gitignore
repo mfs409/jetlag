@@ -1,8 +1,5 @@
 node_modules/
 .vscode/
-dev-serve/
 dist/
-portfolio/
 check/
 local/
-.tsconfig.check.json

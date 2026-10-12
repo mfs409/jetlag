@@ -3,11 +3,12 @@
     "version": "1.0.0",
     "description": "A 2D Game Framework for web and mobile, using PIXI.js and Box2D",
     "scripts": {
-        "start": "node scripts/main.mjs serve",
+        "start": "node scripts/main.mjs start",
         "create": "node scripts/main.mjs create",
         "serve": "node scripts/main.mjs serve",
         "build": "node scripts/main.mjs build",
-        "check": "node scripts/main.mjs check",
+        "zip": "node scripts/main.mjs zip",
+        "check": "tsc --noEmit",
         "clean": "node scripts/main.mjs clean",
         "help": "node scripts/main.mjs help"
     },
@@ -25,6 +26,7 @@
     "devDependencies": {
         "@types/hammerjs": "^2.0.46",
         "@types/howler": "^2.2.13",
+        "adm-zip": "^0.6.1",
         "chalk": "^6.0.0",
         "esbuild": "^0.28.1",
         "typescript": "^7.0.2"
