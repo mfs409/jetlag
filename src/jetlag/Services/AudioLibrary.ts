@@ -156,6 +156,55 @@ export class AudioLibraryService {
     return ret;
   }
 
-  /** On a volume change event, make sure all Music objects are updated */
-  public resetMusicVolume(volume: number) { Howler.volume(volume); }
+  /**
+   * The volume of everything, from 0 (silent) to 1 (full).  This multiplies
+   * with `musicVolume` and `sfxVolume`.
+   */
+  public get masterVolume() { return Howler.volume(); }
+  /** The volume of everything, from 0 (silent) to 1 (full) */
+  public set masterVolume(volume: number) { Howler.volume(volume); }
+
+  /**
+   * The volume of all music, from 0 (silent) to 1 (full).  The default is 1.
+   *
+   * NB: Setting the volume of one playback of a sound, via `ISound.volume(v,
+   * id)`, overrides this for that playback.
+   */
+  public get musicVolume() { return this._musicVolume; }
+  /** The volume of all music, from 0 (silent) to 1 (full) */
+  public set musicVolume(volume: number) {
+    this._musicVolume = volume;
+    this.music.forEach(m => m.volume(volume));
+  }
+  /** The volume of all music, from 0 (silent) to 1 (full) */
+  private _musicVolume = 1;
+
+  /**
+   * The volume of all sound effects, from 0 (silent) to 1 (full).  The default
+   * is 1.
+   *
+   * NB: Setting the volume of one playback of a sound, via `ISound.volume(v,
+   * id)`, overrides this for that playback.
+   */
+  public get sfxVolume() { return this._sfxVolume; }
+  /** The volume of all sound effects, from 0 (silent) to 1 (full) */
+  public set sfxVolume(volume: number) {
+    this._sfxVolume = volume;
+    this.sounds.forEach(s => s.volume(volume));
+  }
+  /** The volume of all sound effects, from 0 (silent) to 1 (full) */
+  private _sfxVolume = 1;
+
+  /**
+   * Is all audio muted?  Muting doesn't change any of the volume settings, so
+   * unmuting puts everything back the way it was.
+   */
+  public get muted() { return this._muted; }
+  /** Is all audio muted? */
+  public set muted(muted: boolean) {
+    this._muted = muted;
+    Howler.mute(muted);
+  }
+  /** Is all audio muted? */
+  private _muted = false;
 }

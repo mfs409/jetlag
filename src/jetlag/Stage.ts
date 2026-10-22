@@ -352,9 +352,8 @@ export class Stage {
     window.addEventListener("resize", () => this.resize());
     document.addEventListener("fullscreenchange", () => this.resize());
 
-    // Start at half volume.  Games that want persistent volume controls can
-    // read/write their own storage key and call resetMusicVolume() themselves.
-    this.musicLibrary.resetMusicVolume(0.5);
+    // Start at half volume
+    this.musicLibrary.masterVolume = 0.5;
 
     // Configure any systems that should be running
     this.tilt = new TiltService;
