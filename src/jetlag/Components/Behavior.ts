@@ -158,9 +158,6 @@ export abstract class Behavior {
     this.team = cfg.team ?? 0;
   }
 
-  /** Tasks to run before every render */
-  readonly prerenderTasks: ((elapsedMs: number, actor?: Actor) => void)[] = [];
-
   /**
    * Attach the behavior to an actor.  This is called internally, once per
    * behavior.  It lets a Behavior customize parts of the actor (such as its
@@ -217,9 +214,7 @@ export abstract class Behavior {
   onEndCollide(_self: Actor, _other: Actor): void { }
 
   /** Code to run immediately before rendering this Behavior's Actor */
-  prerender(elapsedMs: number) {
-    this.prerenderTasks.forEach(task => task(elapsedMs, this._actor));
-  }
+  prerender(_elapsedMs: number): void { }
 
   /**
    * If `actor`'s body isn't dynamic, warn and upgrade it to dynamic.  Used
@@ -460,16 +455,12 @@ export class HealthBehavior extends Behavior {
     this.onDefeated = cfg.onDefeated;
   }
 
-  /** Registers the invincibility-decay prerender task */
-  attach(actor: Actor) {
-    // Decay invincibility over time, firing INV_N once it reaches 0
-    this.prerenderTasks.push((elapsedMs: number) => {
-      if (this.invincibleRemainingMs > 0) {
-        const next = this.invincibleRemainingMs - elapsedMs;
-        this.invincibleRemainingMs = Math.max(0, next);
-        if (next <= 0) actor.state.changeState(actor, StateEvent.INV_N);
-      }
-    });
+  /** Decay invincibility over time, firing INV_N once it reaches 0 */
+  prerender(elapsedMs: number) {
+    if (!this._actor || this.invincibleRemainingMs <= 0) return;
+    const next = this.invincibleRemainingMs - elapsedMs;
+    this.invincibleRemainingMs = Math.max(0, next);
+    if (next <= 0) this._actor.state.changeState(this._actor, StateEvent.INV_N);
   }
 
   /**

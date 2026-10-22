@@ -148,6 +148,14 @@ export class Actor<D = unknown> {
   /** Code to run when the actor disappears */
   readonly onDisappear: undefined | ((a: Actor) => void);
 
+  /**
+   * Tasks to run immediately before every render of this Actor, in the order
+   * that they were added.  Each task receives the time since the last render,
+   * and the Actor.  They are useful for any rule that depends on something that
+   * changes every frame, like "am I behind the camera?".
+   */
+  readonly prerenderTasks: ((elapsedMs: number, actor: Actor) => void)[] = [];
+
   // NB: Below, there are two overloads on the constructor.
   //
   // - The first is for when a Data is provided.  TypeScript sees the data
@@ -236,6 +244,7 @@ export class Actor<D = unknown> {
     this.movement.prerender(elapsedMs, this.scene.camera);
     this.rigidBody.prerender(elapsedMs, this);
     this.behaviors.forEach(b => b.prerender(elapsedMs));
+    this.prerenderTasks.forEach(task => task(elapsedMs, this));
     this.appearance.forEach(a => a.prerender(elapsedMs));
     return true;
   }
