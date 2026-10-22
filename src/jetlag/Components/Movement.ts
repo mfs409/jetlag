@@ -281,20 +281,46 @@ export class ChaseMovement {
     if (!this.rigidBody || !this.target.rigidBody) return;
     if (!this.target.enabled) return;
 
+    // If chasing is turned off, just stand still
+    if (!this.enabled) {
+      this.rigidBody.setVelocity(0, 0);
+      return;
+    }
+
     // compute vector between actors, and normalize it
     let x = this.target.rigidBody!.body.GetPosition().x - this.rigidBody.body.GetPosition().x;
     let y = this.target.rigidBody!.body.GetPosition().y - this.rigidBody.body.GetPosition().y;
     let denom = Math.sqrt(x * x + y * y);
+
+    // If we're beyond the teleport threshold, snap to the target and skip the
+    // rest of the velocity-based movement this frame
+    if (this.teleportDistance !== undefined && denom > this.teleportDistance) {
+      this.rigidBody.setVelocity(0, 0);
+      let targetPos = this.target.rigidBody.body.GetPosition();
+      this.rigidBody.setCenter(targetPos.x, targetPos.y);
+      this.rigidBody.breakStickyJoints();
+      return;
+    }
+
     // If the chaser and target are exactly on top of each other, there's no
-    // direction to normalize toward -- leave velocity alone this tick,
-    // rather than dividing by zero and setting a NaN velocity.
+    // direction to normalize toward, so leave velocity alone this tick, rather
+    // than dividing by zero and setting a NaN velocity.
     if (denom === 0) return;
     x /= denom;
     y /= denom;
 
+    // scale speed based on distance (further away = faster), clamped between
+    // minSpeed and maxSpeed
+    let currentSpeed = this.speed;
+    if (this.scaleSpeedWithDistance) {
+      currentSpeed = this.speed + denom * this.speedDistanceScale;
+      if (this.minSpeed !== undefined) currentSpeed = Math.max(currentSpeed, this.minSpeed);
+      if (this.maxSpeed !== undefined) currentSpeed = Math.min(currentSpeed, this.maxSpeed);
+    }
+
     // multiply by speed
-    x *= this.speed;
-    y *= this.speed;
+    x *= currentSpeed;
+    y *= currentSpeed;
 
     // remove changes for disabled directions, and boost the other
     // dimension a little bit
@@ -310,10 +336,22 @@ export class ChaseMovement {
     this.rigidBody?.setVelocity(x, y);
   }
 
-  /** The actor to chase */
-  private target: Actor;
-  /** The speed at which to chase the actor */
+  /** Is this actor currently chasing its target?  If not, it stands still. */
+  public enabled = true;
+  /** The actor to chase.  It can be changed at any time. */
+  public target: Actor;
+  /** The base speed at which to chase the actor */
   private speed: number;
+  /** Should chase speed scale with distance from the target? */
+  private scaleSpeedWithDistance: boolean;
+  /** How much speed to add per meter of distance (when scaling) */
+  private speedDistanceScale: number;
+  /** The minimum speed to move at when scaling, if any */
+  private minSpeed?: number;
+  /** The maximum speed to move at when scaling, if any */
+  private maxSpeed?: number;
+  /** If set, being farther than this from the target means teleport to it */
+  private teleportDistance?: number;
   /** Should it chase in the X dimension */
   private chaseInX: boolean;
   /** Should it chase in the Y dimension */
@@ -331,8 +369,22 @@ export class ChaseMovement {
    * @param cfg.multiplier  Optional scaling factor for changing how fast the
    *                        actor chases (default is 2) (useful when chaseInX or
    *                        chaseInY is false)
+   * @param cfg.scaleSpeedWithDistance  Optional: should the chase speed grow
+   *                        with the distance to the target? (default false)
+   * @param cfg.speedDistanceScale  Optional: how much speed to add per meter
+   *                        of distance (default 0.1; only used when
+   *                        scaleSpeedWithDistance is true)
+   * @param cfg.minSpeed    Optional: a floor for the scaled speed
+   * @param cfg.maxSpeed    Optional: a ceiling for the scaled speed
+   * @param cfg.teleportDistance  Optional: if the target is farther away than
+   *                        this many meters, teleport to it instead of chasing
    */
-  constructor(cfg: { speed: number, target: Actor, chaseInX?: boolean, chaseInY?: boolean, multiplier?: number }) {
+  constructor(cfg: { speed: number, target: Actor, chaseInX?: boolean, chaseInY?: boolean, multiplier?: number, scaleSpeedWithDistance?: boolean, speedDistanceScale?: number, minSpeed?: number, maxSpeed?: number, teleportDistance?: number }) {
+    this.scaleSpeedWithDistance = cfg.scaleSpeedWithDistance ?? false;
+    this.speedDistanceScale = cfg.speedDistanceScale ?? 0.1;
+    this.minSpeed = cfg.minSpeed;
+    this.maxSpeed = cfg.maxSpeed;
+    this.teleportDistance = cfg.teleportDistance;
     this.speed = cfg.speed;
     this.target = cfg.target;
     this.chaseInX = cfg.chaseInX == undefined ? true : cfg.chaseInX;
