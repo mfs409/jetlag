@@ -448,6 +448,12 @@ export class AnimatedSprite implements IStateObserver {
   /** The AnimationState corresponding to the currently running animation */
   private currentState = AnimationState.IDLE_E;
 
+  /**
+   * The AnimationState corresponding to the currently running animation, e.g.,
+   * for finding out which way the sprite is facing
+   */
+  public get animationState() { return this.currentState; }
+
   /** The frame of the currently running animation that is being displayed */
   private activeFrame = 0;
 
