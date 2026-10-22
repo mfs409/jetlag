@@ -544,56 +544,6 @@ export class ProjectileMovement {
   prerender(_elapsedMs: number, _camera: CameraService) { }
 }
 
-/** A rule for things that move, detect collisions, and experience forces */
-export class DynamicBodyMovement {
-  /** The RigidBodyComponent to which this movement is attached */
-  public set rigidBody(body: RigidBodyComponent | undefined) {
-    this._rigidBody = body;
-    this.rigidBody?.body.SetType(b2BodyType.b2_dynamicBody);
-  }
-  /** The RigidBodyComponent to which this movement is attached */
-  public get rigidBody() { return this._rigidBody; }
-  /** The RigidBodyComponent to which this movement is attached */
-  private _rigidBody?: RigidBodyComponent;
-
-  /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraService) { }
-}
-
-/**
- * A rule for things that move, but don't detect collisions or experience forces
- */
-export class KinematicBodyMovement {
-  /** The RigidBodyComponent to which this movement is attached */
-  public set rigidBody(body: RigidBodyComponent | undefined) {
-    this._rigidBody = body;
-    this.rigidBody?.body.SetType(b2BodyType.b2_kinematicBody);
-  }
-  /** The RigidBodyComponent to which this movement is attached */
-  public get rigidBody() { return this._rigidBody; }
-  /** The RigidBodyComponent to which this movement is attached */
-  private _rigidBody?: RigidBodyComponent;
-
-  /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraService) { }
-}
-
-/** A rule for things that don't actually move or detect collisions */
-export class StaticBodyMovement {
-  /** The RigidBodyComponent to which this movement is attached */
-  public set rigidBody(body: RigidBodyComponent | undefined) {
-    this._rigidBody = body;
-    this.rigidBody?.body.SetType(b2BodyType.b2_staticBody);
-  }
-  /** The RigidBodyComponent to which this movement is attached */
-  public get rigidBody() { return this._rigidBody; }
-  /** The RigidBodyComponent to which this movement is attached */
-  private _rigidBody?: RigidBodyComponent;
-
-  /** Do any last-minute adjustments related to the movement */
-  prerender(_elapsedMs: number, _camera: CameraService) { }
-}
-
 /** This rule says "just stick with the body type that you've already got" */
 export class PassThroughMovement {
   /** The RigidBodyComponent to which this movement is attached */
@@ -604,4 +554,4 @@ export class PassThroughMovement {
 }
 
 /** MovementComponent is the type of any movement rules that an Actor can have */
-export type MovementComponent = PathMovement | TiltMovement | ChaseMovement | HoverMovement | ProjectileMovement | DynamicBodyMovement | KinematicBodyMovement | StaticBodyMovement | PassThroughMovement;
+export type MovementComponent = PathMovement | TiltMovement | ChaseMovement | HoverMovement | ProjectileMovement | PassThroughMovement;

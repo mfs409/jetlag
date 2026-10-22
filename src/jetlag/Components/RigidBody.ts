@@ -465,6 +465,21 @@ abstract class RigidBodyBase {
     }
   }
 
+  /**
+   * The type of this body: "static" (never moves), "kinematic" (moves only as
+   * it is told to), or "dynamic" (moves and responds to forces and collisions).
+   * Assign to it to change the type while the game is running.
+   */
+  public get bodyType(): "static" | "kinematic" | "dynamic" {
+    const t = this.body.GetType();
+    return t === b2BodyType.b2_dynamicBody ? "dynamic" : t === b2BodyType.b2_kinematicBody ? "kinematic" : "static";
+  }
+
+  /** Change the type of this body */
+  public set bodyType(type: "static" | "kinematic" | "dynamic") {
+    this.body.SetType(type === "dynamic" ? b2BodyType.b2_dynamicBody : type === "kinematic" ? b2BodyType.b2_kinematicBody : b2BodyType.b2_staticBody);
+  }
+
   /** The current rotation of the entity, in radians */
   public get rotation() { return this.body.GetAngle(); }
 

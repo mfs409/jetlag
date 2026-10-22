@@ -1,4 +1,4 @@
-import { Actor, BoxBody, CircleBody, DebugToggle, DynamicBodyMovement, FilledBox, FilledCircle, FilledPolygon, GridSystem, PlayerControlBehavior, JetLagGameConfig, KeyCodes, SolidBehavior, PolygonBody, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, BoxBody, CircleBody, DebugToggle, FilledBox, FilledCircle, FilledPolygon, GridSystem, PlayerControlBehavior, JetLagGameConfig, KeyCodes, SolidBehavior, PolygonBody, initializeAndLaunch, stage } from "../jetlag";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
@@ -32,8 +32,7 @@ function builder() {
   // Make a "hero" who moves via keyboard control and appears as a circle
   let hero = new Actor({
     appearance: new FilledCircle({ radius: .5, fillColor: "#ff0000", lineWidth: .04, lineColor: "#00ff00" }),
-    rigidBody: new CircleBody({ cx: 5, cy: 2, radius: .5 }),
-    movement: new DynamicBodyMovement(),
+    rigidBody: new CircleBody({ cx: 5, cy: 2, radius: .5 }, { dynamic: true }),
     behaviors: new PlayerControlBehavior(),
   });
 
