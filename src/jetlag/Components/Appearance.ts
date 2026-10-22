@@ -102,6 +102,17 @@ export class TextSprite {
   /** Stroke color */
   private _strokeColor?: string;
 
+  /**
+   * Width, in meters, at which the text word-wraps onto multiple lines.  If
+   * undefined, the text never wraps.  When wrapping, lines are centered if
+   * `center` is true, and left-aligned otherwise.
+   */
+  public get wrapWidth() { return this._wrapWidth; }
+  /** Width, in meters, at which the text word-wraps (undefined = no wrap) */
+  public set wrapWidth(v: number | undefined) { this._wrapWidth = v; this.rebuildStyle(); }
+  /** Width, in meters, at which the text word-wraps (undefined = no wrap) */
+  private _wrapWidth?: number;
+
   /** An offset between the TextSprite's center and the RigidBody's center */
   offset: { dx: number, dy: number };
 
@@ -120,12 +131,16 @@ export class TextSprite {
    * @param cfg.strokeColor The color of the text outline (optional)
    * @param cfg.lineHeight  Line height, as a multiple of font size (optional,
    *                        default 1.25)
+   * @param cfg.wrapWidth   If provided, the text word-wraps onto multiple
+   *                        lines so that it stays within this many meters of
+   *                        width (optional).  Lines are centered if `center`
+   *                        is true, and left-aligned otherwise.
    * @param cfg.offset      An offset between the component's center and its
    *                        RigidBody's center (optional)
    * @param producer        A function that creates the text to display, or a
    *                        String
    */
-  constructor(cfg: { center: boolean, face: string, color: string, size: number, z?: ZIndex, strokeWidth?: number, strokeColor?: string, lineHeight?: number, offset?: { dx: number, dy: number } }, public producer: string | ((a: Actor) => string)) {
+  constructor(cfg: { center: boolean, face: string, color: string, size: number, z?: ZIndex, strokeWidth?: number, strokeColor?: string, lineHeight?: number, wrapWidth?: number, offset?: { dx: number, dy: number } }, public producer: string | ((a: Actor) => string)) {
     this.center = cfg.center;
     this._face = cfg.face;
     this._color = cfg.color;
@@ -134,10 +149,16 @@ export class TextSprite {
     this._strokeWidth = cfg.strokeWidth;
     this._strokeColor = cfg.strokeColor;
     this._lineHeight = cfg.lineHeight ?? 1.25;
+    this._wrapWidth = cfg.wrapWidth;
     let sample_text = (typeof this.producer == "string") ? this.producer : "";
     let style: Partial<TextStyleOptions> = { fontFamily: this._face, fontSize: this._size, fill: this._color, lineHeight: this._size * this._lineHeight };
     if (cfg.strokeColor || cfg.strokeWidth) {
       style.stroke = { color: cfg.strokeColor ?? 0x000000, width: cfg.strokeWidth ?? 1 };
+    }
+    if (cfg.wrapWidth !== undefined) {
+      style.wordWrap = true;
+      style.wordWrapWidth = cfg.wrapWidth * stage.pixelMeterRatio;
+      style.align = this.center ? "center" : "left";
     }
     this.text = Text.makeText(sample_text, style);
     this.width = this.text.text.width;
@@ -150,7 +171,7 @@ export class TextSprite {
 
   /**
    * Re-derive the PIXI text style from `face`/`color`/`size`/`strokeWidth`/
-   * `strokeColor`/`lineHeight` and apply it in place.  This lets us resize
+   * `strokeColor`/`lineHeight`/`wrapWidth` and apply it in place.  This lets us resize
    * fonts correctly on a screen dimension change.
    */
   private rebuildStyle() {
@@ -161,6 +182,11 @@ export class TextSprite {
       fill: this._color,
       lineHeight: Math.floor(this._size * this._lineHeight * stage.fontScaling),
       stroke: (this._strokeColor || this._strokeWidth) ? { color: this._strokeColor ?? 0x000000, width: this._strokeWidth ?? 1 } : undefined,
+      // wordWrapWidth is in pixels, so it must be recomputed whenever the
+      // pixel/meter ratio changes
+      wordWrap: this._wrapWidth !== undefined,
+      wordWrapWidth: (this._wrapWidth ?? 0) * stage.pixelMeterRatio,
+      align: (this._wrapWidth !== undefined && this.center) ? "center" : "left",
     });
     this.width = this.text.text.width;
     this.height = this.text.text.height;
