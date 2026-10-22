@@ -2,7 +2,7 @@ import { Scene } from "./Entities/Scene";
 import { ParallaxSystem } from "./Services/Parallax";
 import { GestureDevice } from "./Devices/Gesture";
 import { AudioLibraryService } from "./Services/AudioLibrary";
-import { MusicComponent } from "./Components/Music";
+import { MusicLayers } from "./Components/Music";
 import { NetworkDevice } from "./Devices/Network";
 import { ScoreService } from "./Services/Score";
 import { RandomService } from "./Services/Random";
@@ -77,18 +77,11 @@ export class Stage {
   /** The foreground layers */
   public foreground!: ParallaxSystem;
 
-  /** Music that is controlled on one level at a time */
-  public get levelMusic() { return this._levelMusic; }
-
-  /** Music that is controlled on one level at a time */
-  public set levelMusic(m: MusicComponent | undefined) {
-    this._levelMusic?.stop();
-    this._levelMusic = m;
-    m?.play();
-  }
-
-  /** Music that is controlled on one level at a time */
-  private _levelMusic: MusicComponent | undefined;
+  /**
+   * Named layers of music that belong to one level.  Every layer is stopped and
+   * emptied when the level changes.
+   */
+  readonly levelMusic = new MusicLayers();
 
   /** The Score, suitable for use throughout JetLag */
   readonly score = new ScoreService();
@@ -124,17 +117,8 @@ export class Stage {
   /** A library of images */
   readonly imageLibrary = new ImageLibraryService();
 
-  /** Background music that doesn't stop when the level changes */
-  public get gameMusic() { return this._gameMusic; }
-
-  /** Background music that doesn't stop when the level changes */
-  public set gameMusic(m: MusicComponent | undefined) {
-    this._gameMusic?.stop();
-    this._gameMusic = m;
-  }
-
-  /** Background music that doesn't stop when the level changes */
-  private _gameMusic: MusicComponent | undefined;
+  /** Named layers of background music that don't stop when the level changes */
+  readonly gameMusic = new MusicLayers();
 
   /** Persistent storage + volatile storage for a game session and a level */
   readonly storage: StorageDevice;
@@ -311,8 +295,8 @@ export class Stage {
     // clear any overlay left over from the previous stage
     this.clearOverlay();
 
-    // reset music (the setter stops whatever was playing)
-    this.levelMusic = undefined;
+    // reset level music
+    this.levelMusic.clear();
 
     // reset score and storage
     this.score.reset();
@@ -444,8 +428,8 @@ export class Stage {
 
   /** Close the window to exit the game */
   public exit() {
-    this.levelMusic?.stop();
-    this.gameMusic?.stop();
+    this.levelMusic.clear();
+    this.gameMusic.clear();
     this.platform.quitter();
   }
 }
