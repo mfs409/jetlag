@@ -31,8 +31,9 @@ what you remember about it.
   folder.  Every asset a game uses must also be listed in its `Config`'s
   `resources`.  (A game that loads its assets from a CDN instead sets
   `resources.cdn`.)
-- `npm run serve -- <name>` serves a game with automatic reloading.  `npm run
-  check` type-checks all of the code; run it after every change.
+- `npm run serve <name>` serves a game with automatic reloading (leave the
+  name out to be asked which one).  `npm run check` type-checks all of the
+  code; run it after every change.
 
 ## How JetLag games are written
 

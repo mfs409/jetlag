@@ -40,12 +40,13 @@ The terminal says which address to open, such as <http://localhost:7000/my_game/
 This folder is set up to allow you to make many games from the same checkout of JetLag.
 Running `npm run create` again makes another `src/<name>/` folder alongside the first.
 A project is any `src/<name>/` folder that has a `<name>.ts` and a `<name>.html` in it.
-To serve a project, give its name: `npm run serve -- <name>`.
-`npm start` is a shorthand for when you have just one project.
+To serve a project, you must provide its name: `npm run serve <name>`.
 See `npm run help` for the rest of the commands.
 
+To make a multiplayer server for your games, run `npx jetlag create-server <folder>`, and read the README in the folder it makes.
+
 Every project keeps its images, sounds, fonts, videos, and SVG files in its own `src/<name>/assets/` folder, which `npm run create` makes for you.
-`npm run build -- <name>` copies the project's `assets` folder into `dist/<name>/`.
+`npm run build <name>` copies the project's `assets` folder into `dist/<name>/`.
 A game that loads its assets from somewhere else, such as a CDN, can set `resources.cdn` in its `Config`.
 
 To add images and sounds to your game, follow these steps:

@@ -3,20 +3,23 @@
     "version": "1.0.0",
     "description": "A 2D Game Framework for web and mobile, using PIXI.js and Box2D",
     "scripts": {
-        "start": "node scripts/main.mjs start",
-        "create": "node scripts/main.mjs create",
-        "serve": "node scripts/main.mjs serve",
-        "build": "node scripts/main.mjs build",
-        "zip": "node scripts/main.mjs zip",
+        "start": "node cli/main.mjs serve",
+        "create": "node cli/main.mjs create",
+        "serve": "node cli/main.mjs serve",
+        "build": "node cli/main.mjs build",
+        "zip": "node cli/main.mjs zip",
         "check": "tsc --noEmit",
-        "clean": "node scripts/main.mjs clean",
-        "help": "node scripts/main.mjs help"
+        "clean": "node cli/main.mjs clean",
+        "help": "node cli/main.mjs help"
     },
     "owner": "Michael Spear",
     "license": "MIT",
     "type": "module",
     "dependencies": {
         "@box2d/core": "^0.11.0",
+        "adm-zip": "^0.6.1",
+        "chalk": "^6.0.0",
+        "esbuild": "^0.28.1",
         "hammerjs": "^2.0.8",
         "howler": "^2.2.4",
         "pixi-filters": "^6.1.5",
@@ -26,9 +29,9 @@
     "devDependencies": {
         "@types/hammerjs": "^2.0.46",
         "@types/howler": "^2.2.13",
-        "adm-zip": "^0.6.1",
-        "chalk": "^6.0.0",
-        "esbuild": "^0.28.1",
         "typescript": "^7.0.2"
+    },
+    "bin": {
+        "jetlag": "cli/main.mjs"
     }
 }
