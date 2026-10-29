@@ -179,7 +179,7 @@ export class ImageLibraryService {
   async loadVideos(names: string[], prefix: string) {
     if (names.length === 0) return;
     for (let vidName of names) {
-      Assets.add({ alias: vidName, src: prefix + "/" + vidName, data: { autoPlay: false, preload: true } });
+      Assets.add({ alias: vidName, src: prefix + vidName, data: { autoPlay: false, preload: true } });
     }
     const textures = await Assets.load(names, (p) => { this.videoLoadingProgress = p; });
     for (let vidName of names) this.vidTextures.set(vidName, textures[vidName]);

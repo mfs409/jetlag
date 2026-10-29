@@ -14,8 +14,11 @@ export interface JetLagGameConfig {
   readonly hitBoxes: boolean;
   /** Configuration of any assets used by the game */
   readonly resources?: {
-    /** The prefix for all resources */
-    readonly prefix: string,
+    /**
+     * An override for loading assets from a CDN url instead of the game's
+     * `assets` folder.
+     */
+    readonly cdn?: string,
     /** The list of image files needed EARLY (for the loading screen) */
     readonly loadingScreenImageNames?: string[];
     /** The list of fonts needed EARLY (for the loading screen) */
@@ -35,4 +38,19 @@ export interface JetLagGameConfig {
   readonly storageKey?: string;
   /** Accelerometer mode (customize for each device target and orientation) */
   readonly accelerometerMode?: AccelerometerMode;
+}
+
+/** Where a game's assets live, relative to the page that loads the game */
+const DEFAULT_ASSET_BASE = "./assets/";
+
+/**
+ * Compute the string that goes in front of every asset's file name, either
+ * DEFAULT_ASSET_BASE or config.cdn The result always ends in a "/".
+ *
+ * @param config The game-wide configuration
+ */
+export function assetBaseUrl(config: JetLagGameConfig) {
+  const cdn = config.resources?.cdn;
+  if (!cdn) return DEFAULT_ASSET_BASE;
+  return cdn.endsWith("/") ? cdn : cdn + "/";
 }

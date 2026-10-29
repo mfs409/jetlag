@@ -135,10 +135,6 @@ async function create(name) {
     console.error(chalk.red(`'${name}' isn't a valid project name.  Use only letters, numbers, '_', and '-'.`));
     process.exit(1);
   }
-  if (name === "jetlag" || name === "assets") {
-    console.error(chalk.red(`'${name}' is reserved for a folder that is already in src/.`));
-    process.exit(1);
-  }
   const destFolder = path.join(srcFolder, name);
   if (fs.existsSync(destFolder)) {
     console.error(chalk.red(`src/${name}/ already exists.`));
@@ -151,8 +147,13 @@ async function create(name) {
   const templateHtml = fs.readFileSync(path.join(templateFolder, "game.html"), "utf8");
   fs.writeFileSync(path.join(destFolder, `${name}.html`), templateHtml.replace('src="./game.js"', `src="./${name}.js"`));
   fs.copyFileSync(path.join(templateFolder, "game.ts"), path.join(destFolder, `${name}.ts`));
+  // Every project keeps its images, sounds, and fonts in its own `assets`
+  // folder.  The .gitkeep makes git track the folder while it's empty; `build`
+  // doesn't copy it.
+  fs.mkdirSync(path.join(destFolder, "assets"));
+  fs.writeFileSync(path.join(destFolder, "assets", ".gitkeep"), "");
 
-  console.log(chalk.green(`  ✓ Created src/${name}/${name}.ts and src/${name}/${name}.html`));
+  console.log(chalk.green(`  ✓ Created src/${name}/${name}.ts, src/${name}/${name}.html, and src/${name}/assets/`));
   console.log(`\nNext steps:`);
   console.log(`  - Edit src/${name}/${name}.ts`);
   console.log(`  - Run ${chalk.green(`npm run serve -- ${name}`)} to see it`);
@@ -200,8 +201,8 @@ async function start() {
  * self-contained, minified bundle, so `dist/<name>/` can be zipped up and
  * hosted anywhere on its own.
  *
- * Assets come from the project's own `assets/` folder, if it has one.  If not,
- * the shared `src/assets/` is copied instead.
+ * Assets come from the project's own `assets/` folder, if it has one.  Files
+ * whose names start with "." (such as `.gitkeep`) are not copied.
  *
  * @param name The project to build
  */
@@ -215,15 +216,13 @@ async function build(name) {
   fs.copyFileSync(path.join(srcFolder, project, `${project}.html`), path.join(deployFolder, "index.html"));
   console.log(`  ✓ Copied '${project}.html' to '${deployFolder}' as 'index.html'`);
 
-  const ownAssets = path.join(srcFolder, project, "assets");
-  const sharedAssets = path.join(srcFolder, "assets");
-  const assets = fs.existsSync(ownAssets) ? ownAssets : sharedAssets;
+  const assets = path.join(srcFolder, project, "assets");
   if (fs.existsSync(assets)) {
-    fs.cpSync(assets, path.join(deployFolder, "assets"), { recursive: true });
+    fs.cpSync(assets, path.join(deployFolder, "assets"), {
+      recursive: true,
+      filter: (src) => !path.basename(src).startsWith("."),
+    });
     console.log(`  ✓ Copied assets from '${assets}'`);
-    if (assets === sharedAssets) {
-      console.log(chalk.yellow(`  ! '${project}' has no assets folder of its own, so the shared one was copied.  Its resources.prefix must be "./assets/", or its files won't be found.`));
-    }
   }
 
   await esbuild.build({

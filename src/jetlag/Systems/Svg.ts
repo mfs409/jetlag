@@ -1,5 +1,6 @@
 import { b2Vec2 } from "@box2d/core";
 import { stage } from "../Stage";
+import { assetBaseUrl } from "../Config";
 
 /**
  * The parser states for an SVG path's "d" data: reading the very first point
@@ -79,9 +80,7 @@ export class SvgSystem {
     // send the request.  On completion, we'll be in onFileLoaded
     let xhr = new XMLHttpRequest();
     xhr.addEventListener("load", (aa: ProgressEvent) => svg.onFileLoaded(aa));
-    if (!stage.config.resources)
-      throw "Error: to use SVG resources, you must provide a 'resources' field in your game's configuration";
-    xhr.open("GET", stage.config.resources.prefix + file, true);
+    xhr.open("GET", assetBaseUrl(stage.config) + file, true);
     xhr.send();
   }
 

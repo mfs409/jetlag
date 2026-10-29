@@ -27,10 +27,10 @@ what you remember about it.
   say so and suggest a workaround instead.
 - Each game lives in its own folder, `src/<name>/`, with a `<name>.ts` and a
   `<name>.html` file.  Make new games with `npm run create`, not by hand.
-- Assets (images, sounds, fonts) go in the `src/assets/` folder, which every
-  game shares, unless a game has an `assets/` folder of its own.  Every asset
-  a game uses must also be listed in its `Config`'s `resources`, and
-  `resources.prefix` has to match where the files are.
+- Assets (images, sounds, fonts) go in the game's own `src/<name>/assets/`
+  folder.  Every asset a game uses must also be listed in its `Config`'s
+  `resources`.  (A game that loads its assets from a CDN instead sets
+  `resources.cdn`.)
 - `npm run serve -- <name>` serves a game with automatic reloading.  `npm run
   check` type-checks all of the code; run it after every change.
 

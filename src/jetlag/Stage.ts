@@ -6,7 +6,7 @@ import { MusicLayers } from "./Components/Music";
 import { NetworkDevice } from "./Devices/Network";
 import { ScoreService } from "./Services/Score";
 import { RandomService } from "./Services/Random";
-import { JetLagGameConfig } from "./Config";
+import { JetLagGameConfig, assetBaseUrl } from "./Config";
 import { ConsoleDevice } from "./Devices/Console";
 import { KeyboardDevice } from "./Devices/Keyboard";
 import { GamepadDevice } from "./Devices/Gamepad";
@@ -368,7 +368,7 @@ export class Stage {
     await this.renderer.initialize();
 
     const resources = this.config.resources;
-    const prefix = resources?.prefix ?? "";
+    const prefix = assetBaseUrl(this.config);
     const loadingScreenFonts = resources?.loadingScreenFonts ?? [];
     const loadingScreenImageNames = resources?.loadingScreenImageNames ?? [];
 

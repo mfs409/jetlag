@@ -1,5 +1,5 @@
 import { Howl, Howler } from "howler";
-import { JetLagGameConfig } from "../Config";
+import { JetLagGameConfig, assetBaseUrl } from "../Config";
 
 /**
  * An abstract representation of a sound
@@ -122,11 +122,12 @@ export class AudioLibraryService {
     if (!config.resources) {
       return;
     }
+    const base = assetBaseUrl(config);
     for (let name of config.resources.soundNames ?? []) {
-      this.sounds.set(name, new Howl({ src: [config.resources.prefix + name] }));
+      this.sounds.set(name, new Howl({ src: [base + name] }));
     }
     for (let name of config.resources.musicNames ?? []) {
-      this.music.set(name, new Howl({ src: [config.resources.prefix + name], loop: true }));
+      this.music.set(name, new Howl({ src: [base + name], loop: true }));
     }
   }
 

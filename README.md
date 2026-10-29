@@ -44,15 +44,13 @@ To serve a project, give its name: `npm run serve -- <name>`.
 `npm start` is a shorthand for when you have just one project.
 See `npm run help` for the rest of the commands.
 
-By default, every project shares the single `src/assets` folder, so a set of assets only needs to exist once no matter how many projects you make.
-A project that's meant to ship on its own, such as a real game, can keep its own private assets instead.
-To do that, make an `assets` folder inside its `src/<name>/` folder, and set the project's `resources.prefix` to `"./assets/"`.
-Whichever you choose, `resources.prefix` has to match where the files are, since nothing checks that for you.
-`npm run build -- <name>` copies the project's own `assets` folder into `dist/<name>/`, or, if it doesn't have one, the shared one.
+Every project keeps its images, sounds, fonts, videos, and SVG files in its own `src/<name>/assets/` folder, which `npm run create` makes for you.
+`npm run build -- <name>` copies the project's `assets` folder into `dist/<name>/`.
+A game that loads its assets from somewhere else, such as a CDN, can set `resources.cdn` in its `Config`.
 
 To add images and sounds to your game, follow these steps:
 
-1. Copy the image or sound file into the appropriate assets folder
+1. Copy the asset file into your project's `assets` folder
 2. Add the name of the file to the appropriate list in your project's `.ts` file
 3. Now you can refer to the asset by its filename in your code
 

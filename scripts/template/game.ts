@@ -2,7 +2,11 @@ import { Actor, BoxBody, CircleBody, DebugToggle, FilledBox, FilledCircle, Fille
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
- * the assets (images and sounds) used by this game.
+ * the assets (images, sounds, and fonts) used by this game.  To use an asset,
+ * put the file in this project's `assets` folder and list its name in a
+ * `resources` field, such as:
+ *
+ *   resources = { imageNames: ["hero.png"], soundNames: ["boing.ogg"] };
  */
 class Config implements JetLagGameConfig {
   // Use 16/9 for a game in landscape mode, and 9/16 for a game in portrait mode
