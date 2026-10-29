@@ -12,7 +12,6 @@
         "clean": "node cli/main.mjs clean",
         "help": "node cli/main.mjs help"
     },
-    "owner": "Michael Spear",
     "license": "MIT",
     "type": "module",
     "dependencies": {
