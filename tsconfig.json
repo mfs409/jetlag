@@ -16,7 +16,10 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "jetlag": ["./src/jetlag.ts"]
+    }
   },
   "include": [
     "src/**/*.ts"

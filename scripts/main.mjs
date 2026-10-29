@@ -55,6 +55,13 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 /** The folder that holds every project's own sub-folder */
 const srcFolder = path.join(root, "src");
 
+/**
+ * Projects import the engine as "jetlag", but esbuild finds it via this alias.
+ *
+ * NB: This mapping is also in tsconfig.json's `paths`, for the type checking.
+ */
+const ENGINE_ALIAS = { jetlag: path.join(srcFolder, "jetlag.ts") };
+
 /** The checked-in template a new project is created from */
 const templateFolder = path.join(root, "scripts", "template");
 
@@ -174,6 +181,7 @@ async function serve(name) {
   const project = requireProject("serve", name);
   const ctx = await esbuild.context({
     entryPoints: [path.join(srcFolder, project, `${project}.ts`)],
+    alias: ENGINE_ALIAS,
     outdir: srcFolder,
     outbase: srcFolder,
     write: false,
@@ -227,6 +235,7 @@ async function build(name) {
 
   await esbuild.build({
     entryPoints: [path.join(srcFolder, project, `${project}.ts`)],
+    alias: ENGINE_ALIAS,
     outfile: path.join(deployFolder, `${project}.js`),
     bundle: true,
     minify: true,

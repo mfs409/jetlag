@@ -1,4 +1,4 @@
-import { Actor, BoxBody, CircleBody, DebugToggle, FilledBox, FilledCircle, FilledPolygon, GridSystem, PlayerControlBehavior, JetLagGameConfig, KeyCodes, SolidBehavior, PolygonBody, initializeAndLaunch, stage } from "../jetlag";
+import { Actor, BoxBody, CircleBody, DebugToggle, FilledBox, FilledCircle, FilledPolygon, GridSystem, PlayerControlBehavior, JetLagGameConfig, KeyCodes, SolidBehavior, PolygonBody, initializeAndLaunch, stage } from "jetlag";
 
 /**
  * Screen dimensions and other game configuration, such as the names of all
