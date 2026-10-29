@@ -84,7 +84,3 @@ If you contributed, and we missed your name, please send a note reminding us to 
 - Anh Nguyen
 - Yassine Rafih
 - James Goodwin
-
-## Third-Party Assets
-
-JetLag itself is MIT licensed (see `LICENSE`), but `src/assets/Arimo-Regular.ttf` and `src/assets/Arimo-Bold.ttf` are the Arimo font from Google Fonts, licensed separately under the SIL Open Font License, Version 1.1 (see `src/assets/Arimo-OFL.txt`).
