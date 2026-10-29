@@ -9,6 +9,16 @@ import { User, Room } from "./types";
 /** The demo page and 404 page live in the `public` folder, next to `src` */
 const publicFolder = join(__dirname, "..", "public");
 
+/** The port to listen on: the PORT environment variable, or 3000 */
+const port = Number(process.env.PORT) || 3000;
+
+/**
+ * The web pages that are allowed to connect to this server: the ALLOWED_ORIGIN
+ * environment variable (a comma-separated list, if there are several), or the
+ * address where `jetlag2d serve` shows a game while you're developing
+ */
+const allowedOrigins = (process.env.ALLOWED_ORIGIN ?? "http://localhost:7000").split(",").map((o) => o.trim());
+
 /** The main user table, indexed by userId */
 let users = new Map<string, User>();
 
@@ -38,8 +48,8 @@ let app = createServer((req, res) => {
 });
 
 // Set up a websocket interface so that players can interact with each other
-let io = new Server(app, { cors: { origin: "http://localhost:7000" } });
+let io = new Server(app, { cors: { origin: allowedOrigins } });
 io.on('connection', (socket) => { workflow(socket, users, rooms, sockets); });
 
 // Now call listen to actually start the web server
-app.listen(3000);
+app.listen(port);
