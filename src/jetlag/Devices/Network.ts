@@ -1,5 +1,15 @@
 import { Socket, io } from "socket.io-client";
 
+/**
+ * The version of the messages that this client and a server exchange.  The
+ * client sends it when it connects, and a server with a different version
+ * turns the client away (see `onErrVersion`).
+ *
+ * NB: This is not the version of JetLag.  The same number is in the server
+ * template's `src/types.ts`, so change them together.
+ */
+const PROTOCOL_VERSION = 1;
+
 /** The state of the network, which ties to if we have a user and a room */
 export enum NetworkState { Start, User, UserRoom }
 
@@ -52,6 +62,12 @@ export class NetworkDevice {
   /** An event handler for errors due to incorrectly formatted requests */
   onErrFormat: (msg: string) => void = () => { };
 
+  /**
+   * An event handler for when the server turns us away because it uses a
+   * different version of the protocol.  The server disconnects right after.
+   */
+  onErrVersion: (msg: string) => void = () => { };
+
   /** An event handler for when a login request succeeds */
   onLoggedIn: (msg: string) => void = () => { };
 
@@ -81,7 +97,7 @@ export class NetworkDevice {
    */
   connect(serverAddress: string) {
     // Connect to the server
-    this.socket = io(serverAddress);
+    this.socket = io(serverAddress, { auth: { protocolVersion: PROTOCOL_VERSION } });
 
     // Set up listeners for all event messages
     //
@@ -95,6 +111,7 @@ export class NetworkDevice {
     this.socket.on("ResErrHasRoom", (msg) => this.onErrHasRoom(msg));
     this.socket.on("ResErrNoRoom", (msg) => this.onErrNoRoom(msg));
     this.socket.on("ResErrFormat", (msg) => this.onErrFormat(msg));
+    this.socket.on("ResErrVersion", (msg) => this.onErrVersion(msg));
     this.socket.on("ResSent", (msg) => this.onSent(msg));
 
     // These four also update `state`, since they mark a transition in the
@@ -165,6 +182,7 @@ export class NetworkDevice {
     this.onErrHasRoom = () => { };
     this.onErrNoRoom = () => { };
     this.onErrFormat = () => { };
+    this.onErrVersion = () => { };
     this.onLoggedIn = () => { };
     this.onLoggedOut = () => { };
     this.onSent = () => { };

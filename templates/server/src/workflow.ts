@@ -1,6 +1,10 @@
 import { Socket } from "socket.io";
 import { Broadcast, EvtUserJoined, EvtUserLeft, Message, ReqCreate, ReqJoin, ReqLoginToken, ReqLogout, ResCreated, ResErrFormat, ResErrHasRoom, ResErrHasUser, ResErrNoRoom, ResErrNoUser, ResErrUserTaken, ResJoined, ResLoggedIn, ResLoggedOut, ResSent, Room, User } from "./types";
 
+// NB: Before any of this, `index.ts` checks that the client speaks the same
+// version of the protocol (`PROTOCOL_VERSION`), and sends ResErrVersion and
+// hangs up if it doesn't.
+//
 // The following Mermaid.js Graph describes all of the transitions and events in
 // the workflow.  The "Server" is replicated in the diagram, to make it easier
 // to see the relationship between requests and responses.  The client can be in

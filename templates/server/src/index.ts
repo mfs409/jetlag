@@ -4,7 +4,7 @@ import { join } from "path";
 import { Server } from "socket.io";
 
 import { workflow } from "./workflow";
-import { User, Room } from "./types";
+import { User, Room, PROTOCOL_VERSION, ResErrVersion } from "./types";
 
 /** The demo page and 404 page live in the `public` folder, next to `src` */
 const publicFolder = join(__dirname, "..", "public");
@@ -49,7 +49,18 @@ let app = createServer((req, res) => {
 
 // Set up a websocket interface so that players can interact with each other
 let io = new Server(app, { cors: { origin: allowedOrigins } });
-io.on('connection', (socket) => { workflow(socket, users, rooms, sockets); });
+io.on('connection', (socket) => {
+  // A client that speaks a different version of the protocol can't be served, so
+  // say why and hang up before it can do anything else
+  const clientVersion = socket.handshake.auth.protocolVersion;
+  if (clientVersion !== PROTOCOL_VERSION) {
+    const msg = `This server uses protocol version ${PROTOCOL_VERSION}, but the client uses ${clientVersion ?? "no version"}`;
+    socket.emit(ResErrVersion.TAG, JSON.stringify(new ResErrVersion(msg)));
+    socket.disconnect(true);
+    return;
+  }
+  workflow(socket, users, rooms, sockets);
+});
 
 // Now call listen to actually start the web server
 app.listen(port);

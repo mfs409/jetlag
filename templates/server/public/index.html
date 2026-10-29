@@ -30,14 +30,15 @@
   <div id="ResultLog"></div>
 </body>
 <script>
-  // A websocket that connects to the server that provided this web page
-  var socket = io();
+  // A websocket that connects to the server that provided this web page.  The
+  // version has to match PROTOCOL_VERSION in src/types.ts.
+  var socket = io({ auth: { protocolVersion: 1 } });
 
   // On any response from the server, append the message to the ResultLog
-  let events = ["EvtUserJoined", "EvtUserLeft", "Broadcast", "ResErrHasUser", "ResErrNoUser", "ResErrHasRoom", "ResErrNoRoom", "ResErrFormat", "ResErrUserTaken", "ResLoggedIn", "ResLoggedOut", "ResSent", "ResCreated", "ResJoined"];
+  let events = ["EvtUserJoined", "EvtUserLeft", "Broadcast", "ResErrHasUser", "ResErrNoUser", "ResErrHasRoom", "ResErrNoRoom", "ResErrFormat", "ResErrVersion", "ResErrUserTaken", "ResLoggedIn", "ResLoggedOut", "ResSent", "ResCreated", "ResJoined"];
   for (let e of events) socket.on(e, (msg) => {
     let p = document.createElement("p");
-    p.innerHTML = `${tag}: ${msg}`;
+    p.innerHTML = `${e}: ${msg}`;
     document.getElementById("ResultLog").appendChild(p)
   });
 

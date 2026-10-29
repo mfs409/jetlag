@@ -1,3 +1,15 @@
+/**
+ * The version of the messages in this file, which the client and the server
+ * must agree on.  A client sends its version when it connects, and the server
+ * turns away a client whose version is different.
+ *
+ * NB: This is not the version of JetLag.  It goes up by one whenever a message
+ * is added, removed, or changed in a way that would confuse the other side.
+ * The same number is in jetlag2d's `Network.ts`, so only change it when you
+ * also change the client.
+ */
+export const PROTOCOL_VERSION = 1;
+
 /** A user who is playing the game */
 export class User {
   /**
@@ -150,6 +162,21 @@ export class ResErrFormat {
   constructor(public msg: string) { }
 }
 
+/**
+ * An error message sent to a client whose protocol version doesn't match the
+ * server's.  The server disconnects the client right after sending it.
+ */
+export class ResErrVersion {
+  /** A string representation of the message type */
+  static TAG = "ResErrVersion"
+  /**
+   * Construct a ResErrVersion message
+   *
+   * @param msg A description of the mismatch
+   */
+  constructor(public msg: string) { }
+}
+
 /** A message sent to a client whose login succeeded */
 export class ResLoggedIn {
   /** A string representation of the message type */
@@ -260,4 +287,4 @@ export class ReqLogout {
  * The Message type unions all of the message types, to make the rest of the
  * code easier to work with 
  */
-export type Message = EvtUserJoined | EvtUserLeft | Broadcast | ResErrHasUser | ResErrNoUser | ResErrUserTaken | ResErrHasRoom | ResErrNoRoom | ResErrFormat | ResLoggedIn | ResLoggedOut | ResSent | ResCreated | ResJoined | ReqLoginToken | ReqCreate | ReqJoin | ReqLogout;
+export type Message = EvtUserJoined | EvtUserLeft | Broadcast | ResErrHasUser | ResErrNoUser | ResErrUserTaken | ResErrHasRoom | ResErrNoRoom | ResErrFormat | ResErrVersion | ResLoggedIn | ResLoggedOut | ResSent | ResCreated | ResJoined | ReqLoginToken | ReqCreate | ReqJoin | ReqLogout;
