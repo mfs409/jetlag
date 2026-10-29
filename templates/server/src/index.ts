@@ -1,9 +1,13 @@
 import { createServer } from "http";
 import { createReadStream } from "fs";
+import { join } from "path";
 import { Server } from "socket.io";
 
 import { workflow } from "./workflow";
 import { User, Room } from "./types";
+
+/** The demo page and 404 page live in the `public` folder, next to `src` */
+const publicFolder = join(__dirname, "..", "public");
 
 /** The main user table, indexed by userId */
 let users = new Map<string, User>();
@@ -16,24 +20,20 @@ let sockets = new Map<string, User>();
 
 // Set up a web server but don't start it yet
 //
-// NB: We have three routes in the server, all of which only exist for the sake
-// of the demo.  Otherwise, we could have an empty server.
+// NB: We have two routes in the server, both of which only exist for the sake
+// of the demo.  Otherwise, we could have an empty server.  (The socket.io
+// client library that the demo page loads, '/socket.io/socket.io.js', is
+// served by socket.io itself.)
 let app = createServer((req, res) => {
   // Route '/' and '/index.html' to the index.html file
   if (req.url == '/' || req.url == '/index.html') {
     res.writeHead(200, { "Content-Type": "text/html" });
-    createReadStream(__dirname + '/index.html').pipe(res);
-  }
-  // Route '/socket.io.js' to the copy of the socket.io library in
-  // node_modules
-  else if (req.url == '/socket.io.js') {
-    res.writeHead(200, { "Content-Type": "text/javascript" });
-    createReadStream(__dirname + '/socket.io.js').pipe(res);
+    createReadStream(join(publicFolder, 'index.html')).pipe(res);
   }
   // Use 404.html for everything else
   else {
     res.writeHead(404, { "Content-Type": "text/html" });
-    createReadStream(__dirname + '/404.html').pipe(res);
+    createReadStream(join(publicFolder, '404.html')).pipe(res);
   }
 });
 

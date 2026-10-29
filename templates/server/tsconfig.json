@@ -4,7 +4,6 @@
     "target": "esnext",
     "sourceMap": true,
     "rootDir": "./src",
-    "outDir": "./check/",
     "noImplicitAny": true,
     "removeComments": true,
     "strict": true,

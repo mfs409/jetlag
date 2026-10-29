@@ -4,7 +4,7 @@ import { Socket, io } from "socket.io-client";
 export enum NetworkState { Start, User, UserRoom }
 
 /**
- * NetworkDevice interfaces with a server (see the "multiplayer-server" folder)
+ * NetworkDevice interfaces with a server (see the "templates/server" folder)
  * via socket.io to send and receive network events.
  *
  * Naming convention: every incoming event handler is `onX` (assign your own

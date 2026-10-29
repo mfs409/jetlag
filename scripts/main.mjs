@@ -63,7 +63,7 @@ const srcFolder = path.join(root, "src");
 const ENGINE_ALIAS = { jetlag: path.join(srcFolder, "jetlag.ts") };
 
 /** The checked-in template a new project is created from */
-const templateFolder = path.join(root, "scripts", "template");
+const templateFolder = path.join(root, "templates", "game");
 
 /** Where `npm run build` puts each project's deployable package */
 const DEPLOY_OUTPUT_FOLDER = path.join(root, "dist");

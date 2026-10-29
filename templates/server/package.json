@@ -1,0 +1,22 @@
+{
+  "name": "jetlag-socket-server",
+  "version": "0.0.1",
+  "description": "A simple websocket server for JetLag games",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "socket.io": "^4.8.3",
+    "tsx": "^4.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
