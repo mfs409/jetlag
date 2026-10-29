@@ -117,6 +117,20 @@ function findProjects() {
 }
 
 /**
+ * Compute the names of the code files to bundle for a project.
+ *
+ * In addition to the obvious `<name>.ts`, a project might have other
+ * `*.bundle.ts` files in its folder, such as for web workers.
+ *
+ * @param project The name of the project
+ */
+function entryPointsFor(project) {
+  const folder = path.join(srcFolder, project);
+  const extra = fs.readdirSync(folder).filter((f) => f.endsWith(".bundle.ts")).map((f) => path.join(folder, f));
+  return [path.join(folder, `${project}.ts`), ...extra];
+}
+
+/**
  * Pick the project that a command should work on.  If the command was given a
  * name, use it.  If not, use the only project, or (in a terminal) ask which one,
  * suggesting the one whose code was edited most recently.  Otherwise say what
@@ -230,7 +244,7 @@ async function create(name) {
 async function serve(name) {
   const project = await chooseProject("serve", name);
   const ctx = await esbuild.context({
-    entryPoints: [path.join(srcFolder, project, `${project}.ts`)],
+    entryPoints: entryPointsFor(project),
     alias: ENGINE_ALIAS,
     outdir: srcFolder,
     outbase: srcFolder,
@@ -238,6 +252,10 @@ async function serve(name) {
     bundle: true,
     sourcemap: true,
     platform: "browser",
+    // a project may import a .wasm file; it gets a URL
+    loader: { ".wasm": "file" },
+    // some libraries mention Node's built-in modules in code that only runs under Node
+    external: ["node:*"],
     banner: { js: LIVE_RELOAD_BANNER },
   });
   await ctx.watch();
@@ -278,13 +296,18 @@ async function build(name) {
   }
 
   await esbuild.build({
-    entryPoints: [path.join(srcFolder, project, `${project}.ts`)],
+    entryPoints: entryPointsFor(project),
     alias: ENGINE_ALIAS,
-    outfile: path.join(deployFolder, `${project}.js`),
+    outdir: deployFolder,
+    outbase: path.join(srcFolder, project),
     bundle: true,
     minify: true,
     sourcemap: false,
     platform: "browser",
+    // a project may import a .wasm file; it is copied next to the bundle
+    loader: { ".wasm": "file" },
+    assetNames: "[name]",
+    external: ["node:*"],
   });
   console.log(chalk.green(`  ✓ Compiled TypeScript to JavaScript\n`));
   console.log(chalk.green(`Build complete: '${deployFolder}'\n`));
