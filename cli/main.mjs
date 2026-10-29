@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// The `jetlag` command: everything a JetLag workspace needs to make, serve, and
+// The `jetlag2d` command: everything a JetLag workspace needs to make, serve, and
 // build games, and to make a multiplayer server.
 //
-// The command works from a workspace's package.json (`"serve": "jetlag
-// serve"`). It also works via `npx jetlag`.
+// The command works from a workspace's package.json (`"serve": "jetlag2d
+// serve"`). It also works via `npx jetlag2d`.
 //
 // The script takes any of the following commands:
 //
-//   {create, serve, build, zip, clean, create-server, help}
+//   {init, create, serve, build, zip, clean, create-server, help}
 //
 // For more information, see the help function.
 //
@@ -50,7 +50,8 @@ function help() {
   and zip ask you to pick one.  Giving a command a name looks like this: 
   \`npm run serve my_game\`.
 
-  To make a multiplayer server, run \`npx jetlag create-server <folder>\`.
+  To make a new workspace, run \`npx jetlag2d init <folder>\`.  To make a
+  multiplayer server, run \`npx jetlag2d create-server <folder>\`.
 `);
 }
 
@@ -75,13 +76,13 @@ const root = findWorkspaceRoot();
 const srcFolder = path.join(root, "src");
 
 /**
- * Projects import the engine as "jetlag".  In a workspace, that's the installed
+ * Projects import the engine as "jetlag2d".  In a workspace, that's the installed
  * package, so there's nothing to do.  In the engine's own repo, there is no
  * installed package, so esbuild finds it via this alias instead.
  *
  * NB: This mapping is also in tsconfig.json's `paths`, for the type checking.
  */
-const ENGINE_ALIAS = root === engineRoot ? { jetlag: path.join(srcFolder, "jetlag.ts") } : {};
+const ENGINE_ALIAS = root === engineRoot ? { jetlag2d: path.join(srcFolder, "jetlag.ts") } : {};
 
 /** The checked-in template a new project is created from */
 const templateFolder = path.join(engineRoot, "templates", "game");
@@ -306,36 +307,90 @@ async function zip(name) {
   console.log(chalk.green(`  ✓ Zipped it into '${zipFile}'\n`));
 }
 
+/** The engine's own version, which a new workspace pins */
+const engineVersion = JSON.parse(fs.readFileSync(path.join(engineRoot, "package.json"), "utf8")).version;
+
 /**
- * Make a new multiplayer server project from the template: a folder with
- * everything the server needs, which is meant to be edited.  It's separate from
- * any workspace, so it goes wherever the user says, relative to where they ran
- * the command.
- *
- * @param dir The folder to make, which must not already have things in it
+ * What a new workspace's package.json asks to install as "jetlag2d": exactly
+ * the version that made the workspace, so that games don't change underneath
+ * their authors.
  */
-function createServer(dir) {
-  if (!dir) {
-    console.error(chalk.red(`'create-server' needs the name of a folder to make.`));
-    console.error(`Usage: ${chalk.green("npx jetlag create-server <folder>")}`);
-    process.exit(1);
-  }
+function jetlagDependency() {
+  return engineVersion;
+}
+
+/**
+ * Make a new project folder from one of the folders in `templates/`.  It goes
+ * wherever the user says, relative to where they ran the command, and is given
+ * its own package name (the template's is generic).
+ *
+ * @param template The name of the folder in `templates/` to copy
+ * @param dir      The folder to make, which must not already have things in it
+ *
+ * @returns The full path of the new folder
+ */
+function scaffold(template, dir) {
   const dest = path.resolve(dir);
   if (fs.existsSync(dest) && fs.readdirSync(dest).length > 0) {
     console.error(chalk.red(`'${dir}' already exists and isn't empty.`));
     process.exit(1);
   }
-  fs.cpSync(path.join(engineRoot, "templates", "server"), dest, {
+  fs.cpSync(path.join(engineRoot, "templates", template), dest, {
     recursive: true,
     filter: (src) => !["node_modules", "dist"].includes(path.basename(src)),
   });
 
-  // Give the server its own package name, since the template's is generic
+  // npm won't publish a file named .gitignore, so templates keep it as
+  // _gitignore
+  const gitignore = path.join(dest, "_gitignore");
+  if (fs.existsSync(gitignore)) fs.renameSync(gitignore, path.join(dest, ".gitignore"));
+
   const packageFile = path.join(dest, "package.json");
   const pkg = JSON.parse(fs.readFileSync(packageFile, "utf8"));
   pkg.name = path.basename(dest).toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^[._-]+/, "") || pkg.name;
+  if (pkg.dependencies?.jetlag2d) pkg.dependencies.jetlag2d = jetlagDependency();
   fs.writeFileSync(packageFile, JSON.stringify(pkg, null, 2) + "\n");
+  return dest;
+}
 
+/**
+ * Make a new workspace for making games: a folder with a package.json that
+ * installs JetLag, a tsconfig.json, and the other files that every set of
+ * projects needs.  Games are added to it with `create`.
+ *
+ * @param dir The folder to make, or undefined to prompt for one
+ */
+async function init(dir) {
+  if (!dir) {
+    if (!process.stdin.isTTY) {
+      console.error(chalk.red(`'init' needs the name of a folder to make.`));
+      console.error(`Usage: ${chalk.green("npx jetlag2d init <folder>")}`);
+      process.exit(1);
+    }
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    dir = (await rl.question("Name for the new folder [my-games]: ")).trim() || "my-games";
+    rl.close();
+  }
+  scaffold("workspace", dir);
+  console.log(chalk.green(`  ✓ Created the workspace in '${dir}'`));
+  console.log(`\nNext steps:`);
+  console.log(`  - Run ${chalk.green(`${dir === "." ? "" : `cd ${dir} && `}npm install`)}`);
+  console.log(`  - Run ${chalk.green("npm run create my_game")} to make your first game, and read README.md`);
+}
+
+/**
+ * Make a new multiplayer server project from the template: a folder with
+ * everything the server needs, which is meant to be edited.
+ *
+ * @param dir The folder to make
+ */
+function createServer(dir) {
+  if (!dir) {
+    console.error(chalk.red(`'create-server' needs the name of a folder to make.`));
+    console.error(`Usage: ${chalk.green("npx jetlag2d create-server <folder>")}`);
+    process.exit(1);
+  }
+  scaffold("server", dir);
   console.log(chalk.green(`  ✓ Created the server in '${dir}'`));
   console.log(`\nNext steps:`);
   console.log(`  - Run ${chalk.green(`cd ${dir} && npm install && npm start`)}`);
@@ -360,6 +415,8 @@ async function main(command, arg) {
     await zip(arg);
   } else if (command === "clean") {
     clean();
+  } else if (command === "init") {
+    await init(arg);
   } else if (command === "create-server") {
     createServer(arg);
   } else if (command === "help") {

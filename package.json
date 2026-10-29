@@ -1,6 +1,6 @@
 {
-    "name": "jetlag",
-    "version": "1.0.0",
+    "name": "jetlag2d",
+    "version": "2.0.0",
     "description": "A 2D Game Framework for web and mobile, using PIXI.js and Box2D",
     "scripts": {
         "start": "node cli/main.mjs serve",
@@ -17,6 +17,8 @@
     "type": "module",
     "dependencies": {
         "@box2d/core": "^0.11.0",
+        "@types/hammerjs": "^2.0.46",
+        "@types/howler": "^2.2.13",
         "adm-zip": "^0.6.1",
         "chalk": "^6.0.0",
         "esbuild": "^0.28.1",
@@ -27,11 +29,24 @@
         "socket.io-client": "^4.8.3"
     },
     "devDependencies": {
-        "@types/hammerjs": "^2.0.46",
-        "@types/howler": "^2.2.13",
         "typescript": "^7.0.2"
     },
     "bin": {
-        "jetlag": "cli/main.mjs"
-    }
+        "jetlag2d": "cli/main.mjs"
+    },
+    "main": "src/jetlag.ts",
+    "types": "src/jetlag.ts",
+    "exports": {
+        ".": "./src/jetlag.ts",
+        "./cli": "./cli/main.mjs",
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "src/jetlag.ts",
+        "src/jetlag",
+        "cli",
+        "templates",
+        "!templates/**/node_modules",
+        "!templates/**/dist"
+    ]
 }

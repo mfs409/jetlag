@@ -25,43 +25,86 @@ If you find any bugs, please use the [Issue Tracker](https://github.com/mfs409/j
 
 ## Quick Start
 
-Once you have downloaded JetLag, enter the JetLag directory and type `npm install` to fetch all of the supporting code for JetLag.
-Next, make your first project:
+You need [Node.js](https://nodejs.org/) (which comes with `npm`).
+To make a workspace called `my-games` for your games, run:
 
 ```bash
-npm run create
+npx jetlag2d init my-games
+cd my-games
+npm install
 ```
 
-This will ask for a name, then create `src/<name>/` with a small starter game in it.
-Once you've done that, run `npm start` to compile and serve your code.
-JetLag uses `esbuild` for compilation, so every time you make a change, the code will recompile and your browser will auto-reload.
-The terminal says which address to open, such as <http://localhost:7000/my_game/my_game.html>.
+Then make your first game, and run it:
 
-This folder is set up to allow you to make many games from the same checkout of JetLag.
-Running `npm run create` again makes another `src/<name>/` folder alongside the first.
-A project is any `src/<name>/` folder that has a `<name>.ts` and a `<name>.html` in it.
-To serve a project, you must provide its name: `npm run serve <name>`.
-See `npm run help` for the rest of the commands.
+```bash
+npm run create my_game
+npm run serve my_game
+```
 
-To make a multiplayer server for your games, run `npx jetlag create-server <folder>`, and read the README in the folder it makes.
+`create` makes `src/my_game/` with a small starter game in it.
+`serve` compiles it, serves it, and prints the address to open, such as <http://localhost:7000/my_game/my_game.html>.
+JetLag uses `esbuild` for compilation, so every time you save a change, the code recompiles and your browser reloads.
 
-Every project keeps its images, sounds, fonts, videos, and SVG files in its own `src/<name>/assets/` folder, which `npm run create` makes for you.
-`npm run build <name>` copies the project's `assets` folder into `dist/<name>/`.
-A game that loads its assets from somewhere else, such as a CDN, can set `resources.cdn` in its `Config`.
+The workspace can hold many games.
+Each one is a folder `src/<name>/` with a `<name>.ts` and a `<name>.html` in it.
+They all share one installed copy of JetLag.
+See `npm run help` for the rest of the commands, and the `README.md` in your workspace for more.
 
-To add images and sounds to your game, follow these steps:
+A game's images, sounds, fonts, videos, and SVG files go in its own `src/<name>/assets/` folder, which `npm run create` makes for you:
 
-1. Copy the asset file into your project's `assets` folder
-2. Add the name of the file to the appropriate list in your project's `.ts` file
+1. Copy the asset file into the game's `assets` folder
+2. Add the name of the file to the appropriate list in `resources` in the game's `Config`
 3. Now you can refer to the asset by its filename in your code
 
-Note that JetLag supports sprite sheets using [TexturePacker](https://www.codeandweb.com/texturepacker).
+`npm run build <name>` copies the game's `assets` folder into `dist/<name>/`.
+A game that loads its assets from somewhere else, such as a CDN, can set `resources.cdn` in its `Config`.
+JetLag also supports sprite sheets made with [TexturePacker](https://www.codeandweb.com/texturepacker).
 Please see the tutorials for more information.
 
-## Coding Standards
+## Multiplayer Server
 
-JetLag is supposed to be a library that its users will modify and extend for their own purposes.
-Consequently, we prefer that programmers preserve the structure we have in the repository, where `jetlag`, `assets`, and every project made via `npm run create` are sub-folders of the `src` folder.
+JetLag games can talk to each other through a small Socket.IO server.
+A sample server is available, to help you get started.
+To set it up, run `npx jetlag2d create-server <folder>`, and read the README in the folder it makes.
+
+## Versions
+
+JetLag 2 changed some things that break games written for JetLag 1.
+JetLag 1 is no longer maintained.
+Its final release is the `v1.0.0` tag of this repository.
+
+A workspace pins the exact version of JetLag that made it, in `package.json`, so your games don't change underneath you.
+It is probably not a good idea to upgrade.
+Instead, create a new workspace for new projects, and leave the old workspace for old projects.
+
+## Working on JetLag Itself
+
+This repository holds the engine (the `jetlag2d` package), the `jetlag2d` command, and the templates behind `init`, `create`, and `create-server`:
+
+| Folder                         | What's in it                                                         |
+|--------------------------------|----------------------------------------------------------------------|
+| `src/jetlag/`, `src/jetlag.ts` | The engine.  `src/jetlag.ts` lists everything that a game can import |
+| `cli/`                         | The `jetlag2d` command                                               |
+| `templates/game/`              | The starter game that `create` copies                                |
+| `templates/workspace/`         | The files that `init` copies                                         |
+| `templates/server/`            | The multiplayer server that `create-server` copies                   |
+
+To work on it, clone the repository and run `npm install`.
+`npm run check` type-checks the engine.
+The repository is also a workspace, so you can test a change by making a game inside it.
+`npm run create` and `npm run serve` work the same way, and games in `src/` import the engine as `"jetlag2d"`.
+
+To try your changes in a different workspace, edit its `package.json` so that the dependency points at your clone, and run `npm install`:
+
+```json
+"jetlag2d": "file:../my-clone-of-jetlag"
+```
+
+Your edits show up the next time that workspace builds or reloads, with no reinstall.
+To share them, fork the repository and open a pull request.
+
+To release a new version, set `version` in `package.json`, run `npm pack --dry-run` to check the list of files, and then `npm publish` and tag the commit.
+New workspaces pin the version of the engine that made them, so nothing else needs to change.
 
 ## Contributors
 

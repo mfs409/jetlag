@@ -1,0 +1,22 @@
+{
+  "name": "my-games",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Games made with JetLag",
+  "scripts": {
+    "start": "jetlag2d serve",
+    "create": "jetlag2d create",
+    "serve": "jetlag2d serve",
+    "build": "jetlag2d build",
+    "zip": "jetlag2d zip",
+    "clean": "jetlag2d clean",
+    "check": "tsc --noEmit",
+    "help": "jetlag2d help"
+  },
+  "dependencies": {
+    "jetlag2d": "0.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
