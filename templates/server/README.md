@@ -15,6 +15,18 @@ Edit `src/workflow.ts` to change the rules.
 With the server running, <http://localhost:3000> shows a page for sending each kind of request by hand.
 The page and its 404 are in `public/` and exist only for testing; a real server can delete them.
 
+## Running it in Docker
+
+The `Dockerfile` makes an image that runs the server, which many hosting services can run for you:
+
+```bash
+docker build -t my-server .
+docker run -p 3000:3000 -e ALLOWED_ORIGIN=https://example.com my-server
+```
+
+The first number in `-p` is the port on your computer, so `-p 8080:3000` would make the server available at <http://localhost:8080>.
+The server inside the container uses the `PORT` environment variable, which is 3000 unless you set it.
+
 ## Before you put it on the internet
 
 - **Logins aren't secure.**
