@@ -290,10 +290,18 @@ export class JumpBehavior extends Behavior {
   public get actor() { return this._actor; }
 
   /** Indicate that the actor can jump infinitely often while in the air */
-  private allowMultiJump: boolean;
+  public allowMultiJump: boolean;
 
   /** Allow the actor to do > 1 but not infinite jumps while in the air */
-  private numJumpsAllowed: number;
+  private _numJumpsAllowed: number;
+
+  /**
+   * How many jumps the actor gets before it needs to touch the ground again
+   * (always at least 1).  This can change after the actor is built, e.g., when
+   * the actor picks up a power-up that grants a double jump.
+   */
+  public get numJumpsAllowed() { return this._numJumpsAllowed; }
+  public set numJumpsAllowed(n: number) { this._numJumpsAllowed = Math.max(1, n); }
 
   /** How many jumps have been made since the actor was last on the ground */
   private jumpsMade = 0;
@@ -313,12 +321,16 @@ export class JumpBehavior extends Behavior {
     super(cfg);
     this.collisionRules.properties.push(CollisionExemptions.JUMP);
     this.allowMultiJump = !!cfg.allowMultiJump;
-    this.numJumpsAllowed = Math.max(1, cfg.numJumpsAllowed ?? 1);
+    this._numJumpsAllowed = Math.max(1, cfg.numJumpsAllowed ?? 1);
   }
 
-  /** Make the actor jump, unless it is in the air and out of jumps */
+  /**
+   * Make the actor jump, unless it is in the air and out of jumps, or it is
+   * crawling
+   */
   public jump(x: number, y: number) {
     if (!this._actor) return;
+    if (this._actor.state.current.crawling) return;
     if (!this.allowMultiJump && this.jumpsMade >= this.numJumpsAllowed) return;
     this.jumpsMade++;
 
