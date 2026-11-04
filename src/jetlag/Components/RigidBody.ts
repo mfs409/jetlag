@@ -1,4 +1,4 @@
-import { b2Body, b2BodyType, b2CircleShape, b2DistanceJoint, b2DistanceJointDef, b2Fixture, b2LinearStiffness, b2PolygonShape, b2RevoluteJoint, b2RevoluteJointDef, b2Transform, b2Vec2, b2WeldJointDef } from "@box2d/core";
+import { b2Body, b2BodyType, b2CircleShape, b2DistanceJoint, b2DistanceJointDef, b2Fixture, b2LinearStiffness, b2PolygonShape, b2RevoluteJointDef, b2Transform, b2Vec2, b2WeldJointDef } from "@box2d/core";
 import { stage } from "../Stage";
 import { DebugSprite } from "../Services/ImageLibrary";
 import { Actor, actorFromBody } from "../Entities/Actor";
@@ -64,12 +64,6 @@ abstract class RigidBodyBase {
 
   /** A debug context for drawing the punch hitbox's outline, if it has one */
   public punchDebug: DebugSprite | undefined;
-
-  /** A definition for when we attach a revolute joint to this entity */
-  revJointDef?: b2RevoluteJointDef;
-
-  /** A joint that allows this entity to revolve around another */
-  revJoint?: b2RevoluteJoint;
 
   /**
    * An absolute timestamp (comparable to `stage.renderer.now`) before which
@@ -151,77 +145,61 @@ abstract class RigidBodyBase {
   protected constructor(readonly scene: Scene) { }
 
   /**
-   * Create a revolute joint between this entity and some other entity. Note
-   * that both entities need to have some mass (density can't be 0) or else this
-   * won't work.
+   * Joints need both bodies to move, so make this body dynamic.  Joints are
+   * attached with `add...Joint` methods, which may be called any number of times.
    *
-   * @param cfg.anchor       The entity around which this entity will rotate
-   * @param cfg.anchorPoint  The point (relative to center) where the joint
+   * @param caller The name of the method that needs a dynamic body, for the warning
+   */
+  private requireDynamic(caller: string) {
+    if (this.body.GetType() !== b2BodyType.b2_dynamicBody) {
+      stage.console.log(`Warning: You have called ${caller} on an actor whose body is not dynamic.  Switching to dynamic.\n ${Error().stack}`);
+      this.body.SetType(b2BodyType.b2_dynamicBody);
+    }
+  }
+
+  /**
+   * Add a revolute joint between this entity and some other entity, so that
+   * this entity can turn around a point on the other one.  An entity can have
+   * as many joints as you like.  Note that both entities need to have some mass
+   * (density can't be 0) or else this won't work.
+   *
+   * The joint that comes back can be changed later, such as with
+   * `joint.SetMotorSpeed(speed)`, `joint.SetMaxMotorTorque(torque)`, and
+   * `joint.EnableMotor(true)`.
+   *
+   * @param cfg.anchor        The entity around which this entity will rotate
+   * @param cfg.anchorPoint   The point (relative to center) where the joint
    *                          fuses to the anchor
-   * @param cfg.localPoint   The point (relative to center) where the joint
+   * @param cfg.localPoint    The point (relative to center) where the joint
    *                          fuses to this entity
+   * @param cfg.limits        Optional bounds on the rotation, in radians
+   * @param cfg.motor         Optional motor to make the joint turn: `speed` is
+   *                          in radians per second, and when in doubt, give a
+   *                          `torque` that is huge, like positive infinity
    *
    * @return The joint that was created
    */
-  public setRevoluteJoint(cfg: { anchor: Actor, anchorPoint: { x: number, y: number }, localPoint: { x: number, y: number } }) {
-    // make the this body dynamic
-    if (this.body.GetType() !== b2BodyType.b2_dynamicBody) {
-      stage.console.log(`Warning: You have called setRevoluteJoint on an actor whose body is not dynamic.  Switching to dynamic.\n ${Error().stack}`);
-      this.body.SetType(b2BodyType.b2_dynamicBody);
-    }
-    // create joint, connect anchors
-    this.revJointDef = new b2RevoluteJointDef();
-    this.revJointDef.bodyA = cfg.anchor.rigidBody!.body;
-    this.revJointDef.bodyB = this.body;
-    this.revJointDef.localAnchorA.Set(cfg.anchorPoint.x, cfg.anchorPoint.y);
-    this.revJointDef.localAnchorB.Set(cfg.localPoint.x, cfg.localPoint.y);
+  public addRevoluteJoint(cfg: { anchor: Actor, anchorPoint: { x: number, y: number }, localPoint: { x: number, y: number }, limits?: { lower: number, upper: number }, motor?: { speed: number, torque: number } }) {
+    this.requireDynamic("addRevoluteJoint");
+    const def = new b2RevoluteJointDef();
+    def.bodyA = cfg.anchor.rigidBody!.body;
+    def.bodyB = this.body;
+    def.localAnchorA.Set(cfg.anchorPoint.x, cfg.anchorPoint.y);
+    def.localAnchorB.Set(cfg.localPoint.x, cfg.localPoint.y);
     // rotator and anchor don't collide
-    this.revJointDef.collideConnected = false;
-    this.revJointDef.referenceAngle = 0;
-    this.revJointDef.enableLimit = false;
-    this.revJoint = this.body.GetWorld().CreateJoint(this.revJointDef);
-    return this.revJoint;
-  }
-
-  /**
-   * Attach a motor to make a revolute joint turn
-   *
-   * @param cfg.motorSpeed  Speed in radians per second
-   * @param cfg.motorTorque torque of the motor... when in doubt, go with
-   *                        something huge, like positive infinity
-   *
-   * @return The modified joint.  The old revolute joint will be destroyed.
-   */
-  public setRevoluteJointMotor(cfg: { motorSpeed: number, motorTorque: number }) {
-    // destroy the previously created joint, change the definition, re-create
-    // the joint
-    if (this.revJoint) {
-      this.body.GetWorld().DestroyJoint(this.revJoint);
-      this.revJointDef!.enableMotor = true;
-      this.revJointDef!.motorSpeed = cfg.motorSpeed;
-      this.revJointDef!.maxMotorTorque = cfg.motorTorque;
+    def.collideConnected = false;
+    def.referenceAngle = 0;
+    if (cfg.limits) {
+      def.enableLimit = true;
+      def.lowerAngle = cfg.limits.lower;
+      def.upperAngle = cfg.limits.upper;
     }
-    this.revJoint = this.body.GetWorld().CreateJoint(this.revJointDef!);
-    return this.revJoint;
-  }
-
-  /**
-   * Set upper and lower bounds on the rotation of a revolute joint
-   *
-   * @param cfg.upper The upper bound in radians
-   * @param cfg.lower The lower bound in radians
-   *
-   * @return The modified joint.  The old revolute joint will be destroyed.
-   */
-  public setRevoluteJointLimits(cfg: { upper: number, lower: number }) {
-    // destroy the previously created joint, change the definition, re-create
-    // the joint
-    this.body.GetWorld().DestroyJoint(this.revJoint!);
-    this.revJointDef!.upperAngle = cfg.upper;
-    this.revJointDef!.lowerAngle = cfg.lower;
-    this.revJointDef!.enableLimit = true;
-    this.revJoint = this.body.GetWorld().CreateJoint(this.revJointDef!);
-    return this.revJoint;
+    if (cfg.motor) {
+      def.enableMotor = true;
+      def.motorSpeed = cfg.motor.speed;
+      def.maxMotorTorque = cfg.motor.torque;
+    }
+    return this.body.GetWorld().CreateJoint(def);
   }
 
   /**
@@ -237,12 +215,8 @@ abstract class RigidBodyBase {
    *
    * @return The joint that was created
    */
-  public setWeldJoint(cfg: { other: Actor, otherPoint: { x: number, y: number }, localPoint: { x: number, y: number }, angle: number }) {
-    // make the this body dynamic
-    if (this.body.GetType() !== b2BodyType.b2_dynamicBody) {
-      stage.console.log(`Warning: You have called setWeldJoint on an actor whose body is not dynamic.  Switching to dynamic.\n ${Error().stack}`);
-      this.body.SetType(b2BodyType.b2_dynamicBody);
-    }
+  public addWeldJoint(cfg: { other: Actor, otherPoint: { x: number, y: number }, localPoint: { x: number, y: number }, angle: number }) {
+    this.requireDynamic("addWeldJoint");
     let w = new b2WeldJointDef();
     w.bodyA = cfg.other.rigidBody!.body;
     w.bodyB = this.body;
@@ -271,12 +245,8 @@ abstract class RigidBodyBase {
    *
    * @return The joint that was created
    */
-  public setDistanceJoint(cfg: { anchor: Actor, anchorPoint: { x: number, y: number }, localPoint: { x: number, y: number }, frequencyHz?: number, dampingRatio?: number }) {
-    // make the this body dynamic
-    if (this.body.GetType() !== b2BodyType.b2_dynamicBody) {
-      stage.console.log(`Warning: You have called setDistanceJoint on an actor whose body is not dynamic.  Switching to dynamic.\n ${Error().stack}`);
-      this.body.SetType(b2BodyType.b2_dynamicBody);
-    }
+  public addDistanceJoint(cfg: { anchor: Actor, anchorPoint: { x: number, y: number }, localPoint: { x: number, y: number }, frequencyHz?: number, dampingRatio?: number }) {
+    this.requireDynamic("addDistanceJoint");
     // set up a joint so the entity can't move too far
     let mDistJointDef = new b2DistanceJointDef();
     mDistJointDef.bodyA = cfg.anchor.rigidBody!.body;
@@ -316,7 +286,7 @@ abstract class RigidBodyBase {
   /**
    * Break any distance joint connecting this entity on account of the
    * "sticky" feature, or this actor won't be able to move (the setter
-   * destroys the joint).  Joints created via `setDistanceJoint()` won't be
+   * destroys the joint).  Joints created via `addDistanceJoint()` won't be
    * destroyed by this call.
    *
    * If this entity was actually stuck to something, this also starts that
