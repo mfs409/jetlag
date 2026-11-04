@@ -117,6 +117,8 @@ export class AudioLibraryService {
    * long time to load, in which case playback is queued until they are loaded.
    *
    * @param config The game-wide configuration
+    *
+    * @internal
    */
   constructor(config: JetLagGameConfig) {
     if (!config.resources) {

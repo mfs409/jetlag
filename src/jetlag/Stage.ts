@@ -145,19 +145,39 @@ export class Stage {
   /** Text-to-speech support */
   readonly speech: TextToSpeechDevice = new TextToSpeechDevice();
 
-  /** Scaling ratio for fonts, relative to PPM4UF */
+  /**
+   * Scaling ratio for fonts, relative to PPM4UF
+   *
+   * @internal
+   */
   fontScaling = 1;
 
-  /** The screen width (dummy value... gets computed early) */
+  /**
+   * The screen width (dummy value... gets computed early)
+   *
+   * @internal
+   */
   screenWidth = 0;
 
-  /** The screen height (dummy value... gets computed early) */
+  /**
+   * The screen height (dummy value... gets computed early)
+   *
+   * @internal
+   */
   screenHeight = 0;
 
-  /** The pixel-meter ratio (dummy value... gets computed early) */
+  /**
+   * The pixel-meter ratio (dummy value... gets computed early)
+   *
+   * @internal
+   */
   pixelMeterRatio = 0;
 
-  /** The scaling ratio for SVG coords, relative to PPM4SVG */
+  /**
+   * The scaling ratio for SVG coords, relative to PPM4SVG
+   *
+   * @internal
+   */
   svgScaling = 1;
 
   /** Code to run at the end of the next render step (used for screenshots) */
@@ -228,6 +248,8 @@ export class Stage {
    * second to update the overlay, if it is being drawn.
    *
    * @param elapsedMs The time in milliseconds since the previous render
+    *
+    * @internal
    */
   public renderOverlay(elapsedMs: number) {
     if (!this.overlay) return;
@@ -301,6 +323,8 @@ export class Stage {
    * state and re-draw the hud
    *
    * @param elapsedMs The time in milliseconds since the previous render
+    *
+    * @internal
    */
   public renderHud(elapsedMs: number) {
     // If we've got an overlay, don't draw the HUD
@@ -383,6 +407,8 @@ export class Stage {
    * @param builder   A function for building the first visible level of the
    *                  game
    * @param platform  Platform-specific features
+    *
+    * @internal
    */
   constructor(readonly config: JetLagGameConfig, private domId: string, private builder: () => void, readonly platform: PlatformDevice) {
     this.console = new ConsoleDevice(config);
@@ -411,6 +437,8 @@ export class Stage {
   /**
    * Load any images that need to be loaded, then launch the game.  This is the
    * last step in starting a game.
+    *
+    * @internal
    */
   public async begin() {
     // Finish initializing the Pixi renderer (Pixi v8 requires this be async)

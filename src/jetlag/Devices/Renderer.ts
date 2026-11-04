@@ -240,7 +240,11 @@ export class RendererDevice {
     this.filters = [];
   }
 
-  /** Reset the renderer's overlay container state */
+  /**
+   * Reset the renderer's overlay container state
+   *
+   * @internal
+   */
   public resetOverlay() { this.overlayContainers.reset(); }
 
   /**
@@ -250,6 +254,8 @@ export class RendererDevice {
    * @param screenHeight  The height of the screen
    * @param domId         The ID of the DOM element into which we will render
    * @param debugMode     True if debug outlines should be drawn
+    *
+    * @internal
    */
   constructor(private screenWidth: number, private screenHeight: number, private domId: string, debugMode: boolean) {
     // Create the Application object.  Pixi v8 requires an async `init()` call
@@ -269,6 +275,8 @@ export class RendererDevice {
   /**
    * Finish initializing the Pixi Application and attach it to the DOM.  This
    * must be awaited before the renderer is used.
+    *
+    * @internal
    */
   public async initialize() {
     await this.pixi.init({ width: this.screenWidth, height: this.screenHeight, antialias: false, resolution: window.devicePixelRatio, autoDensity: true });
@@ -292,6 +300,8 @@ export class RendererDevice {
   /**
    * Start the render loop, which will cause the game simulation to start
    * running.
+    *
+    * @internal
    */
   public startRenderLoop() {
     this.pixi.ticker.add(() => {
@@ -352,6 +362,8 @@ export class RendererDevice {
    * `ColorSource`, but we only use CSS hex strings.
    *
    * @param color The new background color, as a CSS hex string (e.g. "#ff0000")
+    *
+    * @internal
    */
   public setFrameColor(color: ColorSource) {
     this.pixi.renderer.background.color = color;
@@ -508,6 +520,8 @@ export class RendererDevice {
    * @param camera      The camera (and by extension, the world)
    * @param z           The Z index of the sprite
    * @param location    Where is this being drawn (WORLD, OVERLAY, or HUD)?
+    *
+    * @internal
    */
   public addFilledSpriteToFrame(appearance: FilledBox | FilledCircle | FilledPolygon | FilledRoundedBox, body: RigidBodyComponent, graphic: Graphics, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     graphic.clear();
@@ -587,6 +601,8 @@ export class RendererDevice {
    * @param camera      The camera (and by extension, the world)
    * @param z           The Z index of the particle system
    * @param location    Where is this being drawn (WORLD, OVERLAY, or HUD)?
+    *
+    * @internal
    */
   public addParticlesToFrame(appearance: ParticleComponent, body: RigidBodyComponent, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     // If the anchor isn't on screen, skip it.
@@ -617,6 +633,8 @@ export class RendererDevice {
    *                    where
    * @param z           The Z index of the sprite
    * @param location    Where is this being drawn (WORLD, OVERLAY, or HUD)?
+    *
+    * @internal
    */
   public addBodyToFrame(appearance: AppearanceComponent, body: RigidBodyComponent, sprite: Sprite, camera: CameraService, z: ZIndex, location: SpriteLocation) {
     // If the actor isn't on screen, skip it
@@ -771,6 +789,8 @@ export class RendererDevice {
    *
    * @param world  The physics world whose joints we'll draw
    * @param camera The camera related to where we're drawing
+    *
+    * @internal
    */
   public debugDrawJoints(world: b2World, camera: CameraService) {
     if (!this.debug) return;
@@ -812,6 +832,8 @@ export class RendererDevice {
    *                    where
    * @param foreground  Should this go in the foreground (true) or background
    *                    (false)?
+    *
+    * @internal
    */
   public addParallaxToFrame(anchor: { cx: number, cy: number }, appearance: AppearanceComponent, sprite: Sprite, camera: CameraService, foreground: boolean) {
     // If the picture isn't on screen, skip it
@@ -849,6 +871,8 @@ export class RendererDevice {
    * @param center   Should we center the text at its x/y coordinate?
    * @param z        The Z index of the sprite
    * @param location Where is this being drawn (WORLD, OVERLAY, or HUD)?
+    *
+    * @internal
    */
   public addTextToFrame(text: TextSprite, body: RigidBodyComponent, camera: CameraService, center: boolean, z: ZIndex, location: SpriteLocation) {
     // If the actor isn't on screen, skip it

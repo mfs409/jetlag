@@ -225,6 +225,8 @@ export class TextSprite {
    * @param camera      The camera that defines the bounds for the Scene where
    *                    this image should be drawn
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor) {
@@ -238,7 +240,11 @@ export class TextSprite {
     }
   }
 
-  /** Perform any custom updates to the text before displaying it */
+  /**
+   * Perform any custom updates to the text before displaying it
+   *
+   * @internal
+   */
   prerender() { }
 
   /**
@@ -267,6 +273,8 @@ export class TextSprite {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", fraction means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     if (this._strokeWidth !== undefined) this._strokeWidth *= scale;
@@ -333,6 +341,8 @@ export class ImageSprite {
    *
    * @param camera      The camera for the current stage
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor) {
@@ -352,7 +362,11 @@ export class ImageSprite {
     stage.renderer.addParallaxToFrame(anchor, this, this.image, camera, foreground);
   }
 
-  /** Perform any custom updates to the image before displaying it */
+  /**
+   * Perform any custom updates to the image before displaying it
+   *
+   * @internal
+   */
   prerender() { }
 
   /**
@@ -361,6 +375,8 @@ export class ImageSprite {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", 0 < scale < 1 means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     this.width *= scale;
@@ -715,6 +731,8 @@ export class AnimatedSprite implements IStateObserver {
    *
    * @param camera      The camera for the current stage
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor)
@@ -738,6 +756,8 @@ export class AnimatedSprite implements IStateObserver {
    * Prior to rendering, update the animation state
    *
    * @param elapsedMs The time since the last render
+    *
+    * @internal
    */
   prerender(elapsedMs: number) {
     // Check if it is time to turn off the throwing animation
@@ -762,6 +782,8 @@ export class AnimatedSprite implements IStateObserver {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", fraction means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     this.width *= scale;
@@ -813,6 +835,8 @@ export class VideoSprite {
    *
    * @param camera    The camera for the current stage
    * @param location  Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor)
@@ -862,7 +886,11 @@ export class VideoSprite {
     stage.renderer.addParallaxToFrame(anchor, this, this.sprite, camera, foreground);
   }
 
-  /** Perform any custom updates to the video before displaying it */
+  /**
+   * Perform any custom updates to the video before displaying it
+   *
+   * @internal
+   */
   prerender() { }
 
   /**
@@ -871,6 +899,8 @@ export class VideoSprite {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", fraction means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     this.width *= scale;
@@ -884,7 +914,11 @@ export class VideoSprite {
 export class FilledBox {
   /** The Actor to which this FilledSprite is attached */
   public actor?: Actor;
-  /** The low-level graphics object that we pass to the Renderer */
+  /**
+   * The low-level graphics object that we pass to the Renderer
+   *
+   * @internal
+   */
   readonly graphics = new Graphics();
   /** Width of the box */
   width: number;
@@ -938,6 +972,8 @@ export class FilledBox {
    *
    * @param camera      The camera for the current stage
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor) {
@@ -945,7 +981,11 @@ export class FilledBox {
     }
   }
 
-  /** Perform any custom updates to the box before displaying it */
+  /**
+   * Perform any custom updates to the box before displaying it
+   *
+   * @internal
+   */
   prerender() { }
 
   /**
@@ -954,6 +994,8 @@ export class FilledBox {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", fraction means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     this.width *= scale;
@@ -969,7 +1011,11 @@ export class FilledBox {
 export class FilledRoundedBox {
   /** The Actor to which this FilledSprite is attached */
   public actor?: Actor;
-  /** The low-level graphics object that we pass to the Renderer */
+  /**
+   * The low-level graphics object that we pass to the Renderer
+   *
+   * @internal
+   */
   readonly graphics = new Graphics();
   /** Width of the box */
   width: number;
@@ -1027,6 +1073,8 @@ export class FilledRoundedBox {
    *
    * @param camera      The camera for the current stage
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor) {
@@ -1034,7 +1082,11 @@ export class FilledRoundedBox {
     }
   }
 
-  /** Perform any custom updates to the box before displaying it */
+  /**
+   * Perform any custom updates to the box before displaying it
+   *
+   * @internal
+   */
   prerender() { }
 
   /**
@@ -1043,6 +1095,8 @@ export class FilledRoundedBox {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", fraction means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     this.width *= scale;
@@ -1058,7 +1112,11 @@ export class FilledRoundedBox {
 export class FilledCircle {
   /** The Actor to which this FilledCircle is attached */
   public actor?: Actor;
-  /** The low-level graphics object that we pass to the Renderer */
+  /**
+   * The low-level graphics object that we pass to the Renderer
+   *
+   * @internal
+   */
   readonly graphics = new Graphics();
   /** Radius of the circle */
   radius: number;
@@ -1113,6 +1171,8 @@ export class FilledCircle {
    *
    * @param camera      The camera for the current stage
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor) {
@@ -1120,7 +1180,11 @@ export class FilledCircle {
     }
   }
 
-  /** Perform any custom updates to the circle before displaying it */
+  /**
+   * Perform any custom updates to the circle before displaying it
+   *
+   * @internal
+   */
   prerender() { }
 
   /**
@@ -1129,6 +1193,8 @@ export class FilledCircle {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", fraction means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     this.radius *= scale;
@@ -1144,7 +1210,11 @@ export class FilledCircle {
 export class FilledPolygon {
   /** The Actor to which this FilledPolygon is attached */
   public actor?: Actor;
-  /** The low-level graphics object that we pass to the Renderer */
+  /**
+   * The low-level graphics object that we pass to the Renderer
+   *
+   * @internal
+   */
   readonly graphics = new Graphics();
   /** Z index of the polygon: Must be in the range [-4, 4] */
   z: ZIndex;
@@ -1211,13 +1281,19 @@ export class FilledPolygon {
    *
    * @param camera      The camera for the current stage
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor)
       stage.renderer.addFilledSpriteToFrame(this, this.actor.rigidBody, this.graphics, camera, this.z, location);
   }
 
-  /** Perform any custom updates to the polygon before displaying it */
+  /**
+   * Perform any custom updates to the polygon before displaying it
+   *
+   * @internal
+   */
   prerender() { }
 
   /**
@@ -1226,6 +1302,8 @@ export class FilledPolygon {
    *
    * @param scale The amount to scale the size by.  1 means "no change", >1
    *              means "grow", fraction means "shrink".
+    *
+    * @internal
    */
   resize(scale: number) {
     // we need to manually scale all the vertices, based on the old verts
@@ -1244,7 +1322,11 @@ export class ParticleComponent {
   /** The Actor to which this ParticleComponent is attached */
   public actor?: Actor;
 
-  /** The low-level Pixi object that batches and renders every live particle */
+  /**
+   * The low-level Pixi object that batches and renders every live particle
+   *
+   * @internal
+   */
   readonly container: ParticleContainer;
 
   /**
@@ -1339,6 +1421,8 @@ export class ParticleComponent {
    * point unchanged.  Particles that are already alive are not affected.
    *
    * @param scale The factor by which to scale. Must be >0.
+    *
+    * @internal
    */
   resize(scale: number) {
     if (scale <= 0) {
@@ -1387,6 +1471,8 @@ export class ParticleComponent {
    * that have expired, and spawn new ones if we're continuously emitting
    *
    * @param elapsedMs The time since the last render
+    *
+    * @internal
    */
   prerender(elapsedMs: number) {
     if (this.emitting) {
@@ -1419,6 +1505,8 @@ export class ParticleComponent {
    *
    * @param camera      The camera for the current stage
    * @param location    Where should this be drawn (WORLD/OVERLAY/HUD)
+    *
+    * @internal
    */
   render(camera: CameraService, location: SpriteLocation) {
     if (this.actor) {

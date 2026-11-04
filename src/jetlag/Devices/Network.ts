@@ -87,6 +87,8 @@ export class NetworkDevice {
    * Construct a NetworkDevice, for interacting with a remote server via
    * Socket.IO.  Note that by default, the network device is not connected to
    * anything.
+    *
+    * @internal
    */
   constructor() { }
 

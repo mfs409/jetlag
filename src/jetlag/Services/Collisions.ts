@@ -10,7 +10,11 @@ import { stage } from "../Stage";
  * coordinate
  */
 export class PointToActorCallback {
-  /** If we found any actors, we'll put them here */
+  /**
+   * If we found any actors, we'll put them here
+   *
+   * @internal
+   */
   foundEntities: Actor[] = [];
 
   /** A helper vector for tracking the location that is being queried */
@@ -51,6 +55,8 @@ export class PointToActorCallback {
    * @param world    The world in which the check is happening
    * @param bbLength The side length (in meters) of the square, centered on
    *                 `pt`, in which to look for entities
+    *
+    * @internal
    */
   query(pt: { x: number, y: number }, world: b2World, bbLength: number) {
     const half = bbLength / 2;
@@ -335,6 +341,8 @@ export class AdvancedCollisionService extends BasicCollisionService {
    * NB:  This could become a performance bottleneck, since we're using an array
    *      with O(n) search overhead.  The assumption is that the array will be
    *      small.  If that changes, then this will need to be redesigned.
+    *
+    * @internal
    */
   public endContactHandlers: {
     /** One of the two actors whose contact we are waiting to end */
@@ -349,10 +357,16 @@ export class AdvancedCollisionService extends BasicCollisionService {
    * Callbacks to consider running in response to a contact *beginning*.
    * Unlike endContactHandlers, these are keyed by actor pair, and persist
    * until explicitly removed via removeBeginContactHandler.
+    *
+    * @internal
    */
   public beginContactHandlers: WeakMap<Actor, Map<Actor, ((a: Actor, b: Actor) => void)[]>> = new WeakMap();
 
-  /** Provide a scene, so we can route collision events to it */
+  /**
+   * Provide a scene, so we can route collision events to it
+   *
+   * @internal
+   */
   public setScene(scene: Scene) { this.configureCollisionHandlers(scene); }
 
   /**
@@ -374,6 +388,8 @@ export class AdvancedCollisionService extends BasicCollisionService {
    * @param actor1    One actor of the collision
    * @param actor2    Another actor of the collision
    * @param callback  The code to run when the collision begins
+    *
+    * @internal
    */
   public addBeginContactHandler(actor1: Actor, actor2: Actor, callback: (a: Actor, b: Actor) => void) {
     this.addOneDirectionalBeginContactHandler(actor1, actor2, callback);
@@ -408,6 +424,8 @@ export class AdvancedCollisionService extends BasicCollisionService {
    * @returns True if actor1 and actor2 specifically had a begin contact
    *          handler registered between them (and thus something was
    *          actually removed), false otherwise.
+    *
+    * @internal
    */
   public removeBeginContactHandler(actor1: Actor, actor2: Actor, index?: number) {
     const handlers = this.beginContactHandlers.get(actor1)?.get(actor2);
@@ -430,6 +448,8 @@ export class AdvancedCollisionService extends BasicCollisionService {
    * @param actor2 The second actor of the collision
    * @returns An array of callbacks to be executed by the collision, or
    *          undefined if none are registered
+    *
+    * @internal
    */
   public getBeginContactHandler(actor1: Actor, actor2: Actor) {
     return this.beginContactHandlers.get(actor1)?.get(actor2) || this.beginContactHandlers.get(actor2)?.get(actor1);
@@ -446,6 +466,8 @@ export class AdvancedCollisionService extends BasicCollisionService {
    * @param sticky  The sticky actor 
    * @param other   The other actor
    * @param contact A description of the contact event
+    *
+    * @internal
    */
   public handleSticky(sticky: Actor, other: Actor, contact: b2Contact) {
     // don't create a joint if we've already got one

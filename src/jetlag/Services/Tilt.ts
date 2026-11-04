@@ -33,6 +33,8 @@ export class TiltService {
    *
    * @param actor  The TiltMovement component of the actor to start controlling
    *               via tilt
+    *
+    * @internal
    */
   public addTiltActor(actor: TiltMovement) {
     this.tiltActors.add(actor);
@@ -46,6 +48,8 @@ export class TiltService {
    * displays or uses it anymore.
    *
    * @param actor The TiltMovement component to stop controlling via tilt
+    *
+    * @internal
    */
   public removeTiltActor(actor: TiltMovement) {
     this.tiltActors.delete(actor);
@@ -54,6 +58,8 @@ export class TiltService {
   /**
    * The main render loop calls this to determine what to do when there is a
    * phone tilt
+    *
+    * @internal
    */
   public handleTilt() {
     // Get accelerometer reading

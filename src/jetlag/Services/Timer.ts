@@ -36,6 +36,8 @@ export class TimedEvent {
    *
    * @returns true if this event has not run for the last time yet (either
    *          because it didn't run, or because it did, but it's a repeat event)
+    *
+    * @internal
    */
   public advance(elapsedMs: number) {
     if (this.cancelled) return false;
@@ -89,6 +91,8 @@ export class TimerService {
    *
    * @param elapsedMs The number of milliseconds that have transpired since
    *                  the last clock tick.
+    *
+    * @internal
    */
   public advance(elapsedMs: number) {
     // The events that return true will go into this, so we can do them

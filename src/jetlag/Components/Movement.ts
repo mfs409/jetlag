@@ -206,7 +206,11 @@ export class PathMovement {
     if (cfg.startPoint !== undefined) this.onFirstRender = () => this.skip_to(cfg.startPoint!);
   }
 
-  /** Figure out where we need to go next when driving a path */
+  /**
+   * Figure out where we need to go next when driving a path
+   *
+   * @internal
+   */
   prerender(_elapsedMs: number, _camera: CameraService) {
     // quit if we're done and we don't loop
     if (this.done || this.paused || !this.rigidBody) return;
@@ -254,7 +258,11 @@ export class TiltMovement {
   /** Construct a policy for moving an actor via tilt */
   constructor() { stage.tilt.addTiltActor(this); }
 
-  /** Do any last-minute adjustments related to the movement */
+  /**
+   * Do any last-minute adjustments related to the movement
+   *
+   * @internal
+   */
   prerender(_elapsedMs: number, _camera: CameraService) { }
 }
 
@@ -274,7 +282,11 @@ export class ChaseMovement {
   /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
 
-  /** Do any last-minute adjustments related to the movement */
+  /**
+   * Do any last-minute adjustments related to the movement
+   *
+   * @internal
+   */
   prerender(_elapsedMs: number, _camera: CameraService) {
     // This code only works if we've got a body, the target has a body, and both
     // are enabled
@@ -398,7 +410,11 @@ export class HoverMovement {
   /** The RigidBodyComponent to which this movement is attached */
   public rigidBody?: RigidBodyComponent;
 
-  /** Do any last-minute adjustments related to the movement */
+  /**
+   * Do any last-minute adjustments related to the movement
+   *
+   * @internal
+   */
   prerender(_elapsedMs: number, camera: CameraService) {
     if (!this.rigidBody) return;
     if (!this.hover) return;
@@ -540,7 +556,11 @@ export class ProjectileMovement {
   /** The RigidBodyComponent to which this movement is attached */
   private _rigidBody?: RigidBodyComponent;
 
-  /** Do any last-minute adjustments related to the movement */
+  /**
+   * Do any last-minute adjustments related to the movement
+   *
+   * @internal
+   */
   prerender(_elapsedMs: number, _camera: CameraService) { }
 }
 
@@ -549,7 +569,11 @@ export class PassThroughMovement {
   /** The RigidBodyComponent to which this movement is attached */
   public rigidBody?: RigidBodyComponent;
 
-  /** Do any last-minute adjustments related to the movement */
+  /**
+   * Do any last-minute adjustments related to the movement
+   *
+   * @internal
+   */
   prerender(_elapsedMs: number, _camera: CameraService) { }
 }
 

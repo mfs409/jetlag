@@ -56,13 +56,25 @@ export interface PhysicsCfg {
  * Circles, and Polygons.
  */
 abstract class RigidBodyBase {
-  /** A debug context for drawing the "hit box" */
+  /**
+   * A debug context for drawing the "hit box"
+   *
+   * @internal
+   */
   public debug: DebugSprite | undefined;
 
-  /** A debug context for drawing the proximity-sensor zone's outline, if it has one */
+  /**
+   * A debug context for drawing the proximity-sensor zone's outline, if it has one
+   *
+   * @internal
+   */
   public proximityDebug: DebugSprite | undefined;
 
-  /** A debug context for drawing the punch hitbox's outline, if it has one */
+  /**
+   * A debug context for drawing the punch hitbox's outline, if it has one
+   *
+   * @internal
+   */
   public punchDebug: DebugSprite | undefined;
 
   /**
@@ -70,6 +82,8 @@ abstract class RigidBodyBase {
    * nothing can stick to this entity.  Set (on the *sticky* body, not
    * whatever was riding it) by `breakStickyJoints()` whenever something
    * unsticks from it, using `stickyDelayMs`.
+    *
+    * @internal
    */
   stickyUntilMs?: number;
 
@@ -79,6 +93,8 @@ abstract class RigidBodyBase {
    * Whatever is configured is floored at `MIN_STICKY_DELAY_MS`: without
    * *some* delay, a body whose position hasn't yet moved this step would
    * just re-stick the instant the joint holding it is broken.
+    *
+    * @internal
    */
   stickyDelayMs?: number;
 
@@ -98,7 +114,11 @@ abstract class RigidBodyBase {
    */
   singleRigidSide?: DIRECTION;
 
-  /** A joint for fusing entities together when one is "sticky" */
+  /**
+   * A joint for fusing entities together when one is "sticky"
+   *
+   * @internal
+   */
   public get stickyDistJoint() { return this._stickyDistJoint; }
 
   /** A joint for fusing entities together when one is "sticky" */
@@ -116,7 +136,11 @@ abstract class RigidBodyBase {
   /** The entity's primary fixture */
   protected mainFixture!: b2Fixture;
 
-  /** The entity's primary */
+  /**
+   * The entity's primary
+   *
+   * @internal
+   */
   public get primaryFixture() { return this.mainFixture; }
 
   /** A second, sensor-only fixture for proximity behaviors */
@@ -244,6 +268,8 @@ abstract class RigidBodyBase {
    *                           Default 1.
    *
    * @return The joint that was created
+    *
+    * @internal
    */
   public addDistanceJoint(cfg: { anchor: Actor, anchorPoint: { x: number, y: number }, localPoint: { x: number, y: number }, frequencyHz?: number, dampingRatio?: number }) {
     this.requireDynamic("addDistanceJoint");
@@ -293,6 +319,8 @@ abstract class RigidBodyBase {
    * sticky entity's re-stick cooldown (`stickyDelayMs`, floored at
    * `MIN_STICKY_DELAY_MS`) -- the delay belongs to the sticky entity, not to
    * whatever was riding it, so it applies no matter who/what unsticks.
+    *
+    * @internal
    */
   public breakStickyJoints() {
     if (this._stickyDistJoint) {
@@ -354,7 +382,11 @@ abstract class RigidBodyBase {
    */
   public set collisionsEnabled(val: boolean) { this.mainFixture.SetSensor(!val); }
 
-  /** The fixture used for this entity's proximity-sensor zone, if `proximityRadius` has been set */
+  /**
+   * The fixture used for this entity's proximity-sensor zone, if `proximityRadius` has been set
+   *
+   * @internal
+   */
   public get proximityFixture() { return this._proximityFixture; }
 
   /**
@@ -398,7 +430,11 @@ abstract class RigidBodyBase {
     }
   }
 
-  /** The fixture used for this entity's punch hitbox, if `enablePunch` has been called and `disablePunch` hasn't run yet */
+  /**
+   * The fixture used for this entity's punch hitbox, if `enablePunch` has been called and `disablePunch` hasn't run yet
+   *
+   * @internal
+   */
   public get punchFixture() { return this._punchFixture; }
 
   /**
@@ -484,6 +520,8 @@ abstract class RigidBodyBase {
    * 
    * @param _elapsedMs  The time since the last render
    * @param actor       The entity to which this RigidBody is attached
+    *
+    * @internal
    */
   public prerender(_elapsedMs: number, actor: Actor) {
     // Broadcast the left/right movement of this entity
@@ -617,6 +655,8 @@ abstract class RigidBodyBase {
    * Set the angular velocity, for making a body rotate
    *
    * @param rps The velocity, in radians per second
+    *
+    * @internal
    */
   public updateAngularVelocity(rps: number) {
     this.body.SetAngularVelocity(rps);
@@ -804,7 +844,11 @@ export class BoxBody extends RigidBodyBase {
 
 /** A rigid body whose underlying shape is a convex polygon */
 export class PolygonBody extends RigidBodyBase {
-  /** Vertices of this polygon */
+  /**
+   * Vertices of this polygon
+   *
+   * @internal
+   */
   public vertArray: b2Vec2[] = [];
 
   /**

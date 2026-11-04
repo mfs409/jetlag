@@ -162,12 +162,16 @@ export abstract class Behavior {
    * Attach the behavior to an actor.  This is called internally, once per
    * behavior.  It lets a Behavior customize parts of the actor (such as its
    * rigid body).
+    *
+    * @internal
    */
   attach(_actor: Actor): void { }
 
   /**
    * collisionRules lets us turn off Box2D collisions based on the Behaviors of
    * two actors.  See `CollisionExemptions` for the semantics.
+    *
+    * @internal
    */
   collisionRules = {
     /** The first set: properties associated with this Behavior */
@@ -183,6 +187,8 @@ export abstract class Behavior {
   /**
    * Indicate that this Behavior should not ignore collisions with some other
    * property
+    *
+    * @internal
    */
   public enableCollision(which: CollisionExemptions) {
     this.collisionRules.ignores = this.collisionRules.ignores.filter(value => value != which);
@@ -203,6 +209,8 @@ export abstract class Behavior {
    * @returns true if the collision led to meaningful game state change.  Doing
    *          so stops any remaining Behaviors on `self` from also reacting to
    *          the collision.
+    *
+    * @internal
    */
   onCollide(_self: Actor, _other: Actor) { return false; }
 
@@ -210,10 +218,16 @@ export abstract class Behavior {
    * Code to run when a contact between this Behavior's Actor (`self`) and
    * `other` ends.  By default, nothing happens.  A contact also ends when
    * either actor is removed from the world.
+    *
+    * @internal
    */
   onEndCollide(_self: Actor, _other: Actor): void { }
 
-  /** Code to run immediately before rendering this Behavior's Actor */
+  /**
+   * Code to run immediately before rendering this Behavior's Actor
+   *
+   * @internal
+   */
   prerender(_elapsedMs: number): void { }
 
   /**
@@ -472,7 +486,11 @@ export class HealthBehavior extends Behavior {
     this.onDefeated = cfg.onDefeated;
   }
 
-  /** Decay invincibility over time, firing INV_N once it reaches 0 */
+  /**
+   * Decay invincibility over time, firing INV_N once it reaches 0
+   *
+   * @internal
+   */
   prerender(elapsedMs: number) {
     if (!this._actor || this.invincibleRemainingMs <= 0) return;
     const next = this.invincibleRemainingMs - elapsedMs;
@@ -545,7 +563,11 @@ export class CollectableBehavior extends Behavior {
     this.eligible = cfg.eligible ?? defaultPlayerOnly;
   }
 
-  /** Collect this if `other` is eligible; removes it unless `onCollect` returns false */
+  /**
+   * Collect this if `other` is eligible; removes it unless `onCollect` returns false
+   *
+   * @internal
+   */
   onCollide(self: Actor, other: Actor) {
     if (!this.eligible(other)) return false;
     if (typeof this.onCollect === "string") {
@@ -606,7 +628,11 @@ export class GoalBehavior extends Behavior {
     this.eligible = cfg.eligible ?? defaultPlayerOnly;
   }
 
-  /** Accept `other` if it's eligible, there's remaining capacity, and `onArrival` allows it; removes `other` on acceptance */
+  /**
+   * Accept `other` if it's eligible, there's remaining capacity, and `onArrival` allows it; removes `other` on acceptance
+   *
+   * @internal
+   */
   onCollide(self: Actor, other: Actor) {
     if (!this.eligible(other)) return false;
     if (this.held >= this.capacity) return true;
@@ -717,6 +743,8 @@ export class HazardBehavior extends Behavior {
    * defeats it outright, regardless of `amount`.
    *
    * @param actor The actor this HazardBehavior is attached to
+    *
+    * @internal
    */
   attach(actor: Actor) {
     const health = findBehavior(actor, HealthBehavior);
@@ -778,6 +806,8 @@ export class HazardBehavior extends Behavior {
    *
    * @param self  This hazard's actor
    * @param other The actor touching `self`
+    *
+    * @internal
    */
   onCollide(self: Actor, other: Actor) {
     if (!this.eligible(other)) return false;
@@ -854,6 +884,8 @@ export class SolidBehavior extends Behavior {
    * projectile disappearance -- `ThrowableBehavior.onCollide` always defers
    * to it (see there), so the outcome never depends on which of the two
    * actors happens to be dispatched first.
+    *
+    * @internal
    */
   onCollide(self: Actor, other: Actor) {
     this.playCollideSound();
@@ -947,6 +979,8 @@ export class TouchPlateBehavior<Other extends Actor = Actor> extends Behavior {
    *
    * @param self  This Behavior's actor
    * @param other The actor touching `self`
+    *
+    * @internal
    */
   onCollide(self: Actor, other: Actor) {
     if (!this.eligible(other)) return false;
@@ -959,6 +993,8 @@ export class TouchPlateBehavior<Other extends Actor = Actor> extends Behavior {
    *
    * @param self  This Behavior's actor
    * @param other The actor that was touching `self`
+    *
+    * @internal
    */
   onEndCollide(self: Actor, other: Actor) {
     if (this.eligible(other)) this.onLeave(self, other as Other);
@@ -1074,6 +1110,8 @@ export class ThrowableBehavior extends Behavior {
    * `SolidBehavior.onCollide`), so the disappearance decision is made in
    * exactly one place, regardless of which of the two actors happens to be
    * dispatched first.
+    *
+    * @internal
    */
   onCollide(self: Actor, other: Actor) {
     if (findBehavior(other, SolidBehavior)) return false;

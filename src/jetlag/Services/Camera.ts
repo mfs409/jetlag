@@ -125,6 +125,8 @@ export class CameraService {
    *     and camera bounds.
    *
    * @param elapsedMs The time in milliseconds since the previous frame
+    *
+    * @internal
    */
   public adjustCamera(elapsedMs: number = 0) {
     if (this.actorToFollow) {
@@ -160,6 +162,8 @@ export class CameraService {
 
   /**
    * Create a CameraService.  It starts out with (0, 0) at the top left corner
+    *
+    * @internal
    */
   constructor() {
     this.center.Set(stage.screenWidth / stage.pixelMeterRatio / 2, stage.screenHeight / stage.pixelMeterRatio / 2);
@@ -189,6 +193,8 @@ export class CameraService {
   /**
    * Update everything that depends on the size of the screen.  The stage calls
    * this when the window changes size.
+    *
+    * @internal
    */
   public resize() {
     this.screenDims.Set(stage.screenWidth, stage.screenHeight);
@@ -256,6 +262,8 @@ export class CameraService {
    * @param x The X coordinate of the top left corner of the sprite, in meters
    * @param y The Y coordinate of the top left corner of the sprite, in meters
    * @param r The radius of the circumscribing circle
+    *
+    * @internal
    */
   public inBounds(x: number, y: number, r: number) {
     let leftOk = x + r >= this.getLeft();
@@ -330,10 +338,16 @@ export class CameraService {
    * Add an actor to the level
    *
    * @param actor The actor to add
+    *
+    * @internal
    */
   addActor(actor: Actor) { this.actors.push(actor); }
 
-  /** Render the actors associated with this camera */
+  /**
+   * Render the actors associated with this camera
+   *
+   * @internal
+   */
   render(elapsedMs: number, location: SpriteLocation) {
     // Draw everything
     for (let actor of this.actors)

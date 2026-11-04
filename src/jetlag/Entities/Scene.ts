@@ -38,6 +38,8 @@ export class Scene<P extends AdvancedCollisionService | BasicCollisionService = 
    * Run any pending events that should happen during a render
    *
    * @param elapsedMs The time in milliseconds since the previous render
+    *
+    * @internal
    */
   public runRendertimeEvents(elapsedMs: number) {
     // NB: Must use let-of syntax because a one-time event can insert into the
@@ -51,6 +53,8 @@ export class Scene<P extends AdvancedCollisionService | BasicCollisionService = 
    * Construct a new scene
    *
    * @param physics The physics system for the scene
+    *
+    * @internal
    */
   constructor(public physics: P) {
     this.camera = new CameraService();

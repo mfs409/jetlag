@@ -226,6 +226,8 @@ export class ParallaxSystem {
    * @param elapsedMs  The time since the last render
    * @param foreground Does this go in the foreground (true) or background
    *                   (false)?
+    *
+    * @internal
    */
   public render(camera: CameraService, elapsedMs: number, foreground: boolean) {
     this.layers.forEach(pl => pl.render(camera, elapsedMs, foreground));

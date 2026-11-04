@@ -42,7 +42,11 @@ export class KeyboardDevice {
   /** handlers for when keys are released */
   private upHandlers: Map<string, () => void> = new Map();
 
-  /** Create the device by setting up listeners */
+  /**
+   * Create the device by setting up listeners
+   *
+   * @internal
+   */
   constructor() {
     document.addEventListener("keydown", (ev: KeyboardEvent) => { this.keyDownHandler(ev) }, true);
     document.addEventListener("keyup", (ev: KeyboardEvent) => { this.keyUpHandler(ev) });

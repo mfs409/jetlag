@@ -81,12 +81,16 @@ export class ScoreService {
   /**
    * Predicates checked once per clock tick; the level is won the first time any
    * of these returns true
+    *
+    * @internal
    */
   public winConditions: (() => boolean)[] = [];
 
   /**
    * Predicates checked once per clock tick (after win conditions); the level is
    * lost the first time any of these returns true
+    *
+    * @internal
    */
   public loseConditions: (() => boolean)[] = [];
 
@@ -136,6 +140,8 @@ export class ScoreService {
    * `decided`).
    *
    * @param elapsedMs The milliseconds that have passed
+    *
+    * @internal
    */
   public onClockTick(elapsedMs: number) {
     this.counters.add(ScoreService.STOPWATCH, elapsedMs / 1000);

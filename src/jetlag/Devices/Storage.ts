@@ -18,6 +18,8 @@ export class StorageDevice {
    * @param prefix A string to put in front of every persistent key, so that
    *               games hosted at the same web address can't overwrite each
    *               other's saved data.
+    *
+    * @internal
    */
   constructor(private readonly prefix: string) { }
 

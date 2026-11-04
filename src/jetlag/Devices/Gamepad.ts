@@ -65,6 +65,8 @@ export class GamepadDevice {
    *
    * @param index The slot this device represents (0-3), matching
    *              `navigator.getGamepads()`'s indices
+    *
+    * @internal
    */
   constructor(readonly index: number) { }
 
@@ -114,6 +116,8 @@ export class GamepadDevice {
    *
    * @param raw The browser's `Gamepad` object for this slot, or
    * `null`/`undefined` if nothing is connected
+    *
+    * @internal
    */
   public poll(raw: Gamepad | null | undefined) {
     this.connected = !!raw && raw.mapping === "standard";

@@ -40,6 +40,8 @@ export class GestureDevice {
    *
    * @param domId The Id of the DOM element that will receive gesture events
    * @param stage The stage that should receive the events
+    *
+    * @internal
    */
   constructor(domId: string, stage: Stage) {
     let tmp = document.getElementById(domId);

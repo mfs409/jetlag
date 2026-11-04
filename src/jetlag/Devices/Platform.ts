@@ -31,7 +31,11 @@ export interface PlatformDevice {
  * PlatformDevice.  It is the default implementation.
  */
 export class HtmlPlatformDevice implements PlatformDevice {
-  /** Quit the game and close its window */
+  /**
+   * Quit the game and close its window
+   *
+   * @internal
+   */
   quitter() { window.close(); }
 
   /**
@@ -53,6 +57,8 @@ export class HtmlPlatformDevice implements PlatformDevice {
    *
    * @param accelerometerMode The desired mode for the accelerometer.  Defaults
    *                          to DISABLED
+    *
+    * @internal
    */
   constructor(readonly accelerometerMode: AccelerometerMode = AccelerometerMode.DISABLED) { }
 }

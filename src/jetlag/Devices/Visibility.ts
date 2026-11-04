@@ -34,6 +34,8 @@ export class VisibilityDevice {
   /**
    * The constructor installs listeners that can detect when a page
    * loses/gains visibility, and calls the appropriate callback.
+    *
+    * @internal
    */
   constructor() {
     document.addEventListener("visibilitychange", () => this.setVisible(!document.hidden));

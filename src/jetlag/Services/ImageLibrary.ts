@@ -3,7 +3,11 @@ import { stage } from "../Stage";
 
 /** DebugSprite is used when we need to render a debug outline on an actor */
 export class DebugSprite {
-  /** The PIXI context that we use for making the shape's outline */
+  /**
+   * The PIXI context that we use for making the shape's outline
+   *
+   * @internal
+   */
   readonly shape = new Graphics();
 
   /** A radial line when debugShape is a circle, to show rotation */
@@ -18,7 +22,11 @@ export class DebugSprite {
 
 /** A sprite is any picture that can be drawn to the screen */
 export class Sprite {
-  /** A debug context, for when we need to print shape outlines */
+  /**
+   * A debug context, for when we need to print shape outlines
+   *
+   * @internal
+   */
   readonly debug = new Graphics();
 
   /**
@@ -26,6 +34,8 @@ export class Sprite {
    *
    * @param imgName the name of the image file to load
    * @param sprite The PIXI sprite to use
+    *
+    * @internal
    */
   constructor(readonly imgName: string, public sprite: PixiSprite) { }
 
@@ -36,6 +46,8 @@ export class Sprite {
    * @param ay The Y anchor
    * @param x The X position relative to the anchor
    * @param y The Y position relative to the anchor
+    *
+    * @internal
    */
   setAnchoredPosition(ax: number, ay: number, x: number, y: number) {
     this.sprite.anchor.set(ax, ay);
@@ -45,7 +57,11 @@ export class Sprite {
 
 /** Text is for anything that we render by using a string and a font */
 export class Text {
-  /** A debug context, for when we need to print the text's outline */
+  /**
+   * A debug context, for when we need to print the text's outline
+   *
+   * @internal
+   */
   readonly debug = new Graphics();
 
   /**
@@ -61,6 +77,8 @@ export class Text {
    *
    * @param txt The text to show
    * @param cfg PIXI options for the text
+    *
+    * @internal
    */
   public static makeText(txt: string, cfg: any) {
     cfg.fontSize = Math.floor(cfg.fontSize * stage.fontScaling);
@@ -93,15 +111,25 @@ export class ImageLibraryService {
    */
   public imageLoadingProgress = 2;
 
-  /** Track the progress of font loading, the same way as `imageLoadingProgress`. */
+  /**
+   * Track the progress of font loading, the same way as `imageLoadingProgress`.
+   *
+   * @internal
+   */
   public fontLoadingProgress = 2;
 
-  /** Track the progress of video loading, the same way as `imageLoadingProgress`. */
+  /**
+   * Track the progress of video loading, the same way as `imageLoadingProgress`.
+   *
+   * @internal
+   */
   public videoLoadingProgress = 2;
 
   /**
    * Create the service.  This does not load any assets; that happens via
    * `loadFonts`/`loadImageList`/`loadVideos`, which are invoked by Stage.
+    *
+    * @internal
    */
   constructor() {
     // basePath isn't set by default, so PIXI won't resolve relative asset paths
@@ -117,6 +145,8 @@ export class ImageLibraryService {
    * @param names   An array of font names
    * @param prefix  A prefix to append to each font name that needs to be
    *                loaded
+    *
+    * @internal
    */
   async loadFonts(names: string[], prefix: string) {
     if (names.length === 0) return;
@@ -181,6 +211,8 @@ export class ImageLibraryService {
    * @param names   An array of video names
    * @param prefix  A prefix to append to each video name that needs to be
    *                loaded
+    *
+    * @internal
    */
   async loadVideos(names: string[], prefix: string) {
     if (names.length === 0) return;
@@ -198,6 +230,8 @@ export class ImageLibraryService {
    * @param imgName The name of the image to load
    *
    * @returns A Sprite built from the image
+    *
+    * @internal
    */
   public getSprite(imgName: string) {
     let texture = this.imgTextures.get(imgName);
@@ -233,6 +267,8 @@ export class ImageLibraryService {
    * @param vidName The name of the video to load
    *
    * @returns A Sprite built from the video
+    *
+    * @internal
    */
   public getVideo(vidName: string) {
     let texture = this.vidTextures.get(vidName);

@@ -18,6 +18,8 @@ export class RandomService {
    * @param seed  The seed to start from.  Defaults to a value derived from
    *              the clock, so that an unseeded RandomService still gives
    *              different results from run to run.
+    *
+    * @internal
    */
   constructor(seed?: number) { this.state = (seed ?? Date.now()) >>> 0; }
 

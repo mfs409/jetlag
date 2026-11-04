@@ -256,6 +256,8 @@ export class Actor<D = unknown> {
    * @param elapsedMs The time since the last render
    *
    * @returns True if the Actor is enabled, false otherwise
+    *
+    * @internal
    */
   public prerender(elapsedMs: number) {
     if (!this.enabled) return false;

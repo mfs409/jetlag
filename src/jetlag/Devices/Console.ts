@@ -7,7 +7,11 @@ import { JetLagGameConfig } from "../Config";
  * releasing a game.
  */
 export class ConsoleDevice {
-  /** Create an output console based on the game config object */
+  /**
+   * Create an output console based on the game config object
+   *
+   * @internal
+   */
   constructor(private cfg: JetLagGameConfig) { }
 
   /** Display a message to the console if we're not in debug mode */
