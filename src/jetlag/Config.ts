@@ -9,7 +9,12 @@ export interface JetLagGameConfig {
    * The width and height of the game, in meters.  Common values are 16/9
    * (landscape) and 9/16 (portrait)
    */
-  readonly aspectRatio: { width: number, height: number };
+  readonly aspectRatio: {
+    /** The width part of the ratio */
+    width: number,
+    /** The height part of the ratio */
+    height: number
+  };
   /** Should JetLag print an outline around each actor in the game? */
   readonly hitBoxes: boolean;
   /** Configuration of any assets used by the game */

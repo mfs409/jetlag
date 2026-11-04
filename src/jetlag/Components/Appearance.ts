@@ -8,6 +8,33 @@ import { Graphics, Sprite as PixiSprite, Particle, ParticleContainer, Texture, T
 import { SpriteLocation } from "../Devices/Renderer";
 
 /**
+ * A distance in meters, split into its horizontal part (`dx`) and its vertical
+ * part (`dy`).  Remember that y increases downward.
+ */
+export type JLOffset = {
+  /** Meters to the right (negative is to the left) */
+  dx: number,
+  /** Meters downward (negative is upward) */
+  dy: number
+};
+
+/** A location in the world, in meters */
+export type JLPoint = {
+  /** Distance from the left edge of the world */
+  x: number,
+  /** Distance from the top of the world */
+  y: number
+};
+
+/** A size, in meters */
+export type JLDimensions = {
+  /** How wide, in meters */
+  width: number,
+  /** How tall, in meters */
+  height: number
+};
+
+/**
  * The valid Z indices in JetLag, in ascending order.  Please do not hard-code Z
  * values other than 0.
  */
@@ -114,7 +141,7 @@ export class TextSprite {
   private _wrapWidth?: number;
 
   /** An offset between the TextSprite's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Build some text that can be rendered
@@ -140,7 +167,7 @@ export class TextSprite {
    * @param producer        A function that creates the text to display, or a
    *                        String
    */
-  constructor(cfg: { center: boolean, face: string, color: string, size: number, z?: ZIndex, strokeWidth?: number, strokeColor?: string, lineHeight?: number, wrapWidth?: number, offset?: { dx: number, dy: number } }, public producer: string | ((a: Actor) => string)) {
+  constructor(cfg: { center: boolean, face: string, color: string, size: number, z?: ZIndex, strokeWidth?: number, strokeColor?: string, lineHeight?: number, wrapWidth?: number, offset?: JLOffset }, public producer: string | ((a: Actor) => string)) {
     this.center = cfg.center;
     this._face = cfg.face;
     this._color = cfg.color;
@@ -223,7 +250,7 @@ export class TextSprite {
    *
    * @returns The width and height of the text, in meters
    */
-  dims(camera: CameraService, sampleText: string) {
+  dims(camera: CameraService, sampleText: string): JLDimensions {
     // NB:  When the game starts, text.text will usually be "", which gets us a
     //      valid height but not a valid width.  Swapping in sampleText gets us
     //      a better estimate.
@@ -273,7 +300,7 @@ export class ImageSprite {
   private _img: string;
 
   /** An offset between the ImageSprite's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Build an image that can be rendered
@@ -286,7 +313,7 @@ export class ImageSprite {
    * @param cfg.offset An offset between the component's center and its
    *                   RigidBody's center (optional)
    */
-  constructor(cfg: { width: number, height: number, img: string | PixiSprite, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  constructor(cfg: { width: number, height: number, img: string | PixiSprite, z?: ZIndex, offset?: JLOffset }) {
     this.width = cfg.width;
     this.height = cfg.height;
     this.z = cfg.z ? cfg.z : 0;
@@ -360,7 +387,12 @@ export class AnimationSequence {
    * A set of images that can be used as frames of an animation, along with
    * their durations
    */
-  public steps: { cell: Sprite, duration: number }[] = [];
+  public steps: {
+    /** The image to show during this step */
+    cell: Sprite,
+    /** How long to show it, in milliseconds */
+    duration: number
+  }[] = [];
 
   /**
    * Create the shell of an animation.  Once the shell is created, use "to()" to
@@ -485,7 +517,7 @@ export class AnimatedSprite implements IStateObserver {
   stateSelector = AnimatedSprite.overheadAnimationTransitions;
 
   /** An offset between the AnimatedSprite's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Optional callback that runs whenever the active frame changes.  Receives
@@ -526,7 +558,7 @@ export class AnimatedSprite implements IStateObserver {
    * @param cfg.offset     An offset between the component's center and its
    *                       RigidBody's center (optional)
    */
-  constructor(cfg: { width: number, height: number, animations: Map<AnimationState, AnimationSequence>, z?: ZIndex, remap?: Map<AnimationState, AnimationState>, offset?: { dx: number, dy: number } }) {
+  constructor(cfg: { width: number, height: number, animations: Map<AnimationState, AnimationSequence>, z?: ZIndex, remap?: Map<AnimationState, AnimationState>, offset?: JLOffset }) {
     this.width = cfg.width;
     this.height = cfg.height;
     this.z = cfg.z ? cfg.z : 0;
@@ -755,7 +787,7 @@ export class VideoSprite {
   /** The name of the video file */
   src: string;
   /** An offset between the VideoSprite's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Build a VideoSprite
@@ -767,7 +799,7 @@ export class VideoSprite {
    * @param cfg.offset An offset between the component's center and its
    *                   RigidBody's center (optional)
    */
-  constructor(cfg: { width: number, height: number, vid: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  constructor(cfg: { width: number, height: number, vid: string, z?: ZIndex, offset?: JLOffset }) {
     this.width = cfg.width;
     this.height = cfg.height;
     this.z = cfg.z ? cfg.z : 0;
@@ -876,7 +908,7 @@ export class FilledBox {
   /** Fill color */
   fillColor: string;
   /** An offset between the FilledBox's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Build a FilledBox
@@ -890,7 +922,7 @@ export class FilledBox {
    * @param cfg.offset     An offset between the component's center and its
    *                       RigidBody's center (optional)
    */
-  public constructor(cfg: { width: number, height: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  public constructor(cfg: { width: number, height: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex, offset?: JLOffset }) {
     this.width = cfg.width;
     this.height = cfg.height;
     this.z = cfg.z ? cfg.z : 0;
@@ -963,7 +995,7 @@ export class FilledRoundedBox {
   /** Fill color */
   fillColor: string;
   /** An offset between the FilledRoundedBox's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Build a FilledRoundedBox
@@ -978,7 +1010,7 @@ export class FilledRoundedBox {
    * @param cfg.offset     An offset between the component's center and its
    *                       RigidBody's center (optional)
    */
-  public constructor(cfg: { width: number, height: number, radius: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  public constructor(cfg: { width: number, height: number, radius: number, lineWidth?: number, lineColor?: string, fillColor: string, z?: ZIndex, offset?: JLOffset }) {
     this.width = cfg.width;
     this.height = cfg.height;
     this.z = cfg.z ? cfg.z : 0;
@@ -1052,7 +1084,7 @@ export class FilledCircle {
   /** Fill color */
   fillColor?: string;
   /** An offset between the FilledCircle's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Build a FilledCircle
@@ -1065,7 +1097,7 @@ export class FilledCircle {
    * @param cfg.offset     An offset between the component's center and its
    *                       RigidBody's center (optional)
    */
-  public constructor(cfg: { radius: number, lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  public constructor(cfg: { radius: number, lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex, offset?: JLOffset }) {
     this.radius = cfg.radius;
     this.width = this.height = 2 * this.radius;
     this.z = cfg.z ? cfg.z : 0;
@@ -1121,7 +1153,7 @@ export class FilledPolygon {
   /** Height, to simplify some other code */
   height: number;
   /** Vertices of the polygon */
-  vertices: { x: number, y: number }[] = [];
+  vertices: JLPoint[] = [];
   /** Line width */
   public get lineWidth() { return this._lineWidth; }
   /** Line width */
@@ -1138,7 +1170,7 @@ export class FilledPolygon {
   /** Fill color */
   fillColor?: string;
   /** An offset between the FilledPolygon's center and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /**
    * Build a FilledPolygon
@@ -1151,7 +1183,7 @@ export class FilledPolygon {
    * @param cfg.offset     An offset between the component's center and its
    *                       RigidBody's center (optional)
    */
-  constructor(cfg: { vertices: { x: number, y: number }[], lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  constructor(cfg: { vertices: JLPoint[], lineWidth?: number, lineColor?: string, fillColor?: string, z?: ZIndex, offset?: JLOffset }) {
     for (let v of cfg.vertices)
       this.vertices.push({ x: v.x, y: v.y });
     let minX = this.vertices[0].x;
@@ -1225,7 +1257,7 @@ export class ParticleComponent {
   z: ZIndex;
 
   /** An offset between the emission point and the RigidBody's center */
-  offset: { dx: number, dy: number };
+  offset: JLOffset;
 
   /** The direction (radians, 0 = the anchor's own "forward"/+x) that particles are emitted toward */
   private readonly angle: number;
@@ -1287,7 +1319,7 @@ export class ParticleComponent {
    * @param cfg.z            An optional z index in the range [-4,4]
    * @param cfg.offset       An offset between the emission point and the RigidBody's center
    */
-  constructor(cfg: { img?: string, angle?: number, spread?: number, speed?: { min: number, max: number }, lifetime?: { min: number, max: number }, size?: { min: number, max: number }, colors?: (string | number)[], fade?: boolean, z?: ZIndex, offset?: { dx: number, dy: number } }) {
+  constructor(cfg: { img?: string, angle?: number, spread?: number, speed?: { min: number, max: number }, lifetime?: { min: number, max: number }, size?: { min: number, max: number }, colors?: (string | number)[], fade?: boolean, z?: ZIndex, offset?: JLOffset }) {
     this.texture = cfg.img ? stage.imageLibrary.getImageAsTexture(cfg.img) : Texture.WHITE;
     this.container = new ParticleContainer({ dynamicProperties: { position: true, color: true } });
     this.z = cfg.z ? cfg.z : 0;

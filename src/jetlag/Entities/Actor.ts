@@ -57,13 +57,31 @@ export class GestureHandlers {
  * Everything that can be given to the `Actor` constructor, other than `data`,
  * which has its own rules (see the constructor)
  */
-interface ActorConfig {
+export interface ActorConfig {
+  /**
+   * The physical body (`BoxBody`, `CircleBody`, or `PolygonBody`).  It also
+   * decides which scene the actor lives in.  Required, because every actor needs
+   * a place in the world.
+   */
   rigidBody: RigidBodyComponent,
+  /**
+   * What the actor looks like: one appearance component, or an array of them,
+   * drawn in order.  An empty array is an error.
+   */
   appearance: AppearanceComponent | AppearanceComponent[],
+  /** How the actor moves.  If omitted, the actor only moves when physics moves it */
   movement?: MovementComponent,
+  /**
+   * What the actor does when it touches other actors: one behavior, or an array
+   * of them.  If omitted, the actor has a `PassiveBehavior`, so it doesn't
+   * collide with anything
+   */
   behaviors?: Behavior | Behavior[],
+  /** Functions to run when the player touches, pans, swipes, or hovers over the actor */
   gestures?: GestureHandlers,
+  /** The sounds to play for this actor, such as when it disappears */
   sounds?: SoundEffectComponent,
+  /** Code to run when the actor disappears */
   onDisappear?: (a: Actor) => void
 }
 

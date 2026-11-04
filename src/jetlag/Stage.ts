@@ -243,7 +243,7 @@ export class Stage {
    * This code is called dozens of times per second to update the game's world's
    * state and re-draw the world
    *
-   * @param elapsedMs The time in milliseconds since the previous render
+   * @param realElapsedMs The time in milliseconds since the previous render
    */
   public renderWorld(realElapsedMs: number) {
     // If we've got an overlay, don't render the world

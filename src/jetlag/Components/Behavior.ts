@@ -2,7 +2,7 @@ import { b2Transform, b2BodyType } from "@box2d/core";
 import { Actor } from "../Entities/Actor";
 import { stage } from "../Stage";
 import { DIRECTION, StateEvent } from "./StateManager";
-import { AnimatedSprite } from "./Appearance";
+import { AnimatedSprite, JLOffset, JLPoint } from "./Appearance";
 import { tossAt, tossFixedDir } from "./Movement";
 import { TimedEvent } from "../Services/Timer";
 
@@ -301,6 +301,11 @@ export class JumpBehavior extends Behavior {
    * the actor picks up a power-up that grants a double jump.
    */
   public get numJumpsAllowed() { return this._numJumpsAllowed; }
+  
+  /**
+   * Set how many jumps the actor gets before touching the ground (values below
+   * 1 become 1)
+   */
   public set numJumpsAllowed(n: number) { this._numJumpsAllowed = Math.max(1, n); }
 
   /** How many jumps have been made since the actor was last on the ground */
@@ -1030,7 +1035,7 @@ export class ThrowableBehavior extends Behavior {
   public get actor() { return this._actor; }
 
   /** This is the initial point from which the throwable was tossed */
-  readonly rangeFrom = { x: 0, y: 0 };
+  readonly rangeFrom: JLPoint = { x: 0, y: 0 };
 
   /**
    * When throwables collide, and they are not sensors, one will disappear. We
@@ -1100,7 +1105,7 @@ export class ThrowableBehavior extends Behavior {
    *                     the center of the actor tossing it
    * @param cfg.velocity The velocity of the throwable when it is tossed
    */
-  public tossFixedDir(cfg: { actor: Actor, offset: { dx: number, dy: number }, velocity: { x: number, y: number } }) {
+  public tossFixedDir(cfg: { actor: Actor, offset: JLOffset, velocity: { x: number, y: number } }) {
     let b = this.actor;
     if (!b) return;
     if (b.appearance[0] instanceof AnimatedSprite) (b.appearance[0] as AnimatedSprite).restartCurrentAnimation();
@@ -1126,7 +1131,7 @@ export class ThrowableBehavior extends Behavior {
    * @param cfg.rotateVectorToss    Should this be rotated to face the direction
    *                                it's tossed?
    */
-  public tossAt(cfg: { actor: Actor, from: { x: number, y: number }, to: { x: number, y: number }, offset: { dx: number, dy: number }, multiplier?: number, fixedVectorVelocity?: number, rotateVectorToss?: boolean }) {
+  public tossAt(cfg: { actor: Actor, from: { x: number, y: number }, to: { x: number, y: number }, offset: JLOffset, multiplier?: number, fixedVectorVelocity?: number, rotateVectorToss?: boolean }) {
     let b = this.actor;
     if (!b) return;
     if (b.appearance[0] instanceof AnimatedSprite) (b.appearance[0] as AnimatedSprite).restartCurrentAnimation();
@@ -1180,7 +1185,7 @@ export class PunchBehavior extends Behavior {
    * @param cfg.radius   The radius of the punch hitbox (default 0.5)
    * @param cfg.duration How long the punch should last, in seconds
    */
-  public punch(cfg: { offset: { dx: number, dy: number }, radius?: number, duration: number }) {
+  public punch(cfg: { offset: JLOffset, radius?: number, duration: number }) {
     const b = this._actor;
     if (!b) return;
     if (b.appearance[0] instanceof AnimatedSprite) (b.appearance[0] as AnimatedSprite).restartCurrentAnimation();

@@ -30,10 +30,20 @@ export class GamepadDevice {
   public connected = false;
 
   /** The left analog stick, each axis in [-1, 1] */
-  public readonly leftStick = { x: 0, y: 0 };
+  public readonly leftStick = {
+    /** Left (-1) to right (1) */
+    x: 0,
+    /** Up (-1) to down (1) */
+    y: 0
+  };
 
   /** The right analog stick, each axis in [-1, 1] */
-  public readonly rightStick = { x: 0, y: 0 };
+  public readonly rightStick = {
+    /** Left (-1) to right (1) */
+    x: 0,
+    /** Up (-1) to down (1) */
+    y: 0
+  };
 
   /** The left trigger's analog value, in [0, 1] (0 if the controller only reports it as a digital button) */
   public leftTrigger = 0;
@@ -97,12 +107,13 @@ export class GamepadDevice {
   }
 
   /**
-   * Update this device's state from a browser `Gamepad` snapshot, and fire
-   * any button handlers whose pressed state changed. Called once per render
-   * tick by `Stage.pollGamepads`, for every slot, whether or not a
-   * controller is actually connected there.
+   * Update this device's state from a browser `Gamepad` snapshot, and fire any
+   * button handlers whose pressed state changed. Called once per render tick by
+   * `Stage.pollGamepads`, for every slot, whether or not a controller is
+   * actually connected there.
    *
-   * @param raw The browser's `Gamepad` object for this slot, or `null`/`undefined` if nothing is connected
+   * @param raw The browser's `Gamepad` object for this slot, or
+   * `null`/`undefined` if nothing is connected
    */
   public poll(raw: Gamepad | null | undefined) {
     this.connected = !!raw && raw.mapping === "standard";

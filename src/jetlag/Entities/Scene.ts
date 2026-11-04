@@ -61,12 +61,13 @@ export class Scene<P extends AdvancedCollisionService | BasicCollisionService = 
 
   /**
    * Set (or reset) the gravity in this world
-   *
-   * @param g.x The gravitational force in the x dimension
-   * @param g.y The gravitational force in the y dimension (remember up is
-   *            negative!)
    */
-  public set gravity(g: { x: number, y: number }) {
+  public set gravity(g: {
+    /** The gravitational force in the x dimension */
+    x: number,
+    /** The gravitational force in the y dimension (remember up is negative!) */
+    y: number
+  }) {
     this.physics.world.SetGravity(new b2Vec2(g.x, g.y));
   }
 }

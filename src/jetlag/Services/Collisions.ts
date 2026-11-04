@@ -9,7 +9,7 @@ import { stage } from "../Stage";
  * PointToActorCallback queries the world to find the actor at a given
  * coordinate
  */
-class PointToActorCallback {
+export class PointToActorCallback {
   /** If we found any actors, we'll put them here */
   foundEntities: Actor[] = [];
 
@@ -336,7 +336,14 @@ export class AdvancedCollisionService extends BasicCollisionService {
    *      with O(n) search overhead.  The assumption is that the array will be
    *      small.  If that changes, then this will need to be redesigned.
    */
-  public endContactHandlers: { actor1: Actor, actor2: Actor, callback: (a: Actor, b: Actor) => void }[] = [];
+  public endContactHandlers: {
+    /** One of the two actors whose contact we are waiting to end */
+    actor1: Actor,
+    /** The other actor */
+    actor2: Actor,
+    /** The code to run when the two actors stop touching */
+    callback: (a: Actor, b: Actor) => void
+  }[] = [];
 
   /**
    * Callbacks to consider running in response to a contact *beginning*.

@@ -174,6 +174,7 @@ export class CameraService {
    * and 0.5 is twice as far.
    */
   public get zoom(): number { return this._zoom; }
+  /** Set how far the camera is zoomed (1 is the starting view), and redraw */
   public set zoom(z: number) {
     this._zoom = z;
     this.resize();
@@ -282,7 +283,12 @@ export class CameraService {
    * @param screen.x The X coordinate, in pixels
    * @param screen.y The Y coordinate, in pixels
    */
-  public screenToMeters(screen: { x: number, y: number }) {
+  public screenToMeters(screen: { x: number, y: number }): {
+    /** The X coordinate, in meters */
+    x: number,
+    /** The Y coordinate, in meters */
+    y: number
+  } {
     return { x: screen.x / this.scale + this.getLeft(), y: screen.y / this.scale + this.getTop() };
   }
 
@@ -292,7 +298,12 @@ export class CameraService {
    * @param world.x The X coordinate, in meters
    * @param world.y The Y coordinate, in meters
    */
-  public metersToScreen(world: { x: number, y: number }) {
+  public metersToScreen(world: { x: number, y: number }): {
+    /** The X coordinate, in pixels */
+    x: number,
+    /** The Y coordinate, in pixels */
+    y: number
+  } {
     return { x: (world.x - this.getLeft()) * this.scale, y: (world.y - this.getTop()) * this.scale };
   }
 
