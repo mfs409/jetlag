@@ -59,6 +59,19 @@ export class Stage {
   /** The physics world in which all actors exist */
   public world!: Scene<AdvancedCollisionService>;
 
+  /**
+   * How fast the world runs: 1 is normal, 0.5 is half speed, and 0 freezes it.
+   * This slows physics, timers, and animations, but not the HUD or overlays.
+   * See `slowMotion` and `hitstop` for changing it for a short time.
+   */
+  public timeScale = 1;
+
+  /** How many real milliseconds are left in a `slowMotion` */
+  private slowMotionLeftMs = 0;
+
+  /** The time scale to use while a `slowMotion` lasts */
+  private slowMotionScale = 1;
+
   /** A heads-up display */
   public hud!: Scene;
 
@@ -232,9 +245,19 @@ export class Stage {
    *
    * @param elapsedMs The time in milliseconds since the previous render
    */
-  public renderWorld(elapsedMs: number) {
+  public renderWorld(realElapsedMs: number) {
     // If we've got an overlay, don't render the world
     if (this.overlay) return;
+
+    // A slow motion or a hitstop slows everything in the world, for a number of
+    // real milliseconds, and then ends.  The camera (and its shake) keeps real
+    // time.
+    let scale = this.timeScale;
+    if (this.slowMotionLeftMs > 0) {
+      scale *= this.slowMotionScale;
+      this.slowMotionLeftMs = Math.max(0, this.slowMotionLeftMs - realElapsedMs);
+    }
+    const elapsedMs = realElapsedMs * scale;
 
     // Only set the color if we don't have an overlay showing
     this.renderer.setFrameColor(this.backgroundColor);
@@ -259,7 +282,7 @@ export class Stage {
     this.world.runRendertimeEvents(elapsedMs);
 
     // Determine the center of the camera's focus
-    this.world.camera.adjustCamera();
+    this.world.camera.adjustCamera(realElapsedMs);
 
     // The world is now static for this time step... we can display it!
     this.world.timer.advance(elapsedMs);
@@ -290,12 +313,36 @@ export class Stage {
   }
 
   /**
+   * Run the world slowly for a short time, and then at normal speed again.
+   *
+   * @param seconds How long it lasts, in real seconds
+   * @param scale   How fast the world runs while it lasts: 0.25 is a quarter
+   *                of normal speed
+   */
+  public slowMotion(seconds: number, scale: number) {
+    this.slowMotionLeftMs = seconds * 1000;
+    this.slowMotionScale = Math.max(0, scale);
+  }
+
+  /**
+   * Freeze the world for a moment, such as when a heavy blow lands.  The camera
+   * (shake) and the HUD keep going.
+   *
+   * @param seconds How long to freeze, in real seconds
+   */
+  public hitstop(seconds: number) { this.slowMotion(seconds, 0); }
+
+  /**
    * Before we call programmer code to load a new stage, we call this to
    * ensure that everything is in a clean state.
    */
   public switchTo(builder: () => void) {
     // clear any overlay left over from the previous stage
     this.clearOverlay();
+
+    // a new stage starts at normal speed
+    this.timeScale = 1;
+    this.slowMotionLeftMs = 0;
 
     // reset level music
     this.levelMusic.clear();

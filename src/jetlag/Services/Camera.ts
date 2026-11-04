@@ -51,36 +51,111 @@ export class CameraService {
   private readonly cameraOffset = new b2Vec2(0, 0);
 
   /**
+   * Camera lag.  0 means no lag.  A positive number (seconds) indicates how
+   * long the camera takes to catch up with whatever it follows.
+   */
+  private lag = 0;
+
+  /** Where the camera was centered on the last frame, before any shaking */
+  private readonly preShakeCenter = new b2Vec2(0, 0);
+
+  /**
+   * Has the camera jumped straight to the Actor it follows, since it was last
+   * asked to follow one?  With a lag, the camera eases toward its target, so
+   * without this the first frame would ease in from wherever the camera
+   * happened to be (the top left of the world, say).  The first frame snaps,
+   * and every frame after that eases.
+   */
+  private hasSnapped = false;
+
+  /** How far the camera is currently thrown off center by a shake */
+  private readonly shakeOffset = new b2Vec2(0, 0);
+
+  /** How many seconds of shaking are left */
+  private shakeLeft = 0;
+
+  /** How many seconds the current shake lasts, in all */
+  private shakeTotal = 0;
+
+  /** How far (in meters) the current shake can throw the camera, at first */
+  private shakeSize = 0;
+
+  /**
    * Make the camera follow an Actor.  Optionally add an offset to the
-   * actor's center, and center the camera on that point instead.
+   * actor's center, and center the camera on that point instead.  Optionally
+   * give a lag, so that the camera eases toward that point instead of staying
+   * exactly on it.
    *
    * @param actor      The actor to follow
    * @param offset.dx  Amount of x distance to add to actor center
    * @param offset.dy  Amount of y distance to add to actor center
+   * @param lag        How many seconds the camera takes to close most of the
+   *                   distance to the point it is following.  The default, 0,
+   *                   keeps the camera exactly on that point.
    */
-  public setCameraFocus(actor: Actor | undefined, offset: { dx: number, dy: number } = { dx: 0, dy: 0 }) {
+  public setCameraFocus(actor: Actor | undefined, offset: { dx: number, dy: number } = { dx: 0, dy: 0 }, lag: number = 0) {
     this.actorToFollow = actor;
     this.cameraOffset.Set(offset.dx, offset.dy);
+    this.lag = Math.max(0, lag);
+    this.hasSnapped = false;
+  }
+
+  /**
+   * Shake the camera, so that a hit or an explosion can be felt.  The shake
+   * starts at the given size and dies down to nothing.  It is applied on top of
+   * wherever the camera is, so it works whether or not the camera is following
+   * an Actor.  A second shake replaces the first, unless it would be weaker.
+   *
+   * @param seconds How long the shake lasts
+   * @param size    How far, in meters, the camera is thrown at the start
+   */
+  public shake(seconds: number, size: number) {
+    // Don't let a small shake cut short a big one that is still going
+    if (this.shakeLeft > 0 && this.shakeSize * (this.shakeLeft / this.shakeTotal) > size) return;
+    this.shakeLeft = this.shakeTotal = seconds;
+    this.shakeSize = size;
   }
 
   /**
    * If the world's camera is supposed to follow an Actor, this code will
    * figure out the point on which the camera should center, and will request
-   * that the camera center on that point.
+   * that the camera center on that point.  It also advances any shake.
    *
    * NB: The camera may decide not to center on that point, depending on zoom
    *     and camera bounds.
+   *
+   * @param elapsedMs The time in milliseconds since the previous frame
    */
-  public adjustCamera() {
-    if (!this.actorToFollow) return;
+  public adjustCamera(elapsedMs: number = 0) {
+    if (this.actorToFollow) {
+      // figure out the entity's position + the offset
+      let a = this.actorToFollow;
+      let x = a.rigidBody.body.GetWorldCenter().x + this.cameraOffset.x;
+      let y = a.rigidBody.body.GetWorldCenter().y + this.cameraOffset.y;
 
-    // figure out the entity's position + the offset
-    let a = this.actorToFollow;
-    let x = a.rigidBody.body.GetWorldCenter().x + this.cameraOffset.x;
-    let y = a.rigidBody.body.GetWorldCenter().y + this.cameraOffset.y;
+      // With a lag, move only part of the way there: the same fraction per
+      // second, no matter how fast frames come.  The first frame snaps.
+      if (this.lag > 0 && this.hasSnapped) {
+        const f = 1 - Math.exp(-elapsedMs / 1000 / this.lag);
+        x = this.preShakeCenter.x + (x - this.preShakeCenter.x) * f;
+        y = this.preShakeCenter.y + (y - this.preShakeCenter.y) * f;
+      }
 
-    // request that the camera center on that point
-    this.setCenter({ x, y });
+      // request that the camera center on that point
+      this.setCenter({ x, y });
+      this.hasSnapped = true;
+    }
+    this.preShakeCenter.Set(this.center.x, this.center.y);
+
+    // Throw the camera off center, by a bit less each frame
+    if (this.shakeLeft > 0) {
+      this.shakeLeft = Math.max(0, this.shakeLeft - elapsedMs / 1000);
+      const size = this.shakeSize * (this.shakeLeft / this.shakeTotal);
+      this.shakeOffset.Set((stage.random.next() * 2 - 1) * size, (stage.random.next() * 2 - 1) * size);
+    }
+    else {
+      this.shakeOffset.Set(0, 0);
+    }
   }
 
   /**
@@ -182,24 +257,24 @@ export class CameraService {
    * @param r The radius of the circumscribing circle
    */
   public inBounds(x: number, y: number, r: number) {
-    let leftOk = x + r >= this.center.x - this.scaledVisibleRegionDims.x / 2;
-    let rightOk = x - r <= this.center.x + this.scaledVisibleRegionDims.x / 2;
-    let topOk = y + r >= this.center.y - this.scaledVisibleRegionDims.y / 2;
-    let bottomOk = y - r <= this.center.y + this.scaledVisibleRegionDims.y / 2;
+    let leftOk = x + r >= this.getLeft();
+    let rightOk = x - r <= this.getRight();
+    let topOk = y + r >= this.getTop();
+    let bottomOk = y - r <= this.getBottom();
     return leftOk && rightOk && topOk && bottomOk;
   }
 
   /** Return the X coordinate of the left of the camera viewport */
-  public getLeft() { return this.center.x - this.scaledVisibleRegionDims.x / 2; }
+  public getLeft() { return this.center.x + this.shakeOffset.x - this.scaledVisibleRegionDims.x / 2; }
 
   /** Return the Y coordinate of the top of the camera viewport */
-  public getTop() { return this.center.y - this.scaledVisibleRegionDims.y / 2; }
+  public getTop() { return this.center.y + this.shakeOffset.y - this.scaledVisibleRegionDims.y / 2; }
 
   /** Return the X coordinate of the right of the camera viewport */
-  public getRight() { return this.center.x + this.scaledVisibleRegionDims.x / 2; }
+  public getRight() { return this.center.x + this.shakeOffset.x + this.scaledVisibleRegionDims.x / 2; }
 
   /** Return the Y coordinate of the bottom of the camera viewport */
-  public getBottom() { return this.center.y + this.scaledVisibleRegionDims.y / 2; }
+  public getBottom() { return this.center.y + this.shakeOffset.y + this.scaledVisibleRegionDims.y / 2; }
 
   /**
    * Convert screen coordinates (absolute pixels), to world coordinates (meters)
