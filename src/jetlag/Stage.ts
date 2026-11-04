@@ -266,6 +266,8 @@ export class Stage {
     this.background.render(this.world.camera, elapsedMs, false);
     this.world.camera.render(elapsedMs, SpriteLocation.WORLD);
     this.foreground.render(this.world.camera, elapsedMs, true);
+    // The debug view (if it's showing) also draws the world's joints
+    this.renderer.debugDrawJoints(this.world.physics!.world, this.world.camera);
 
     // Run post-render tasks
     if (this.afterRender) this.afterRender();

@@ -122,6 +122,9 @@ abstract class RigidBodyBase {
   /** The entity's primary fixture */
   protected mainFixture!: b2Fixture;
 
+  /** The entity's primary */
+  public get primaryFixture() { return this.mainFixture; }
+
   /** A second, sensor-only fixture for proximity behaviors */
   private _proximityFixture?: b2Fixture;
 

@@ -8,6 +8,12 @@ export class DebugSprite {
 
   /** A radial line when debugShape is a circle, to show rotation */
   readonly line = new Graphics();
+
+  /**
+   * The outlines of any other fixtures that were added directly to the Box2D
+   * body
+   */
+  readonly extra = new Graphics();
 }
 
 /** A sprite is any picture that can be drawn to the screen */

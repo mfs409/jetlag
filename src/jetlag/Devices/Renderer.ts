@@ -4,7 +4,7 @@ import { AppearanceComponent, FilledBox, FilledCircle, FilledPolygon, FilledRoun
 import { RigidBodyComponent, BoxBody, CircleBody, PolygonBody } from "../Components/RigidBody";
 import { CameraService } from "../Services/Camera";
 import { Sprite } from "../Services/ImageLibrary";
-import { b2CircleShape, b2Vec2 } from "@box2d/core";
+import { b2ChainShape, b2CircleShape, b2EdgeShape, b2Joint, b2JointType, b2PolygonShape, b2Shape, b2ShapeType, b2Vec2, b2World } from "@box2d/core";
 import { FilterComponent } from "../Components/FilterComponent"
 
 /** The location of a sprite */
@@ -151,6 +151,9 @@ export class RendererDevice {
    * in-progress render
    */
   private worldContainers: FilterableContainerSet;
+
+  /** The Graphics object that the debug view draws every joint on */
+  private jointDebug = new Graphics();
 
   /** A container for all of the foreground parallax images */
   private foregroundContainer: FilterableContainer;
@@ -670,6 +673,131 @@ export class RendererDevice {
       const cy = s * (worldCenter.y - camera.getTop());
       this.drawDebugCircle(cx, cy, shape.m_radius * s, r, body.punchDebug.shape, body.punchDebug.line, 0xff8800);
     }
+
+    // A body can have fixtures beyond the three above, if code added them
+    // straight to the Box2D body.  Draw those too.
+    this.drawExtraFixtures(body, camera);
+  }
+
+  /**
+   * Draw the outline of every fixture on a body that isn't its main shape, its
+   * proximity sensor, or its punch hitbox: solid ones in cyan, and sensors in
+   * gray.  They are all drawn into one Graphics object, in screen coordinates,
+   * so any number of fixtures (of any shape) can be shown.
+   *
+   * @param body   The rigid body whose extra fixtures we'll draw
+   * @param camera The camera related to where we're drawing
+   */
+  private drawExtraFixtures(body: RigidBodyComponent, camera: CameraService) {
+    const g = body.debug!.extra;
+    g.clear();
+    let any = false;
+    for (let f = body.body.GetFixtureList(); f; f = f.GetNext()) {
+      if (f === body.primaryFixture || f === body.proximityFixture || f === body.punchFixture) continue;
+      any = true;
+      this.strokeShape(f.GetShape(), body, camera, g, f.IsSensor() ? 0x999999 : 0x00ffff);
+    }
+    if (any) this.debug!.addChild(g);
+  }
+
+  /**
+   * Stroke the outline of a Box2D shape, whose points are relative to its
+   * body, onto a Graphics object
+   *
+   * @param shape  The shape
+   * @param body   The rigid body that the shape belongs to
+   * @param camera The camera related to where we're drawing
+   * @param g      The Graphics object to draw on
+   * @param color  The color for the outline
+   */
+  private strokeShape(shape: b2Shape, body: RigidBodyComponent, camera: CameraService, g: Graphics, color: number) {
+    const s = camera.scale;
+    const tmp = new b2Vec2();
+    /** Turn a point on the shape into pixels on the screen */
+    const toScreen = (p: { x: number, y: number }) => {
+      body.body.GetWorldPoint(p, tmp);
+      return { x: s * (tmp.x - camera.getLeft()), y: s * (tmp.y - camera.getTop()) };
+    };
+    switch (shape.GetType()) {
+      case b2ShapeType.e_circle: {
+        const circle = shape as b2CircleShape;
+        const c = toScreen(circle.m_p);
+        g.circle(c.x, c.y, circle.m_radius * s).stroke({ width: 1, color });
+        break;
+      }
+      case b2ShapeType.e_polygon: {
+        const poly = shape as b2PolygonShape;
+        const pts: number[] = [];
+        for (let i = 0; i < poly.m_count; i++) { const v = toScreen(poly.m_vertices[i]); pts.push(v.x, v.y); }
+        g.poly(pts, true).stroke({ width: 1, color });
+        break;
+      }
+      case b2ShapeType.e_edge: {
+        const edge = shape as b2EdgeShape;
+        const a = toScreen(edge.m_vertex1), b = toScreen(edge.m_vertex2);
+        g.moveTo(a.x, a.y).lineTo(b.x, b.y).stroke({ width: 1, color });
+        break;
+      }
+      case b2ShapeType.e_chain: {
+        const chain = shape as b2ChainShape;
+        chain.m_vertices.forEach((p, i) => { const v = toScreen(p); if (i == 0) g.moveTo(v.x, v.y); else g.lineTo(v.x, v.y); });
+        g.stroke({ width: 1, color });
+        break;
+      }
+    }
+  }
+
+  /**
+   * Pick the color that a joint is drawn in
+   *
+   * @param type The kind of joint
+   */
+  private jointColor(type: b2JointType) {
+    switch (type) {
+      case b2JointType.e_revoluteJoint: return 0xff66cc;
+      case b2JointType.e_weldJoint: return 0xffffff;
+      case b2JointType.e_distanceJoint: return 0x66ffcc;
+      case b2JointType.e_prismaticJoint: return 0xffaa44;
+      case b2JointType.e_wheelJoint: return 0x88aaff;
+      default: return 0xcccccc;
+    }
+  }
+
+  /**
+   * Debug draw every joint in a physics world.  The picture consists of a small
+   * circle at each of the joint's two anchor points, a line between them, and a
+   * faint line from each anchor to the center of the body that it is attached
+   * to. The color says what kind of joint it is.
+   *
+   * @param world  The physics world whose joints we'll draw
+   * @param camera The camera related to where we're drawing
+   */
+  public debugDrawJoints(world: b2World, camera: CameraService) {
+    if (!this.debug) return;
+    const g = this.jointDebug;
+    g.clear();
+    const s = camera.scale;
+    const a = new b2Vec2(), b = new b2Vec2();
+    let any = false;
+    for (let j: b2Joint | null = world.GetJointList(); j; j = j.GetNext()) {
+      any = true;
+      j.GetAnchorA(a);
+      j.GetAnchorB(b);
+      const color = this.jointColor(j.GetType());
+      const ax = s * (a.x - camera.getLeft()), ay = s * (a.y - camera.getTop());
+      const bx = s * (b.x - camera.getLeft()), by = s * (b.y - camera.getTop());
+      const pa = j.GetBodyA().GetPosition(), pb = j.GetBodyB().GetPosition();
+      // Which bodies it holds together
+      g.moveTo(s * (pa.x - camera.getLeft()), s * (pa.y - camera.getTop())).lineTo(ax, ay).stroke({ width: 1, color, alpha: 0.4 });
+      g.moveTo(s * (pb.x - camera.getLeft()), s * (pb.y - camera.getTop())).lineTo(bx, by).stroke({ width: 1, color, alpha: 0.4 });
+      // The anchors, and the span between them
+      g.circle(ax, ay, 4).stroke({ width: 2, color });
+      if (Math.hypot(ax - bx, ay - by) > 1) {
+        g.circle(bx, by, 4).stroke({ width: 2, color });
+        g.moveTo(ax, ay).lineTo(bx, by).stroke({ width: 1, color });
+      }
+    }
+    if (any) this.debug.addChild(g);
   }
 
   /**
