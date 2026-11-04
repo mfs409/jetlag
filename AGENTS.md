@@ -13,7 +13,7 @@ what you remember about it.
 
 - **The engine source**, `src/jetlag/`, is the final word on what exists and
   how it behaves.  `src/jetlag.ts` lists everything a game can import.
-- **The tutorial book**: <https://www.cse.lehigh.edu/~spear/jetlag_tutorials/>.
+- **The tutorial book**: <https://mfs409.github.io/jetlag-tutorials/>.
   Each unit teaches one area (bodies and physics, movement, gestures,
   collisions, behaviors, timers, data-driven design, scene flow, audio and
   HUD, endless games and storage, animation and effects, assets), with a
