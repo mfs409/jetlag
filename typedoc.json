@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["src/jetlag.ts"],
+  "readme": "README.md",
+  "out": "docs",
+  "cleanOutputDir": true,
+  "excludeInternal": true,
+  "externalSymbolLinkMappings": {
+    "pixi.js": { "*": "https://pixijs.download/release/docs/index.html" }
+  }
+}
