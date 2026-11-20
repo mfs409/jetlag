@@ -289,11 +289,10 @@ class ContactListener {
     // Check both, not just whichever qualifies first: handleSticky() is a
     // no-op if this contact's zone doesn't match any of that entity's
     // sticky sides, and in that case, the other entity's own stickiness (if
-    // any) still deserves a chance.
-    let stickyHandled = false;
-    if (ab.stickySides.length > 0) { this.collisionService.handleSticky(a, b, contact); stickyHandled = true; }
-    if (bb.stickySides.length > 0) { this.collisionService.handleSticky(b, a, contact); stickyHandled = true; }
-    if (stickyHandled) return;
+    // any) still deserves a chance.  Being sticky doesn't exempt a contact
+    // from the pass-through and exemption rules below, so don't return here.
+    if (ab.stickySides.length > 0) this.collisionService.handleSticky(a, b, contact);
+    if (bb.stickySides.length > 0) this.collisionService.handleSticky(b, a, contact);
 
     // if the entities have a matching passthrough ID
     if (ab.passThroughId && bb.passThroughId) {
