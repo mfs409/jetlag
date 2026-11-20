@@ -54,8 +54,8 @@ export class PathMovement {
   private loop: boolean;
 
   /**
-   * Code to run each time a waypoint of the path is reached.  It will be
-   * given the index of the *next* waypoint.
+   * Code to run each time a waypoint of the path is reached.  It is be given
+   * the index of the waypoint, which includes the last waypoint.
    */
   private waypointCallback?: (which: number) => void;
 
@@ -186,11 +186,13 @@ export class PathMovement {
    *
    * @param cfg.path              The path on which to move
    * @param cfg.velocity          The speed at which the actor should move
-   * @param cfg.loop              Should the path repeat infinitely, or just
-   *                               run once?
+   * @param cfg.loop              Should the path repeat infinitely, or just run
+   *                              once?
    * @param cfg.waypointCallback  Code to run each time a waypoint of the path
-   *                               is reached.  It will be given the index of
-   *                               the *next* waypoint.
+   *                              is reached, including the final one.  It is
+   *                              given the index of that waypoint.  On a
+   *                              looping path, the final waypoint is followed
+   *                              immediately by waypoint 0.
    * @param cfg.startPoint        The point on the path from which to start
    */
   constructor(cfg: { path: Path, velocity: number, loop: boolean, waypointCallback?: (which: number) => void, startPoint?: number }) {
@@ -231,8 +233,16 @@ export class PathMovement {
     // Update the goal, and restart, stop, or start moving toward it
     this.nextIndex++;
     if (this.nextIndex == this.path.length) {
-      if (this.loop) this.start(); // start over for the looping case
-      else this.halt(); // halt the path for the non-looping case
+      // Run the callback for the final point.  In the non-looping case, halt
+      // first, so a callback that gives the actor a new movement isn't undone
+      // by our halt().
+      if (this.loop) {
+        if (this.waypointCallback) this.waypointCallback(this.nextIndex - 1);
+        this.start(); // start over for the looping case
+      } else {
+        this.halt(); // halt the path for the non-looping case
+        if (this.waypointCallback) this.waypointCallback(this.nextIndex - 1);
+      }
       return;
     }
     this.goToNext(); // Not at end, so move to next
