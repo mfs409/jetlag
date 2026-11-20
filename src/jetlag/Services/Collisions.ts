@@ -476,6 +476,12 @@ export class AdvancedCollisionService extends BasicCollisionService {
     // (started by breakStickyJoints() the last time something unstuck from
     // it) hasn't elapsed yet
     if (stage.renderer.now < (sticky.rigidBody?.stickyUntilMs ?? 0)) return;
+    // don't stick to something that is moving, under its own power, relative
+    // to the sticky actor (e.g., walking across a platform).  Otherwise this
+    // would run on every step of the contact, and stop that actor dead each
+    // time.  It can stick once it slows down.
+    const ov = other.rigidBody!.getVelocity(), sv = sticky.rigidBody!.getVelocity();
+    if (Math.hypot(ov.x - sv.x, ov.y - sv.y) > sticky.rigidBody!.stickySpeedLimit) return;
     // only do something if we're hitting the actor from the correct direction
     let sBody = sticky.rigidBody!;
     if (sBody.stickySides.includes(relativeZone(sticky, other))) {
@@ -488,7 +494,8 @@ export class AdvancedCollisionService extends BasicCollisionService {
         let sb = sticky.rigidBody?.body;
         let ob = other.rigidBody?.body;
         if (!sb || !ob) return;
-        ob?.SetLinearVelocity(new b2Vec2(0, 0));
+        // match the sticky actor's velocity, so the actor doesn't jerk when it sticks
+        ob?.SetLinearVelocity(sb.GetLinearVelocity());
         let d = new b2DistanceJointDef();
         d.Initialize(sb, ob, v, v);
         d.collideConnected = true;
