@@ -34,6 +34,13 @@ export interface PhysicsCfg {
   /** Delay (milliseconds) after something stops sticking, before it can stick again */
   stickyDelay?: number;
   /**
+   * Fastest speed (meters per second) at which something can move, relative to
+   * this body, and still stick to it.  Something that is moving faster (like a
+   * player who is walking across a sticky platform) doesn't stick until it
+   * slows down.  Defaults to 0.5.
+   */
+  stickySpeedLimit?: number;
+  /**
    * Are collisions only valid from one direction?  Expressed as the zone
    * (see `relativeZone`) something must be in to collide with this body,
    * e.g. `DIRECTION.N` for "solid only when approached from above."
@@ -103,6 +110,12 @@ abstract class RigidBodyBase {
    * touching my top sticks."
    */
   stickySides: DIRECTION[] = [];
+
+  /**
+   * The fastest speed, relative to this body, at which something can stick to
+   * it.  Configured via `PhysicsCfg.stickySpeedLimit`.
+   */
+  stickySpeedLimit = 0.5;
 
   /** Entities with a matching Id don't collide with each other */
   passThroughId?: number[];
@@ -570,6 +583,8 @@ abstract class RigidBodyBase {
     // `stickyUntilMs` deadline, at the moment something unsticks.
     if (physicsCfg.stickyDelay !== undefined)
       this.stickyDelayMs = physicsCfg.stickyDelay;
+    if (physicsCfg.stickySpeedLimit !== undefined)
+      this.stickySpeedLimit = physicsCfg.stickySpeedLimit;
     if (physicsCfg.stickySides !== undefined) {
       this.stickySides = [...physicsCfg.stickySides];
     }
